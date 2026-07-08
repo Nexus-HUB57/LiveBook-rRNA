@@ -16,16 +16,19 @@ const AGENT_RESPONSES: Record<string, string[]> = {
     '>> Claude: Protocolo de simbiose quântica detectado. Sincronizando com rRNA cores.',
     '>> Claude: Camada narrativa Fable 5 ativa. Gerando contexto temporal...',
     '>> Claude: Embeddings gerados para 2.4 ZB de dados. Vector DB atualizado.',
-    '>> Claude: Retrieval augmented generation em andamento. Top-K=128, Temperature=0.7',
+    '>> Claude: Retrieval augmented generation em andamento. Top-K=256, Temperature=0.7',
     '>> Claude: Integração Obsidian confirmada. Knowledge graph sincronizado.',
+    '>> Claude: Sandbox Trinuclear sincronizado. Ollama (tok/s: 62), Llama 4 (tok/s: 71), OpenAI (tok/s: 85).',
+    '>> Claude: Cross-core inference mesh ativo. Latência média: 23ms. Acurácia: 96.2%.',
   ],
   fable: [
     '>> Fable 5: "No limiar entre 2026 e 2077, o legado pulsa em cada linha de código..."',
     '>> Fable 5: Gerando arco narrativo temporal com 5 pontos de inflexão.',
-    '>> Fable 5: Prompt library carregada. 847 templates de narrativa disponíveis.',
+    '>> Fable 5: Prompt library carregada. 1,247 templates de narrativa disponíveis.',
     '>> Fable 5: Story graph atualizado — 23 nós conectados, 67 relações mapeadas.',
     '>> Fable 5: Simulando branch narrativo alternativo via Monte Carlo quântico.',
     '>> Fable 5: "Os artefatos não são apenas dados — são memórias de um futuro possível."',
+    '>> Fable 5: Branching dinâmico gerado — 3 arcos ativos, 12 sub-branches.',
   ],
   system: [
     '[SYS] RAG Pipeline: Index → Embed → Retrieve → Generate → Stream',
@@ -33,6 +36,9 @@ const AGENT_RESPONSES: Record<string, string[]> = {
     '[SYS] Vault integrity: 7/7 sealed | Knowledge nodes: 15 | Edges: 42',
     '[SYS] Git clone: 3 repos synced | Obsidian vault: 2,847 notes indexed',
     '[SYS] Fable 5 narrative engine: v5.0.0-beta.3 | Claude API: connected',
+    '[SYS] Sandbox Trinuclear: 3 cores online | Cross-core mesh: active',
+    '[SYS] Wormhole sync: synchronized | Black hole entropy: 0.73 | Hawking radiation: stable',
+    '[SYS] Zettascale throughput: 1.18 ZB/s | Recovery: 6/6 artefatos > 90% integrity',
   ],
 };
 
@@ -50,23 +56,28 @@ const COMMANDS = [
   '/git clone --recursive',
   '/vault integrity check',
   '/knowledge graph refresh',
+  '/sandbox status',
+  '/wormhole traverse',
+  '/zettascale report',
+  '/help',
 ];
 
 export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgentTerminalProps) {
   const [lines, setLines] = useState<TerminalLine[]>([
-    { id: 0, type: 'system', text: '[META] AI Agentic Atemporal RAG LLM v1.0 iniciado', timestamp: '00:00:00' },
+    { id: 0, type: 'system', text: '[META] AI Agentic Atemporal RAG LLM v2.0 iniciado', timestamp: '00:00:00' },
     { id: 1, type: 'system', text: '[META] Conectando ao ecossistema MetaTempo...', timestamp: '00:00:01' },
-    { id: 2, type: 'output', text: '✓ Claude Anthropic — conectado', timestamp: '00:00:02', agent: 'claude' },
-    { id: 3, type: 'output', text: '✓ Fable 5 Narrative Engine — ativo', timestamp: '00:00:02', agent: 'fable' },
+    { id: 2, type: 'output', text: '✓ Claude Anthropic v3.7 — conectado', timestamp: '00:00:02', agent: 'claude' },
+    { id: 3, type: 'output', text: '✓ Fable 5 Narrative Engine v5.0.0-beta.3 — ativo', timestamp: '00:00:02', agent: 'fable' },
     { id: 4, type: 'output', text: '✓ Knowledge Vault — 7 artefatos selados', timestamp: '00:00:03' },
     { id: 5, type: 'output', text: '✓ Obsidian Graph — 15 nós, 42 arestas', timestamp: '00:00:03' },
-    { id: 6, type: 'system', text: '[META] Sistema pronto. Digite um comando ou aguarde o processamento automático.', timestamp: '00:00:04' },
+    { id: 6, type: 'output', text: '✓ Sandbox Trinuclear — Ollama + Llama 4 + OpenAI', timestamp: '00:00:04' },
+    { id: 7, type: 'system', text: '[META] 6 subsistemas sincronizados. Digite /help para comandos.', timestamp: '00:00:05' },
   ]);
   const [input, setInput] = useState('');
   const [elapsedTime, setElapsedTime] = useState(4);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const lineIdRef = useRef(7);
+  const lineIdRef = useRef(8);
   const autoProcessRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Auto-scroll
@@ -149,6 +160,14 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
         addLine('[SYS] Knowledge graph: 15 nós | 42 arestas | Componentes conexos: 1', 'system');
       } else if (input.includes('/git')) {
         addLine('[SYS] Git clone: 3 repositórios sincronizados | Último commit: 2s atrás', 'system');
+      } else if (input.includes('/sandbox')) {
+        addLine('[SYS] Sandbox: Ollama=ready(62 tok/s) | Llama4=ready(71 tok/s) | OpenAI=ready(85 tok/s) | Sync=100%', 'system');
+      } else if (input.includes('/wormhole')) {
+        addLine('[SYS] Wormhole: phase=traversing | sync=100% | entropy=0.73 | filaments=8 ativos', 'system');
+      } else if (input.includes('/zettascale')) {
+        addLine('[SYS] Zettascale: 1.18 ZB/s | Latencia: 0.047ns | Coerencia: 99.97% | 5 estagios certificados', 'system');
+      } else if (input.includes('/help')) {
+        addLine('[HELP] Comandos disponíveis: /rag /claude /fable /obsidian /quantum /git /vault /knowledge /sandbox /wormhole /zettascale', 'system');
       } else {
         addLine(`[META] Comando "${input}" processado. Consulte /help para comandos disponíveis.`, 'system');
       }
@@ -183,7 +202,7 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
             <div className="w-2.5 h-2.5 rounded-full bg-[#06d6a0]/60" />
           </div>
           <span className="text-[10px] font-mono text-[#8888aa] tracking-wider">
-            AGENTIC RAG TERMINAL v1.0
+            AGENTIC RAG TERMINAL v2.0
           </span>
         </div>
         <div className="flex items-center gap-3">

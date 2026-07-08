@@ -117,15 +117,61 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
       // Triangle connections between cores
       const corePositions = CORES.map((_, i) => getCorePos(i, w, h));
 
-      // Triangle fill
+      // Mesh fill with animated gradient
       ctx.beginPath();
       ctx.moveTo(corePositions[0].x, corePositions[0].y);
       ctx.lineTo(corePositions[1].x, corePositions[1].y);
       ctx.lineTo(corePositions[2].x, corePositions[2].y);
       ctx.closePath();
-      const triAlpha = isActive ? 0.02 + syncIntensity * 0.04 : 0.01;
-      ctx.fillStyle = `rgba(168, 85, 247, ${triAlpha})`;
+      const triAlpha = isActive ? 0.02 + syncIntensity * 0.05 : 0.01;
+      const triGrad = ctx.createLinearGradient(
+        corePositions[0].x, corePositions[0].y,
+        corePositions[2].x, corePositions[2].y
+      );
+      triGrad.addColorStop(0, `rgba(6, 214, 160, ${triAlpha})`);
+      triGrad.addColorStop(0.5, `rgba(168, 85, 247, ${triAlpha * 1.5})`);
+      triGrad.addColorStop(1, `rgba(224, 64, 160, ${triAlpha})`);
+      ctx.fillStyle = triGrad;
       ctx.fill();
+
+      // Cross-core inference mesh (dense connections inside triangle)
+      if (isActive && syncIntensity > 0.2) {
+        const meshPoints = 12;
+        for (let m = 0; m < meshPoints; m++) {
+          const t1 = Math.random();
+          const t2 = Math.random() * (1 - t1);
+          const t3 = 1 - t1 - t2;
+          const mx = corePositions[0].x * t1 + corePositions[1].x * t2 + corePositions[2].x * t3;
+          const my = corePositions[0].y * t1 + corePositions[1].y * t2 + corePositions[2].y * t3;
+          ctx.beginPath();
+          ctx.arc(mx, my, 1, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(168, 85, 247, ${syncIntensity * 0.15})`;
+          ctx.fill();
+        }
+
+        // Cross-core inference beams
+        if (syncIntensity > 0.5) {
+          for (let c = 0; c < 3; c++) {
+            const target = (c + 1) % 3;
+            const src = corePositions[c];
+            const tgt = corePositions[target];
+            const beamProgress = ((time * 3 + c) % 1);
+            const bpx = src.x + (tgt.x - src.x) * beamProgress;
+            const bpy = src.y + (tgt.y - src.y) * beamProgress;
+            ctx.save();
+            ctx.globalAlpha = syncIntensity * 0.6;
+            ctx.fillStyle = CORES[c].color;
+            ctx.beginPath();
+            ctx.arc(bpx, bpy, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = syncIntensity * 0.15;
+            ctx.beginPath();
+            ctx.arc(bpx, bpy, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+      }
 
       // Triangle edges
       for (let i = 0; i < 3; i++) {

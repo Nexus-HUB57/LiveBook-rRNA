@@ -227,6 +227,32 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
         n.pulsePhase += 0.03;
       });
 
+      // Quantum pulse wave from active node
+      if (activeNode) {
+        const activeNodeObj = nodes.find(n => n.id === activeNode);
+        if (activeNodeObj) {
+          const pulseRadius = ((time * 80) % 200);
+          const pulseAlpha = Math.max(0, 1 - pulseRadius / 200) * 0.15;
+          if (pulseAlpha > 0.01) {
+            ctx.beginPath();
+            ctx.arc(activeNodeObj.x, activeNodeObj.y, pulseRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(168, 85, 247, ${pulseAlpha})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // Second wave
+            const pulse2 = ((time * 80 + 100) % 200);
+            const pulse2Alpha = Math.max(0, 1 - pulse2 / 200) * 0.08;
+            if (pulse2Alpha > 0.01) {
+              ctx.beginPath();
+              ctx.arc(activeNodeObj.x, activeNodeObj.y, pulse2, 0, Math.PI * 2);
+              ctx.strokeStyle = `rgba(6, 214, 160, ${pulse2Alpha})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
       // Draw connections
       nodes.forEach(n => {
         n.connections.forEach(connId => {

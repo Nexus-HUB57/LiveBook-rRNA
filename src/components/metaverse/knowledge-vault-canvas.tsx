@@ -92,16 +92,20 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('click', handleClick);
 
-    const NEURON_COUNT = 60;
-    const neurons: { x: number; y: number; vx: number; vy: number; size: number; connections: number[] }[] = [];
+    const NEURON_COUNT = 90;
+    const CLUSTER_COUNT = 5;
+    const neurons: { x: number; y: number; vx: number; vy: number; size: number; connections: number[]; cluster: number; activation: number }[] = [];
     for (let i = 0; i < NEURON_COUNT; i++) {
+      const cluster = i % CLUSTER_COUNT;
       neurons.push({
         x: Math.random() * canvas.getBoundingClientRect().width,
         y: Math.random() * canvas.getBoundingClientRect().height,
-        vx: (Math.random() - 0.5) * 0.2,
-        vy: (Math.random() - 0.5) * 0.2,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
         size: 1 + Math.random() * 2.5,
-        connections: Array.from({ length: 2 + Math.floor(Math.random() * 3) }, () => Math.floor(Math.random() * NEURON_COUNT)),
+        connections: Array.from({ length: 2 + Math.floor(Math.random() * 4) }, () => Math.floor(Math.random() * NEURON_COUNT)),
+        cluster,
+        activation: 0.1 + Math.random() * 0.2,
       });
     }
 
@@ -116,12 +120,34 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
       ctx.clearRect(0, 0, w, h);
       time += 0.005;
 
-      // Neural network background
+      // Deep neural network with clustering and activation propagation
+      const clusterColors = ['168,85,247', '6,214,160', '224,64,160', '251,191,36', '6,182,212'];
       neurons.forEach((n) => {
+        // Cluster attraction: neurons in same cluster attract gently
+        const sameCluster = neurons.filter(m => m.cluster === n.cluster && m !== n);
+        sameCluster.forEach(m => {
+          const dx = m.x - n.x;
+          const dy = m.y - n.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 80 && dist < 200) {
+            n.vx += (dx / dist) * 0.002;
+            n.vy += (dy / dist) * 0.002;
+          }
+        });
+
         n.x += n.vx;
         n.y += n.vy;
         if (n.x < 0 || n.x > w) n.vx *= -1;
         if (n.y < 0 || n.y > h) n.vy *= -1;
+        n.vx *= 0.995;
+        n.vy *= 0.995;
+
+        // Activation propagation: active RAG phase increases activation
+        if (isActive && ragPhase !== 'idle') {
+          n.activation = Math.min(1, n.activation + 0.001);
+        } else {
+          n.activation = Math.max(0.1, n.activation - 0.0005);
+        }
 
         n.connections.forEach((targetIdx) => {
           const target = neurons[targetIdx];
@@ -129,59 +155,103 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
           const dx = n.x - target.x;
           const dy = n.y - target.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 120) {
-            const alpha = (1 - dist / 120) * 0.08;
+          const maxDist = 130;
+          if (dist < maxDist) {
+            const baseAlpha = (1 - dist / maxDist) * 0.06;
+            const activationBoost = (n.activation + target.activation) * 0.5;
+            const alpha = baseAlpha * (0.3 + activationBoost * 0.7);
+            const cc = clusterColors[n.cluster];
             ctx.beginPath();
             ctx.moveTo(n.x, n.y);
             ctx.lineTo(target.x, target.y);
-            ctx.strokeStyle = `rgba(168, 85, 247, ${alpha})`;
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = `rgba(${cc}, ${alpha})`;
+            ctx.lineWidth = 0.4 + activationBoost * 0.6;
             ctx.stroke();
+
+            // Active connection pulse
+            if (n.activation > 0.5 && Math.random() < 0.02) {
+              const pp = Math.random();
+              const px = n.x + (target.x - n.x) * pp;
+              const py = n.y + (target.y - n.y) * pp;
+              ctx.beginPath();
+              ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(${cc}, ${0.6 * activationBoost})`;
+              ctx.fill();
+            }
           }
         });
 
         const distToCenter = Math.sqrt((n.x - cx) ** 2 + (n.y - cy) ** 2);
-        const glow = isActive ? 0.4 + Math.sin(time * 3 + distToCenter * 0.01) * 0.2 : 0.15;
+        const cc = clusterColors[n.cluster];
+        const glow = n.activation * (0.3 + Math.sin(time * 3 + distToCenter * 0.01) * 0.15);
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(168, 85, 247, ${glow})`;
+        ctx.fillStyle = `rgba(${cc}, ${glow})`;
         ctx.fill();
+        if (n.activation > 0.4) {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.size + 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${cc}, ${glow * 0.15})`;
+          ctx.fill();
+        }
       });
 
-      // RAG data flow lines during active phases
+      // RAG bidirectional data flow: retrieve (file→core) + generate (core→file)
       if (ragPhase !== 'idle' && filesRef.current.length > 0) {
-        const activeFile = filesRef.current[Math.floor(time * 10) % filesRef.current.length];
-        const progress = (time * 2) % 1;
+        const fileIdx1 = Math.floor(time * 8) % filesRef.current.length;
+        const fileIdx2 = (fileIdx1 + 3) % filesRef.current.length;
+        const retrieveFile = filesRef.current[fileIdx1];
+        const generateFile = filesRef.current[fileIdx2];
 
-        // Draw flowing data stream from file to center
+        // Retrieve stream (file → core)
+        const cp1x = (retrieveFile.x + cx) / 2 + Math.sin(time * 5) * 35;
+        const cp1y = (retrieveFile.y + cy) / 2 + Math.cos(time * 5) * 35;
         ctx.beginPath();
-        const cp1x = (activeFile.x + cx) / 2 + Math.sin(time * 5) * 40;
-        const cp1y = (activeFile.y + cy) / 2 + Math.cos(time * 5) * 40;
-        ctx.moveTo(activeFile.x, activeFile.y);
+        ctx.moveTo(retrieveFile.x, retrieveFile.y);
         ctx.quadraticCurveTo(cp1x, cp1y, cx, cy);
-        const gradient = ctx.createLinearGradient(activeFile.x, activeFile.y, cx, cy);
-        gradient.addColorStop(0, activeFile.color + '40');
-        gradient.addColorStop(progress, activeFile.color + 'cc');
-        gradient.addColorStop(1, 'rgba(168, 85, 247, 0.1)');
-        ctx.strokeStyle = gradient;
+        const grad1 = ctx.createLinearGradient(retrieveFile.x, retrieveFile.y, cx, cy);
+        grad1.addColorStop(0, retrieveFile.color + '50');
+        grad1.addColorStop(1, 'rgba(6,214,160,0.3)');
+        ctx.strokeStyle = grad1;
         ctx.lineWidth = 1.5;
         ctx.setLineDash([4, 8]);
         ctx.lineDashOffset = -time * 200;
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Data packets
-        for (let p = 0; p < 3; p++) {
-          const pp = ((time * 1.5 + p * 0.33) % 1);
-          const px = (1 - pp) * (1 - pp) * activeFile.x + 2 * (1 - pp) * pp * cp1x + pp * pp * cx;
-          const py = (1 - pp) * (1 - pp) * activeFile.y + 2 * (1 - pp) * pp * cp1y + pp * pp * cy;
+        // Generate stream (core → file) with different dash
+        const cp2x = (cx + generateFile.x) / 2 + Math.sin(time * 4 + 2) * 35;
+        const cp2y = (cy + generateFile.y) / 2 + Math.cos(time * 4 + 2) * 35;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.quadraticCurveTo(cp2x, cp2y, generateFile.x, generateFile.y);
+        const grad2 = ctx.createLinearGradient(cx, cy, generateFile.x, generateFile.y);
+        grad2.addColorStop(0, 'rgba(224,64,160,0.3)');
+        grad2.addColorStop(1, generateFile.color + '50');
+        ctx.strokeStyle = grad2;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([2, 6]);
+        ctx.lineDashOffset = time * 150;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Bidirectional data packets
+        for (let p = 0; p < 4; p++) {
+          const isRetrieve = p < 2;
+          const src = isRetrieve ? retrieveFile : { x: cx, y: cy };
+          const tgt = isRetrieve ? { x: cx, y: cy } : generateFile;
+          const cp = isRetrieve ? { x: cp1x, y: cp1y } : { x: cp2x, y: cp2y };
+          const pp = ((time * 1.5 + p * 0.25) % 1);
+          const px = (1 - pp) * (1 - pp) * src.x + 2 * (1 - pp) * pp * cp.x + pp * pp * tgt.x;
+          const py = (1 - pp) * (1 - pp) * src.y + 2 * (1 - pp) * pp * cp.y + pp * pp * tgt.y;
+          const pColor = isRetrieve ? '#06d6a0' : '#e040a0';
           ctx.beginPath();
-          ctx.arc(px, py, 3, 0, Math.PI * 2);
-          ctx.fillStyle = activeFile.color;
+          ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = pColor;
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(px, py, 6, 0, Math.PI * 2);
-          ctx.fillStyle = activeFile.color + '30';
+          ctx.arc(px, py, 5, 0, Math.PI * 2);
+          ctx.fillStyle = pColor + '25';
           ctx.fill();
         }
       }
