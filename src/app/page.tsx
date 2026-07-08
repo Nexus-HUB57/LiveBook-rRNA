@@ -9,6 +9,7 @@ import WormholeBlackholeSection from '@/components/metaverse/wormhole-blackhole-
 import RecoverySection from '@/components/metaverse/recovery-section';
 import ZettaScaleDashboard from '@/components/metaverse/zettascale-dashboard';
 import AgenticRAGSection from '@/components/metaverse/agentic-rag-section';
+import SandboxTrinuclearSection from '@/components/metaverse/sandbox-trinuclear-section';
 import FooterSection from '@/components/metaverse/footer-section';
 
 export default function Home() {
@@ -29,6 +30,7 @@ export default function Home() {
         <RecoverySection />
         <ZettaScaleDashboard />
         <AgenticRAGSection />
+        <SandboxTrinuclearSection />
       </main>
 
       {/* Footer */}
