@@ -5,6 +5,7 @@ import ExperienceSection from '@/components/metaverse/experience-section';
 import TimelineSection from '@/components/metaverse/timeline-section';
 import QuoteSection from '@/components/metaverse/quote-section';
 import CTASection from '@/components/metaverse/cta-section';
+import WormholeBlackholeSection from '@/components/metaverse/wormhole-blackhole-section';
 import FooterSection from '@/components/metaverse/footer-section';
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
         <TimelineSection />
         <QuoteSection />
         <CTASection />
+        <WormholeBlackholeSection />
       </main>
 
       {/* Footer */}
