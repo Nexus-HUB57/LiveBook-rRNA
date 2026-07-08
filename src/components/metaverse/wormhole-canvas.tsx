@@ -72,6 +72,28 @@ interface PhotonRingConfig {
   wobbleFreq: number;
 }
 
+interface QuantumTunnelParticle {
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+  progress: number;
+  speed: number;
+  tunneling: boolean;
+  tunnelPhase: number;
+  size: number;
+  hue: number;
+  partnerIdx: number;
+}
+
+interface TemporalDistortionWave {
+  radius: number;
+  opacity: number;
+  speed: number;
+  thickness: number;
+  hue: number;
+}
+
 // Gravitational redshift: closer to center = red, farther = blue/purple
 function redshiftColor(normalizedDist: number): string {
   // normalizedDist: 0 = center (red), 1 = edge (blue/purple)
@@ -97,11 +119,15 @@ export default function WormholeCanvas({
   const filamentsRef = useRef<Filament[]>([]);
   const ripplesRef = useRef<TimeRipple[]>([]);
   const causticsRef = useRef<CausticSpot[]>([]);
+  const quantumPairsRef = useRef<QuantumTunnelParticle[]>([]);
+  const temporalWavesRef = useRef<TemporalDistortionWave[]>([]);
   const animationRef = useRef<number>(0);
   const timeRef = useRef(0);
   const activationRef = useRef(0);
   const lastRippleRef = useRef(0);
   const lastCausticRef = useRef(0);
+  const lastWaveSpawnRef = useRef(0);
+  const spiralAngleRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -187,6 +213,56 @@ export default function WormholeCanvas({
       });
     }
     filamentsRef.current = filaments;
+
+    // Quantum tunneling particle pairs: 12 pairs (24 particles)
+    const qParticles: QuantumTunnelParticle[] = [];
+    for (let i = 0; i < 12; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 120 + Math.random() * 180;
+      qParticles.push({
+        x: Math.cos(angle) * dist,
+        y: Math.sin(angle) * dist,
+        targetX: 0,
+        targetY: 0,
+        progress: 0,
+        speed: 15 + Math.random() * 25,
+        tunneling: false,
+        tunnelPhase: 0,
+        size: 1.5 + Math.random() * 2,
+        hue: Math.random() * 360,
+        partnerIdx: i + 12,
+      });
+      // Partner on opposite side
+      const partnerAngle = angle + Math.PI + (Math.random() - 0.5) * 0.8;
+      const partnerDist = 120 + Math.random() * 180;
+      qParticles.push({
+        x: Math.cos(partnerAngle) * partnerDist,
+        y: Math.sin(partnerAngle) * partnerDist,
+        targetX: 0,
+        targetY: 0,
+        progress: 0,
+        speed: 15 + Math.random() * 25,
+        tunneling: false,
+        tunnelPhase: 0,
+        size: 1.5 + Math.random() * 2,
+        hue: Math.random() * 360,
+        partnerIdx: i,
+      });
+    }
+    quantumPairsRef.current = qParticles;
+
+    // Temporal distortion waves: 5 initial waves
+    const tWaves: TemporalDistortionWave[] = [];
+    for (let i = 0; i < 5; i++) {
+      tWaves.push({
+        radius: i * 60,
+        opacity: 0.15 + Math.random() * 0.1,
+        speed: 30 + Math.random() * 20,
+        thickness: 3 + Math.random() * 4,
+        hue: 270 + (i / 5) * 180, // deep purple to cyan
+      });
+    }
+    temporalWavesRef.current = tWaves;
 
     // Photon ring configs: 3 layers at different radii
     const photonRings: PhotonRingConfig[] = [
@@ -545,6 +621,46 @@ export default function WormholeCanvas({
         }
       }
 
+      // === FRAME-DRAGGING LOGARITHMIC SPIRAL ARMS ===
+      if (activation > 0.05) {
+        ctx.save();
+        spiralAngleRef.current += dt * (0.3 + activation * 1.2);
+        const spiralRotation = spiralAngleRef.current;
+        const maxSpiralR = Math.min(w, h) * 0.4;
+        const spiralAlpha = activation * 0.18;
+
+        for (let arm = 0; arm < 3; arm++) {
+          const armOffset = (arm / 3) * Math.PI * 2;
+          ctx.beginPath();
+          for (let s = 0; s < 60; s++) {
+            const progress = s / 60;
+            // Logarithmic spiral: r = a * e^(b*theta)
+            const theta = progress * Math.PI * 5;
+            const spiralR = 5 * Math.exp(theta * 0.18);
+            const clampedR = Math.min(spiralR, maxSpiralR);
+            const angle = armOffset + theta + spiralRotation;
+            const sx = cx + Math.cos(angle) * clampedR;
+            const sy = cy + Math.sin(angle) * clampedR * 0.4;
+            if (s === 0) ctx.moveTo(sx, sy);
+            else ctx.lineTo(sx, sy);
+          }
+          // Color gradient from white (center) to purple (outer)
+          const spiralGrad = ctx.createLinearGradient(cx, cy, cx + maxSpiralR, cy + maxSpiralR * 0.4);
+          spiralGrad.addColorStop(0, `rgba(255,255,255,${spiralAlpha})`);
+          spiralGrad.addColorStop(0.5, `rgba(200,160,255,${spiralAlpha * 0.7})`);
+          spiralGrad.addColorStop(1, `rgba(139,92,246,${spiralAlpha * 0.3})`);
+          ctx.strokeStyle = spiralGrad;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          // Glow pass
+          ctx.lineWidth = 5;
+          ctx.globalAlpha = spiralAlpha * 0.2;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+        ctx.restore();
+      }
+
       // === TUNNEL RINGS (evolved: wobble + hue shift + inner glow + frame-dragging) ===
       const sortedRings = [...ringsRef.current].sort((a, b) => b.z - a.z);
 
@@ -645,6 +761,68 @@ export default function WormholeCanvas({
         ctx.restore();
       }
 
+      // === TEMPORAL DISTORTION WAVES ===
+      if (activation > 0.1) {
+        // Spawn new wave periodically
+        if (isActive && t - lastWaveSpawnRef.current > 2.0) {
+          lastWaveSpawnRef.current = t;
+          if (temporalWavesRef.current.length < 5) {
+            temporalWavesRef.current.push({
+              radius: 0,
+              opacity: 0.2 + Math.random() * 0.1,
+              speed: 40 + Math.random() * 30,
+              thickness: 3 + Math.random() * 4,
+              hue: 270 + Math.random() * 180, // deep purple to cyan
+            });
+          }
+        }
+
+        const maxWaveR = Math.min(w, h) * 0.45;
+        for (let wi = temporalWavesRef.current.length - 1; wi >= 0; wi--) {
+          const wave = temporalWavesRef.current[wi];
+          wave.radius += wave.speed * dt;
+          wave.opacity -= dt * 0.04;
+
+          if (wave.opacity <= 0 || wave.radius > maxWaveR) {
+            temporalWavesRef.current.splice(wi, 1);
+            continue;
+          }
+
+          // Interpolate hue: purple (270) to cyan (450 mod 360 = 90)
+          const waveHue = wave.hue % 360;
+          const progress = wave.radius / maxWaveR;
+
+          ctx.save();
+          ctx.globalAlpha = wave.opacity * activation;
+          ctx.strokeStyle = `hsla(${waveHue}, 80%, 60%, 1)`;
+          ctx.lineWidth = wave.thickness * (1 - progress * 0.5);
+          ctx.beginPath();
+          ctx.arc(cx, cy, wave.radius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Inner echo
+          ctx.globalAlpha = wave.opacity * activation * 0.3;
+          ctx.lineWidth = wave.thickness * 0.5;
+          ctx.strokeStyle = `hsla(${(waveHue + 60) % 360}, 70%, 50%, 1)`;
+          ctx.beginPath();
+          ctx.arc(cx, cy, wave.radius * 0.85, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.restore();
+
+          // Displace nearby quantum tunneling particles as wave passes
+          for (const qp of quantumPairsRef.current) {
+            const qpDist = Math.sqrt(qp.x * qp.x + qp.y * qp.y);
+            const diff = Math.abs(qpDist - wave.radius);
+            if (diff < 20 && !qp.tunneling) {
+              const pushAngle = Math.atan2(qp.y, qp.x);
+              qp.x += Math.cos(pushAngle) * dt * 15;
+              qp.y += Math.sin(pushAngle) * dt * 15;
+            }
+          }
+        }
+      }
+
       // === ENERGY PARTICLES with helical trails + frame-dragging ===
       for (const p of particlesRef.current) {
         p.z -= p.speed * dt * (1 + activation * 2.5);
@@ -706,6 +884,149 @@ export default function WormholeCanvas({
         ctx.beginPath();
         ctx.arc(px, py, Math.max(0.5, p.size * perspective), 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.restore();
+      }
+
+      // === QUANTUM TUNNELING PARTICLES ===
+      if (activation > 0.15) {
+        ctx.save();
+        const halfW = w / 2;
+        const halfH = h / 2;
+        const tunnelDist = 80;
+
+        for (let qi = 0; qi < quantumPairsRef.current.length; qi++) {
+          const qp = quantumPairsRef.current[qi];
+          const partner = quantumPairsRef.current[qp.partnerIdx];
+          const distToCenter = Math.sqrt(qp.x * qp.x + qp.y * qp.y);
+
+          // Drift toward center
+          if (!qp.tunneling) {
+            const driftAngle = Math.atan2(-qp.y, -qp.x);
+            qp.x += Math.cos(driftAngle) * qp.speed * dt * 0.3;
+            qp.y += Math.sin(driftAngle) * qp.speed * dt * 0.3;
+
+            // Enter tunneling mode when close to center
+            if (distToCenter < tunnelDist) {
+              qp.tunneling = true;
+              qp.tunnelPhase = 0;
+              qp.progress = 0;
+              // Mirror partner into tunneling
+              if (partner) {
+                partner.tunneling = true;
+                partner.tunnelPhase = 0;
+                partner.progress = 0;
+              }
+            }
+          }
+
+          if (qp.tunneling) {
+            qp.tunnelPhase += dt * 4;
+            qp.progress += dt * 0.8;
+
+            if (qp.progress >= 1) {
+              // Tunnel complete: teleport to opposite side
+              const outAngle = Math.atan2(qp.y, qp.x) + Math.PI + (Math.random() - 0.5) * 1.0;
+              const outDist = 140 + Math.random() * 160;
+              qp.x = Math.cos(outAngle) * outDist;
+              qp.y = Math.sin(outAngle) * outDist;
+              qp.tunneling = false;
+              qp.progress = 0;
+            }
+          }
+
+          // Draw particle
+          const screenX = cx + qp.x;
+          const screenY = cy + qp.y;
+          if (screenX < -20 || screenX > w + 20 || screenY < -20 || screenY > h + 20) continue;
+
+          const particleAlpha = activation * 0.7;
+
+          if (qp.tunneling) {
+            // Superposition: 3 ghost copies at offset positions
+            const flicker = Math.sin(qp.tunnelPhase * 8) * 0.5 + 0.5;
+            const offsets = [
+              { dx: Math.sin(qp.tunnelPhase * 3) * 8, dy: Math.cos(qp.tunnelPhase * 2.5) * 6 },
+              { dx: Math.sin(qp.tunnelPhase * 5 + 2) * 6, dy: Math.cos(qp.tunnelPhase * 4 + 1) * 8 },
+              { dx: Math.sin(qp.tunnelPhase * 7 + 4) * 10, dy: Math.cos(qp.tunnelPhase * 6 + 3) * 5 },
+            ];
+            for (const off of offsets) {
+              const ghostAlpha = particleAlpha * 0.25 * (0.5 + flicker * 0.5);
+              ctx.globalAlpha = ghostAlpha;
+              ctx.fillStyle = `hsla(${qp.hue}, 80%, 70%, 1)`;
+              ctx.beginPath();
+              ctx.arc(screenX + off.dx, screenY + off.dy, qp.size * 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            // Core flicker
+            ctx.globalAlpha = particleAlpha * (0.3 + flicker * 0.7);
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, qp.size * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            // Normal particle
+            ctx.globalAlpha = particleAlpha * 0.2;
+            ctx.fillStyle = `hsla(${qp.hue}, 80%, 60%, 1)`;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, qp.size * 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = particleAlpha;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, qp.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // === ENTANGLEMENT CONNECTION LINES ===
+        for (let qi = 0; qi < 12; qi++) {
+          const a = quantumPairsRef.current[qi];
+          const b = quantumPairsRef.current[a.partnerIdx];
+          if (!a || !b) continue;
+
+          const ax = cx + a.x;
+          const ay = cy + a.y;
+          const bx = cx + b.x;
+          const by = cy + b.y;
+
+          // Only draw if both within canvas bounds
+          if (ax < -20 || ax > w + 20 || ay < -20 || ay > h + 20) continue;
+          if (bx < -20 || bx > w + 20 || by < -20 || by > h + 20) continue;
+
+          const lineHue = (a.hue + b.hue) / 2;
+          const pulseOpacity = (Math.sin(t * 3 + qi * 0.5) * 0.5 + 0.5) * activation * 0.4;
+
+          ctx.save();
+          ctx.globalAlpha = pulseOpacity;
+          ctx.strokeStyle = `hsla(${lineHue}, 70%, 65%, 1)`;
+          ctx.lineWidth = 0.8;
+          ctx.setLineDash([4, 8]);
+          ctx.lineDashOffset = -t * 30;
+          ctx.beginPath();
+          ctx.moveTo(ax, ay);
+          ctx.lineTo(bx, by);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Traveling dot along the line
+          const dotT = (Math.sin(t * 2 + qi) * 0.5 + 0.5); // 0-1 back and forth
+          const dotX = ax + (bx - ax) * dotT;
+          const dotY = ay + (by - ay) * dotT;
+          ctx.globalAlpha = pulseOpacity * 2;
+          ctx.fillStyle = `hsla(${lineHue}, 90%, 80%, 1)`;
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, 2, 0, Math.PI * 2);
+          ctx.fill();
+          // Dot glow
+          ctx.globalAlpha = pulseOpacity * 0.5;
+          ctx.fillStyle = `hsla(${lineHue}, 80%, 70%, 1)`;
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        }
 
         ctx.restore();
       }

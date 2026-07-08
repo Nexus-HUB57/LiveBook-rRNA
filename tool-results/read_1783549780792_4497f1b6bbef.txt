@@ -1,0 +1,1007 @@
+     1→'use client';
+     2→
+     3→import { useEffect, useRef, useCallback } from 'react';
+     4→
+     5→interface Star {
+     6→  x: number;
+     7→  y: number;
+     8→  z: number;
+     9→  baseAngle: number;
+    10→  baseRadius: number;
+    11→  size: number;
+    12→  brightness: number;
+    13→  color: string;
+    14→}
+    15→
+    16→interface AccretionParticle {
+    17→  angle: number;
+    18→  radius: number;
+    19→  speed: number;
+    20→  size: number;
+    21→  opacity: number;
+    22→  color: [number, number, number];
+    23→  spiralRate: number;
+    24→  life: number;
+    25→  temperature: number;
+    26→}
+    27→
+    28→interface AbsorbedParticle {
+    29→  x: number;
+    30→  y: number;
+    31→  vx: number;
+    32→  vy: number;
+    33→  size: number;
+    34→  opacity: number;
+    35→  color: string;
+    36→}
+    37→
+    38→interface HawkingParticle {
+    39→  angle: number;
+    40→  dist: number;
+    41→  speed: number;
+    42→  size: number;
+    43→  opacity: number;
+    44→  color: string;
+    45→  vx: number;
+    46→  vy: number;
+    47→}
+    48→
+    49→interface ISCOOrbiter {
+    50→  angle: number;
+    51→  speed: number;
+    52→  size: number;
+    53→  brightness: number;
+    54→  trail: { x: number; y: number }[];
+    55→}
+    56→
+    57→interface PenroseEvent {
+    58→  phase: 'entering' | 'splitting' | 'escaping';
+    59→  timer: number;
+    60→  enterAngle: number;
+    61→  enterDist: number;
+    62→  escapeAngle: number;
+    63→  escapeSpeed: number;
+    64→  escapeX: number;
+    65→  escapeY: number;
+    66→  escapeVx: number;
+    67→  escapeVy: number;
+    68→  escapeSize: number;
+    69→  escapeOpacity: number;
+    70→  inwardsOpacity: number;
+    71→}
+    72→
+    73→interface SuperradiantFlash {
+    74→  angle: number;
+    75→  dist: number;
+    76→  life: number;
+    77→  maxLife: number;
+    78→  size: number;
+    79→  maxOpacity: number;
+    80→}
+    81→
+    82→function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+    83→  let r: number, g: number, b: number;
+    84→  if (s === 0) {
+    85→    r = g = b = l;
+    86→  } else {
+    87→    const hue2rgb = (p: number, q: number, t: number) => {
+    88→      if (t < 0) t += 1;
+    89→      if (t > 1) t -= 1;
+    90→      if (t < 1 / 6) return p + (q - p) * 6 * t;
+    91→      if (t < 1 / 2) return q;
+    92→      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    93→      return p;
+    94→    };
+    95→    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    96→    const p = 2 * l - q;
+    97→    r = hue2rgb(p, q, h + 1 / 3);
+    98→    g = hue2rgb(p, q, h);
+    99→    b = hue2rgb(p, q, h - 1 / 3);
+   100→  }
+   101→  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+   102→}
+   103→
+   104→function temperatureToColor(temp: number): [number, number, number] {
+   105→  // Dramatic redshift: 0=cool(blue-white) 0.5=hot(orange) 1.0=extreme(deep red)
+   106→  if (temp < 0.25) {
+   107→    // Far: blue-white (blueshifted)
+   108→    return hslToRgb(210 + temp * 80, 0.5 + temp * 0.5, 0.7 + temp * 0.2);
+   109→  }
+   110→  if (temp < 0.5) {
+   111→    // Medium: white to yellow
+   112→    return hslToRgb(50 + (temp - 0.25) * 120, 0.7 + temp * 0.3, 0.75 - temp * 0.3);
+   113→  }
+   114→  if (temp < 0.75) {
+   115→    // Hot: orange
+   116→    return hslToRgb(30 + (temp - 0.5) * 30, 0.95, 0.55 - (temp - 0.5) * 0.3);
+   117→  }
+   118→  // Extreme: deep red (redshifted)
+   119→  return hslToRgb(5 + (1 - temp) * 15, 0.9, 0.35 - (temp - 0.75) * 0.5);
+   120→}
+   121→
+   122→export default function BlackHoleCanvas({
+   123→  onWormholeTrigger,
+   124→  isWormholeActive,
+   125→  syncPhase,
+   126→}: {
+   127→  onWormholeTrigger?: () => void;
+   128→  isWormholeActive?: boolean;
+   129→  syncPhase?: number;
+   130→}) {
+   131→  const canvasRef = useRef<HTMLCanvasElement>(null);
+   132→  const starsRef = useRef<Star[]>([]);
+   133→  const accretionRef = useRef<AccretionParticle[]>([]);
+   134→  const absorbedRef = useRef<AbsorbedParticle[]>([]);
+   135→  const hawkingRef = useRef<HawkingParticle[]>([]);
+   136→  const iscoRef = useRef<ISCOOrbiter[]>([]);
+   137→  const penroseRef = useRef<PenroseEvent[]>([]);
+   138→  const superradiantRef = useRef<SuperradiantFlash[]>([]);
+   139→  const animationRef = useRef<number>(0);
+   140→  const timeRef = useRef(0);
+   141→  const hoverRef = useRef(false);
+   142→  const sizeRef = useRef({ w: 0, h: 0 });
+   143→  const lastPenroseRef = useRef(0);
+   144→  const lastSuperradiantRef = useRef(0);
+   145→
+   146→  const init = useCallback((w: number, h: number) => {
+   147→    sizeRef.current = { w, h };
+   148→    const cx = w / 2;
+   149→    const cy = h / 2;
+   150→    const maxR = Math.min(w, h) * 0.45;
+   151→
+   152→    const starColors = ['#e8e0f0', '#c8d8ff', '#ffe8d0', '#ffd0e8', '#d0ffe8'];
+   153→    const stars: Star[] = [];
+   154→    for (let i = 0; i < 350; i++) {
+   155→      const angle = Math.random() * Math.PI * 2;
+   156→      const radius = Math.random() * maxR * 2;
+   157→      stars.push({
+   158→        x: cx + Math.cos(angle) * radius,
+   159→        y: cy + Math.sin(angle) * radius,
+   160→        z: Math.random() * 2.5 + 0.3,
+   161→        baseAngle: angle,
+   162→        baseRadius: radius,
+   163→        size: Math.random() * 1.8 + 0.2,
+   164→        brightness: Math.random() * 0.8 + 0.2,
+   165→        color: starColors[Math.floor(Math.random() * starColors.length)],
+   166→      });
+   167→    }
+   168→    starsRef.current = stars;
+   169→
+   170→    const accretion: AccretionParticle[] = [];
+   171→    for (let i = 0; i < 500; i++) {
+   172→      const r = 35 + Math.random() * 150;
+   173→      const distFromBH = (r - 35) / 150;
+   174→      const temp = 1 - distFromBH;
+   175→      const color = temperatureToColor(temp);
+   176→      accretion.push({
+   177→        angle: Math.random() * Math.PI * 2,
+   178→        radius: r,
+   179→        speed: (0.3 + Math.random() * 0.8) / (r * 0.018),
+   180→        size: Math.random() * 2.5 + 0.5,
+   181→        opacity: Math.random() * 0.7 + 0.3,
+   182→        color,
+   183→        spiralRate: 0.015 + Math.random() * 0.035,
+   184→        life: 1,
+   185→        temperature: temp,
+   186→      });
+   187→    }
+   188→    accretionRef.current = accretion;
+   189→
+   190→    // ISCO orbiters: 7 bright particles at ~3x Schwarzschild radius
+   191→    const iscoOrbiters: ISCOOrbiter[] = [];
+   192→    for (let i = 0; i < 7; i++) {
+   193→      iscoOrbiters.push({
+   194→        angle: (i / 7) * Math.PI * 2 + Math.random() * 0.3,
+   195→        speed: 1.8 + Math.random() * 0.6,
+   196→        size: 2 + Math.random() * 1.5,
+   197→        brightness: 0.7 + Math.random() * 0.3,
+   198→        trail: [],
+   199→      });
+   200→    }
+   201→    iscoRef.current = iscoOrbiters;
+   202→  }, []);
+   203→
+   204→  useEffect(() => {
+   205→    const canvas = canvasRef.current;
+   206→    if (!canvas) return;
+   207→    const ctx = canvas.getContext('2d');
+   208→    if (!ctx) return;
+   209→
+   210→    const resize = () => {
+   211→      const dpr = window.devicePixelRatio || 1;
+   212→      const rect = canvas.getBoundingClientRect();
+   213→      canvas.width = rect.width * dpr;
+   214→      canvas.height = rect.height * dpr;
+   215→      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+   216→      sizeRef.current = { w: rect.width, h: rect.height };
+   217→      if (starsRef.current.length === 0) {
+   218→        init(rect.width, rect.height);
+   219→      }
+   220→    };
+   221→
+   222→    const handleMouseMove = () => { hoverRef.current = true; };
+   223→    const handleMouseLeave = () => { hoverRef.current = false; };
+   224→    const handleClick = () => { onWormholeTrigger?.(); };
+   225→
+   226→    resize();
+   227→    window.addEventListener('resize', resize);
+   228→    canvas.addEventListener('mousemove', handleMouseMove);
+   229→    canvas.addEventListener('mouseenter', handleMouseMove);
+   230→    canvas.addEventListener('mouseleave', handleMouseLeave);
+   231→    canvas.addEventListener('click', handleClick);
+   232→
+   233→    function drawAccretionHalf(
+   234→      c: CanvasRenderingContext2D,
+   235→      ccx: number, ccy: number, bhR: number,
+   236→      t: number, whIntensity: number, isBack: boolean,
+   237→      ergoRadiusX: number, ergoRadiusY: number
+   238→    ) {
+   239→      const accretion = accretionRef.current;
+   240→      for (const p of accretion) {
+   241→        p.angle += p.speed * 0.016 * (1 + whIntensity * 0.6);
+   242→        p.radius -= p.spiralRate * 0.02 * (1 + whIntensity * 1.2);
+   243→        // Dynamic temperature based on distance (dramatic redshift)
+   244→        p.temperature = Math.max(0, Math.min(1, 1 - (p.radius - bhR) / 150));
+   245→
+   246→        if (p.radius < bhR * 0.8) {
+   247→          p.radius = 130 + Math.random() * 55;
+   248→          p.angle = Math.random() * Math.PI * 2;
+   249→          p.life = 1;
+   250→          p.temperature = 0.2 + Math.random() * 0.3;
+   251→        }
+   252→
+   253→        // Frame-dragging spiral: particles near horizon get extra angular velocity
+   254→        const distFromHorizon = (p.radius - bhR) / bhR;
+   255→        const frameDragBoost = distFromHorizon < 1 ? (1 - distFromHorizon) * 1.5 : 0;
+   256→        p.angle += frameDragBoost * 0.016 * 2;
+   257→
+   258→        const px = ccx + Math.cos(p.angle) * p.radius;
+   259→        const py = ccy + Math.sin(p.angle) * p.radius * 0.3;
+   260→        const isBehind = Math.sin(p.angle) > 0;
+   261→
+   262→        if (isBack !== isBehind) continue;
+   263→
+   264→        const distFromCenter = Math.sqrt((px - ccx) ** 2 + (py - ccy) ** 2);
+   265→        const fadeNear = distFromCenter < bhR * 1.2 ? Math.max(0, (distFromCenter - bhR) / (bhR * 0.2)) : 1;
+   266→
+   267→        // Dramatic thermal color shift (gravitational redshift)
+   268→        const thermalColor = temperatureToColor(p.temperature);
+   269→        const [cr, cg, cb] = thermalColor;
+   270→
+   271→        c.save();
+   272→        // Hotter particles glow more
+   273→        const glowMultiplier = 1 + p.temperature * 3;
+   274→
+   275→        c.globalAlpha = p.opacity * fadeNear * (isBack ? 0.4 : 1);
+   276→        c.fillStyle = `rgba(${cr},${cg},${cb},1)`;
+   277→        c.beginPath();
+   278→        c.arc(px, py, p.size * (isBack ? 0.65 : 1), 0, Math.PI * 2);
+   279→        c.fill();
+   280→
+   281→        // Heat glow for high-temperature particles (more dramatic)
+   282→        if (p.temperature > 0.4 && !isBack) {
+   283→          const heatAlpha = p.temperature * 0.3 * glowMultiplier;
+   284→          c.globalAlpha = p.opacity * fadeNear * Math.min(0.5, heatAlpha);
+   285→          c.beginPath();
+   286→          c.arc(px, py, p.size * 5 * glowMultiplier, 0, Math.PI * 2);
+   287→          c.fill();
+   288→        }
+   289→
+   290→        // Extreme temperature glow (deep red corona)
+   291→        if (p.temperature > 0.8 && !isBack) {
+   292→          c.globalAlpha = p.opacity * fadeNear * 0.15;
+   293→          c.beginPath();
+   294→          c.arc(px, py, p.size * 8, 0, Math.PI * 2);
+   295→          c.fill();
+   296→        }
+   297→
+   298→        c.globalAlpha = p.opacity * fadeNear * 0.12 * (isBack ? 0.3 : 1);
+   299→        c.beginPath();
+   300→        c.arc(px, py, p.size * 2.5, 0, Math.PI * 2);
+   301→        c.fill();
+   302→        c.restore();
+   303→      }
+   304→    }
+   305→
+   306→    function drawJet(
+   307→      c: CanvasRenderingContext2D,
+   308→      jcx: number, jcy: number, bhR: number,
+   309→      t: number, intensity: number, direction: number,
+   310→      precessionAngle: number
+   311→    ) {
+   312→      const jetLength = bhR * 6 * intensity;
+   313→      const segments = 40;
+   314→
+   315→      for (let i = 0; i < segments; i++) {
+   316→        const progress = i / segments;
+   317→        // Jet precession: wobble around vertical axis
+   318→        const precOffsetX = Math.sin(precessionAngle + progress * 0.5) * progress * bhR * 0.8;
+   319→        const precOffsetZ = Math.cos(precessionAngle + progress * 0.5) * progress * bhR * 0.3;
+   320→        const jy = jcy + direction * (bhR * 1.2 + progress * jetLength);
+   321→        const spread = progress * bhR * 0.9 * intensity;
+   322→        const wobble1 = Math.sin(t * 3 + i * 0.4) * spread * 0.25;
+   323→        const wobble2 = Math.cos(t * 2.3 + i * 0.6) * spread * 0.15;
+   324→        const alpha = (1 - progress * 0.8) * intensity * 0.45;
+   325→        const jx = jcx + precOffsetX + wobble1 + wobble2;
+   326→
+   327→        c.save();
+   328→        c.globalAlpha = alpha;
+   329→        const grad = c.createRadialGradient(jx, jy, 0, jx, jy, Math.max(1, spread));
+   330→        grad.addColorStop(0, direction === -1 ? 'rgba(168,85,247,0.9)' : 'rgba(6,214,160,0.9)');
+   331→        grad.addColorStop(0.3, direction === -1 ? 'rgba(224,64,160,0.5)' : 'rgba(168,85,247,0.5)');
+   332→        grad.addColorStop(0.6, direction === -1 ? 'rgba(6,182,212,0.2)' : 'rgba(251,191,36,0.2)');
+   333→        grad.addColorStop(1, 'rgba(0,0,0,0)');
+   334→        c.fillStyle = grad;
+   335→        c.beginPath();
+   336→        c.ellipse(jx, jy, Math.max(1, spread), Math.max(1, spread * 0.35), 0, 0, Math.PI * 2);
+   337→        c.fill();
+   338→        c.restore();
+   339→      }
+   340→
+   341→      // Jet core beam with precession
+   342→      c.save();
+   343→      c.globalAlpha = intensity * 0.15;
+   344→      const precBaseX = Math.sin(precessionAngle) * bhR * 0.15;
+   345→      const precEndX = Math.sin(precessionAngle + 0.5) * bhR * 0.4;
+   346→      const beamGrad = c.createLinearGradient(jcx, jcy, jcx + precEndX, jcy + direction * jetLength);
+   347→      beamGrad.addColorStop(0, direction === -1 ? 'rgba(168,85,247,0.6)' : 'rgba(6,214,160,0.6)');
+   348→      beamGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   349→      c.fillStyle = beamGrad;
+   350→      c.beginPath();
+   351→      c.moveTo(jcx + precBaseX - 2, jcy);
+   352→      c.lineTo(jcx + precBaseX + 2, jcy);
+   353→      c.lineTo(jcx + precEndX + bhR * 0.15, jcy + direction * jetLength);
+   354→      c.lineTo(jcx + precEndX - bhR * 0.15, jcy + direction * jetLength);
+   355→      c.closePath();
+   356→      c.fill();
+   357→      c.restore();
+   358→    }
+   359→
+   360→    const draw = () => {
+   361→      timeRef.current += 0.016;
+   362→      const t = timeRef.current;
+   363→      const { w, h } = sizeRef.current;
+   364→      if (w === 0 || h === 0) { animationRef.current = requestAnimationFrame(draw); return; }
+   365→
+   366→      const cx = w / 2;
+   367→      const cy = h / 2;
+   368→      const bhRadius = Math.min(w, h) * 0.08;
+   369→      const eventHorizon = bhRadius * 1.5;
+   370→      const wormholeIntensity = isWormholeActive ? Math.min(syncPhase ?? 0, 1) : 0;
+   371→
+   372→      // Ergosphere dimensions (Kerr: oblate, outside event horizon)
+   373→      const ergoRadiusX = eventHorizon * 1.45;
+   374→      const ergoRadiusY = eventHorizon * 1.15;
+   375→
+   376→      // Jet precession angle (slow wobble ~20s period)
+   377→      const jetPrecessionAngle = t * 0.314; // ~20 second period
+   378→
+   379→      ctx.clearRect(0, 0, w, h);
+   380→
+   381→      // === ADVANCED GRAVITATIONAL LENSING ===
+   382→      const einsteinRadius = bhRadius * 5;
+   383→      for (const star of starsRef.current) {
+   384→        const dx = star.x - cx;
+   385→        const dy = star.y - cy;
+   386→        const dist = Math.sqrt(dx * dx + dy * dy);
+   387→
+   388→        const normalizedDist = dist / einsteinRadius;
+   389→        let lensStrength = 0;
+   390→        if (normalizedDist < 1) {
+   391→          lensStrength = 1;
+   392→        } else if (normalizedDist < 2.5) {
+   393→          lensStrength = 1 / (normalizedDist * normalizedDist);
+   394→        }
+   395→
+   396→        const lensAngle = Math.atan2(dy, dx) + lensStrength * 0.8;
+   397→        const lensDist = dist + lensStrength * bhRadius * 3;
+   398→
+   399→        const lx = cx + Math.cos(lensAngle) * lensDist;
+   400→        const ly = cy + Math.sin(lensAngle) * lensDist;
+   401→
+   402→        const fadeFactor = dist < eventHorizon ? 0 : dist < eventHorizon * 2 ? (dist - eventHorizon) / eventHorizon : 1;
+   403→        const twinkle = Math.sin(t * star.z * 1.5 + star.baseAngle * 2) * 0.25 + 0.75;
+   404→
+   405→        ctx.save();
+   406→        ctx.globalAlpha = star.brightness * fadeFactor * twinkle * 0.75;
+   407→        ctx.fillStyle = star.color;
+   408→        ctx.beginPath();
+   409→        ctx.arc(lx, ly, star.size * star.z, 0, Math.PI * 2);
+   410→        ctx.fill();
+   411→
+   412→        // Einstein ring arc for strongly lensed stars
+   413→        if (lensStrength > 0.15 && dist > eventHorizon) {
+   414→          ctx.globalAlpha = lensStrength * 0.2 * fadeFactor;
+   415→          ctx.strokeStyle = star.color;
+   416→          ctx.lineWidth = star.size * 0.8;
+   417→          const arcSpan = lensStrength * 1.2;
+   418→          const tangent = Math.atan2(dy, dx);
+   419→          ctx.beginPath();
+   420→          ctx.arc(cx, cy, dist * 0.92, tangent - arcSpan, tangent + arcSpan);
+   421→          ctx.stroke();
+   422→        }
+   423→        ctx.restore();
+   424→      }
+   425→
+   426→      // === FRAME-DRAGGING SPIRAL ARMS in accretion disk ===
+   427→      if (wormholeIntensity > 0.1 || true) {
+   428→        ctx.save();
+   429→        const spiralArmCount = 3;
+   430→        for (let arm = 0; arm < spiralArmCount; arm++) {
+   431→          const armBaseAngle = (arm / spiralArmCount) * Math.PI * 2 + t * 0.15;
+   432→          ctx.beginPath();
+   433→          const armSteps = 120;
+   434→          for (let s = 0; s <= armSteps; s++) {
+   435→            const progress = s / armSteps;
+   436→            const spiralR = eventHorizon * 1.2 + progress * bhRadius * 4;
+   437→            // Frame-dragging: tighter spiral near horizon
+   438→            const dragFactor = 1 + (1 - progress) * 2;
+   439→            const spiralAngle = armBaseAngle + progress * Math.PI * 1.5 * dragFactor;
+   440→            const sx = cx + Math.cos(spiralAngle) * spiralR;
+   441→            const sy = cy + Math.sin(spiralAngle) * spiralR * 0.3;
+   442→            if (s === 0) ctx.moveTo(sx, sy);
+   443→            else ctx.lineTo(sx, sy);
+   444→          }
+   445→          ctx.globalAlpha = 0.04 + wormholeIntensity * 0.06;
+   446→          ctx.strokeStyle = `rgba(168,85,247,1)`;
+   447→          ctx.lineWidth = 2.5;
+   448→          ctx.stroke();
+   449→
+   450→          // Glow pass
+   451→          ctx.globalAlpha = 0.02 + wormholeIntensity * 0.03;
+   452→          ctx.lineWidth = 8;
+   453→          ctx.stroke();
+   454→        }
+   455→        ctx.restore();
+   456→      }
+   457→
+   458→      // === ACCRETION DISK (back half) ===
+   459→      drawAccretionHalf(ctx, cx, cy, bhRadius, t, wormholeIntensity, true, ergoRadiusX, ergoRadiusY);
+   460→
+   461→      // === BLACK HOLE CENTER with photon sphere ===
+   462→      const pulseIntensity = 1 + Math.sin(t * 0.5) * 0.15 + wormholeIntensity * 0.6;
+   463→      const glowR = Math.max(1, eventHorizon * 2.2 * pulseIntensity);
+   464→
+   465→      // Outer atmospheric glow
+   466→      const outerGlow = ctx.createRadialGradient(cx, cy, Math.max(1, glowR * 0.7), cx, cy, Math.max(2, glowR * 1.5));
+   467→      outerGlow.addColorStop(0, `rgba(80,20,120,${0.08 + wormholeIntensity * 0.1})`);
+   468→      outerGlow.addColorStop(1, 'rgba(0,0,0,0)');
+   469→      ctx.fillStyle = outerGlow;
+   470→      ctx.beginPath();
+   471→      ctx.arc(cx, cy, glowR * 1.5, 0, Math.PI * 2);
+   472→      ctx.fill();
+   473→
+   474→      // Main glow
+   475→      const glowGrad = ctx.createRadialGradient(cx, cy, Math.max(1, bhRadius * 0.5), cx, cy, glowR);
+   476→      glowGrad.addColorStop(0, 'rgba(0,0,0,1)');
+   477→      glowGrad.addColorStop(0.25, `rgba(15,0,30,${0.97 + wormholeIntensity * 0.03})`);
+   478→      glowGrad.addColorStop(0.45, `rgba(60,10,90,${0.3 + wormholeIntensity * 0.4})`);
+   479→      glowGrad.addColorStop(0.65, `rgba(168,85,247,${0.12 + wormholeIntensity * 0.3})`);
+   480→      glowGrad.addColorStop(0.85, `rgba(6,182,212,${0.04 + wormholeIntensity * 0.1})`);
+   481→      glowGrad.addColorStop(1, 'rgba(168,85,247,0)');
+   482→      ctx.fillStyle = glowGrad;
+   483→      ctx.beginPath();
+   484→      ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+   485→      ctx.fill();
+   486→
+   487→      // Event horizon (pure black)
+   488→      ctx.fillStyle = '#000000';
+   489→      ctx.beginPath();
+   490→      ctx.arc(cx, cy, bhRadius, 0, Math.PI * 2);
+   491→      ctx.fill();
+   492→
+   493→      // Wormhole interior glow
+   494→      if (wormholeIntensity > 0.1) {
+   495→        const wormGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(1, bhRadius));
+   496→        wormGrad.addColorStop(0, `rgba(6,214,160,${wormholeIntensity * 0.6})`);
+   497→        wormGrad.addColorStop(0.4, `rgba(168,85,247,${wormholeIntensity * 0.4})`);
+   498→        wormGrad.addColorStop(0.8, `rgba(224,64,160,${wormholeIntensity * 0.2})`);
+   499→        wormGrad.addColorStop(1, `rgba(0,0,0,0.5)`);
+   500→        ctx.fillStyle = wormGrad;
+   501→        ctx.beginPath();
+   502→        ctx.arc(cx, cy, bhRadius, 0, Math.PI * 2);
+   503→        ctx.fill();
+   504→      }
+   505→
+   506→      // === ACCRETION DISK (front half) ===
+   507→      drawAccretionHalf(ctx, cx, cy, bhRadius, t, wormholeIntensity, false, ergoRadiusX, ergoRadiusY);
+   508→
+   509→      // === ERGOSPHERE BOUNDARY (Kerr black hole) ===
+   510→      ctx.save();
+   511→      ctx.translate(cx, cy);
+   512→      const ergoPulse = 1 + Math.sin(t * 0.8) * 0.04;
+   513→      const ergoRotation = t * 0.2;
+   514→
+   515→      // Ergosphere fill (very subtle)
+   516→      ctx.save();
+   517→      ctx.rotate(ergoRotation);
+   518→      ctx.globalAlpha = 0.06 + wormholeIntensity * 0.04;
+   519→      const ergoGrad = ctx.createRadialGradient(0, 0, bhRadius, 0, 0, Math.max(2, ergoRadiusX * ergoPulse));
+   520→      ergoGrad.addColorStop(0, 'rgba(168,85,247,0.2)');
+   521→      ergoGrad.addColorStop(0.5, 'rgba(100,50,180,0.1)');
+   522→      ergoGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   523→      ctx.fillStyle = ergoGrad;
+   524→      ctx.beginPath();
+   525→      ctx.ellipse(0, 0, ergoRadiusX * ergoPulse, ergoRadiusY * ergoPulse, 0, 0, Math.PI * 2);
+   526→      ctx.fill();
+   527→
+   528→      // Ergosphere boundary stroke
+   529→      ctx.globalAlpha = 0.2 + wormholeIntensity * 0.15;
+   530→      ctx.strokeStyle = 'rgba(168,85,247,0.6)';
+   531→      ctx.lineWidth = 1.2;
+   532→      ctx.setLineDash([6, 4]);
+   533→      ctx.lineDashOffset = -t * 12;
+   534→      ctx.beginPath();
+   535→      ctx.ellipse(0, 0, ergoRadiusX * ergoPulse, ergoRadiusY * ergoPulse, 0, 0, Math.PI * 2);
+   536→      ctx.stroke();
+   537→      ctx.setLineDash([]);
+   538→      ctx.restore();
+   539→
+   540→      // Forced co-rotation visual: small arrows/dots inside ergosphere
+   541→      if (wormholeIntensity > 0.1) {
+   542→        const coRotCount = 8;
+   543→        ctx.globalAlpha = wormholeIntensity * 0.3;
+   544→        for (let cri = 0; cri < coRotCount; cri++) {
+   545→          const coAngle = (cri / coRotCount) * Math.PI * 2 + t * 1.5;
+   546→          const coR = eventHorizon * (0.85 + Math.sin(t + cri) * 0.15);
+   547→          const coX = Math.cos(coAngle) * coR;
+   548→          const coY = Math.sin(coAngle) * coR * 0.5;
+   549→          // Small trailing arc to show co-rotation direction
+   550→          ctx.strokeStyle = 'rgba(224,64,160,0.7)';
+   551→          ctx.lineWidth = 1;
+   552→          ctx.beginPath();
+   553→          ctx.arc(0, 0, coR, coAngle - 0.3, coAngle, false);
+   554→          ctx.stroke();
+   555→          // Dot at end
+   556→          ctx.fillStyle = 'rgba(224,64,160,0.8)';
+   557→          ctx.beginPath();
+   558→          ctx.arc(coX, coY, 1.5, 0, Math.PI * 2);
+   559→          ctx.fill();
+   560→        }
+   561→      }
+   562→
+   563→      ctx.restore();
+   564→
+   565→      // === MULTIPLE PHOTON SPHERES (3 layers) ===
+   566→      // Inner: thin, bright, fast pulse
+   567→      const innerPulse = 0.4 + wormholeIntensity * 0.4 + Math.sin(t * 4) * 0.15;
+   568→      ctx.save();
+   569→      ctx.globalAlpha = innerPulse;
+   570→      ctx.strokeStyle = `rgba(168,85,247,${0.8 + wormholeIntensity * 0.2})`;
+   571→      ctx.lineWidth = 1.5;
+   572→      ctx.beginPath();
+   573→      ctx.arc(cx, cy, eventHorizon * 0.88, 0, Math.PI * 2);
+   574→  ctx.stroke();
+   575→  // Fast pulse glow
+   576→  ctx.globalAlpha = innerPulse * 0.3;
+   577→  ctx.lineWidth = 4;
+   578→  ctx.stroke();
+   579→  ctx.restore();
+   580→
+   581→  // Middle: medium, with orbiting light points
+   582→  const middlePulse = 0.3 + wormholeIntensity * 0.35 + Math.sin(t * 2) * 0.1;
+   583→  ctx.save();
+   584→  ctx.globalAlpha = middlePulse;
+   585→  ctx.strokeStyle = `rgba(200,140,255,${0.5 + wormholeIntensity * 0.3})`;
+   586→  ctx.lineWidth = 2;
+   587→  ctx.beginPath();
+   588→  ctx.arc(cx, cy, eventHorizon * 1.0, 0, Math.PI * 2);
+   589→  ctx.stroke();
+   590→  // Glow
+   591→  ctx.globalAlpha = middlePulse * 0.2;
+   592→  ctx.lineWidth = 6;
+   593→  ctx.stroke();
+   594→
+   595→  // Orbiting light points on middle ring
+   596→  const orbitLightCount = 5;
+   597→  for (let oli = 0; oli < orbitLightCount; oli++) {
+   598→    const olAngle = (oli / orbitLightCount) * Math.PI * 2 + t * 3;
+   599→    const olR = eventHorizon * 1.0;
+   600→    const olx = cx + Math.cos(olAngle) * olR;
+   601→    const oly = cy + Math.sin(olAngle) * olR;
+   602→    ctx.globalAlpha = middlePulse * 0.8;
+   603→    ctx.fillStyle = 'rgba(255,255,255,1)';
+   604→    ctx.beginPath();
+   605→    ctx.arc(olx, oly, 2, 0, Math.PI * 2);
+   606→    ctx.fill();
+   607→    // Light point glow
+   608→    ctx.globalAlpha = middlePulse * 0.3;
+   609→    ctx.fillStyle = 'rgba(200,140,255,1)';
+   610→    ctx.beginPath();
+   611→    ctx.arc(olx, oly, 6, 0, Math.PI * 2);
+   612→    ctx.fill();
+   613→  }
+   614→  ctx.restore();
+   615→
+   616→  // Outer: wider, diffuse, slower
+   617→  const outerPulse = 0.2 + wormholeIntensity * 0.25 + Math.sin(t * 1.2) * 0.08;
+   618→  ctx.save();
+   619→  ctx.globalAlpha = outerPulse;
+   620→  ctx.strokeStyle = `rgba(251,191,36,${0.3 + wormholeIntensity * 0.2})`;
+   621→  ctx.lineWidth = 3;
+   622→  ctx.setLineDash([8, 6]);
+   623→  ctx.lineDashOffset = t * 8;
+   624→  ctx.beginPath();
+   625→  ctx.arc(cx, cy, eventHorizon * 1.15, 0, Math.PI * 2);
+   626→  ctx.stroke();
+   627→  ctx.setLineDash([]);
+   628→  // Diffuse glow
+   629→  ctx.globalAlpha = outerPulse * 0.15;
+   630→  ctx.lineWidth = 12;
+   631→  ctx.setLineDash([]);
+   632→  ctx.beginPath();
+   633→  ctx.arc(cx, cy, eventHorizon * 1.15, 0, Math.PI * 2);
+   634→  ctx.stroke();
+   635→  ctx.restore();
+   636→
+   637→      // === ISCO RING with orbiting particles ===
+   638→      const iscoRadius = bhRadius * 3;
+   639→      const iscoPulse = 0.25 + wormholeIntensity * 0.3;
+   640→
+   641→      // ISCO ring
+   642→      ctx.save();
+   643→      ctx.globalAlpha = iscoPulse * 0.4;
+   644→      ctx.strokeStyle = 'rgba(6,214,160,0.5)';
+   645→      ctx.lineWidth = 1;
+   646→      ctx.setLineDash([3, 5]);
+   647→      ctx.lineDashOffset = -t * 40;
+   648→      ctx.beginPath();
+   649→      ctx.ellipse(cx, cy, iscoRadius, iscoRadius * 0.3, 0, 0, Math.PI * 2);
+   650→      ctx.stroke();
+   651→  ctx.setLineDash([]);
+   652→  ctx.restore();
+   653→
+   654→  // ISCO orbiting particles
+   655→  for (const orb of iscoRef.current) {
+   656→    orb.angle += orb.speed * 0.016;
+   657→    const orbX = cx + Math.cos(orb.angle) * iscoRadius;
+   658→    const orbY = cy + Math.sin(orb.angle) * iscoRadius * 0.3;
+   659→
+   660→    // Trail
+   661→    orb.trail.push({ x: orbX, y: orbY });
+   662→    if (orb.trail.length > 10) orb.trail.shift();
+   663→
+   664→    const orbAlpha = iscoPulse * orb.brightness;
+   665→
+   666→    // Draw trail
+   667→    if (orb.trail.length > 1) {
+   668→      for (let ti = 1; ti < orb.trail.length; ti++) {
+   669→        const trailAlpha = (ti / orb.trail.length) * orbAlpha * 0.4;
+   670→        ctx.save();
+   671→        ctx.globalAlpha = trailAlpha;
+   672→        ctx.strokeStyle = 'rgba(6,214,160,1)';
+   673→        ctx.lineWidth = orb.size * 0.5 * (ti / orb.trail.length);
+   674→        ctx.beginPath();
+   675→        ctx.moveTo(orb.trail[ti - 1].x, orb.trail[ti - 1].y);
+   676→        ctx.lineTo(orb.trail[ti].x, orb.trail[ti].y);
+   677→        ctx.stroke();
+   678→        ctx.restore();
+   679→      }
+   680→    }
+   681→
+   682→    // Particle glow
+   683→    ctx.save();
+   684→    ctx.globalAlpha = orbAlpha * 0.3;
+   685→    ctx.fillStyle = 'rgba(6,214,160,1)';
+   686→    ctx.beginPath();
+   687→    ctx.arc(orbX, orbY, orb.size * 4, 0, Math.PI * 2);
+   688→    ctx.fill();
+   689→
+   690→    // Particle core
+   691→    ctx.globalAlpha = orbAlpha;
+   692→    ctx.fillStyle = '#ffffff';
+   693→    ctx.beginPath();
+   694→    ctx.arc(orbX, orbY, orb.size, 0, Math.PI * 2);
+   695→    ctx.fill();
+   696→    ctx.restore();
+   697→  }
+   698→
+   699→      // === SUPERRADIANT SCATTERING (bright flashes near ergosphere) ===
+   700→      if (t - lastSuperradiantRef.current > 2 + Math.random() * 4) {
+   701→        lastSuperradiantRef.current = t;
+   702→        superradiantRef.current.push({
+   703→          angle: Math.random() * Math.PI * 2,
+   704→          dist: eventHorizon * (1.1 + Math.random() * 0.3),
+   705→          life: 0,
+   706→          maxLife: 0.4 + Math.random() * 0.4,
+   707→          size: 15 + Math.random() * 25,
+   708→          maxOpacity: 0.5 + Math.random() * 0.5,
+   709→        });
+   710→      }
+   711→
+   712→      for (let si = superradiantRef.current.length - 1; si >= 0; si--) {
+   713→        const sf = superradiantRef.current[si];
+   714→        sf.life += 0.016;
+   715→        if (sf.life >= sf.maxLife) {
+   716→          superradiantRef.current.splice(si, 1);
+   717→          continue;
+   718→        }
+   719→        const sProgress = sf.life / sf.maxLife;
+   720→        const sFade = sProgress < 0.3 ? sProgress / 0.3 : 1 - (sProgress - 0.3) / 0.7;
+   721→        const sAlpha = sFade * sf.maxOpacity;
+   722→        const sfX = cx + Math.cos(sf.angle) * sf.dist;
+   723→        const sfY = cy + Math.sin(sf.angle) * sf.dist * 0.3;
+   724→
+   725→        ctx.save();
+   726→        const sfGrad = ctx.createRadialGradient(sfX, sfY, 0, sfX, sfY, Math.max(1, sf.size * sFade));
+   727→        sfGrad.addColorStop(0, `rgba(255,255,255,${sAlpha * 0.9})`);
+   728→        sfGrad.addColorStop(0.2, `rgba(168,85,247,${sAlpha * 0.6})`);
+   729→        sfGrad.addColorStop(0.5, `rgba(224,64,160,${sAlpha * 0.3})`);
+   730→        sfGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   731→        ctx.fillStyle = sfGrad;
+   732→        ctx.beginPath();
+   733→        ctx.arc(sfX, sfY, Math.max(1, sf.size * sFade * 1.5), 0, Math.PI * 2);
+   734→        ctx.fill();
+   735→        ctx.restore();
+   736→      }
+   737→
+   738→      if (superradiantRef.current.length > 8) {
+   739→        superradiantRef.current.splice(0, 2);
+   740→      }
+   741→
+   742→      // === PENROSE PROCESS VISUALIZATION ===
+   743→      if (t - lastPenroseRef.current > 5 + Math.random() * 8) {
+   744→        lastPenroseRef.current = t;
+   745→        const enterAngle = Math.random() * Math.PI * 2;
+   746→        penroseRef.current.push({
+   747→          phase: 'entering',
+   748→          timer: 0,
+   749→          enterAngle,
+   750→          enterDist: eventHorizon * 2.5,
+   751→          escapeAngle: 0,
+   752→          escapeSpeed: 0,
+   753→          escapeX: 0,
+   754→          escapeY: 0,
+   755→          escapeVx: 0,
+   756→          escapeVy: 0,
+   757→          escapeSize: 0,
+   758→          escapeOpacity: 1,
+   759→          inwardsOpacity: 1,
+   760→        });
+   761→      }
+   762→
+   763→      for (let pi = penroseRef.current.length - 1; pi >= 0; pi--) {
+   764→        const pe = penroseRef.current[pi];
+   765→        pe.timer += 0.016;
+   766→
+   767→        if (pe.phase === 'entering') {
+   768→          // Particle spirals toward ergosphere
+   769→          pe.enterDist -= 1.5;
+   770→          pe.enterAngle += 0.04;
+   771→
+   772→          const peX = cx + Math.cos(pe.enterAngle) * pe.enterDist;
+   773→          const peY = cy + Math.sin(pe.enterAngle) * pe.enterDist * 0.3;
+   774→
+   775→          ctx.save();
+   776→          ctx.globalAlpha = 0.8;
+   777→          ctx.fillStyle = 'rgba(6,182,212,1)';
+   778→          ctx.beginPath();
+   779→          ctx.arc(peX, peY, 3, 0, Math.PI * 2);
+   780→          ctx.fill();
+   781→          // Glow
+   782→          ctx.globalAlpha = 0.2;
+   783→          ctx.beginPath();
+   784→          ctx.arc(peX, peY, 9, 0, Math.PI * 2);
+   785→          ctx.fill();
+   786→          ctx.restore();
+   787→
+   788→          if (pe.enterDist <= eventHorizon * 1.2) {
+   789→            pe.phase = 'splitting';
+   790→            pe.timer = 0;
+   791→            pe.escapeAngle = pe.enterAngle;
+   792→            pe.escapeX = peX;
+   793→            pe.escapeY = peY;
+   794→            pe.escapeSpeed = 4 + Math.random() * 3;
+   795→            pe.escapeSize = 4;
+   796→            pe.escapeOpacity = 1;
+   797→            pe.inwardsOpacity = 1;
+   798→          }
+   799→        } else if (pe.phase === 'splitting') {
+   800→          // Split animation: bright flash
+   801→          if (pe.timer < 0.3) {
+   802→            const splitFlash = 1 - pe.timer / 0.3;
+   803→            ctx.save();
+   804→            ctx.globalAlpha = splitFlash * 0.7;
+   805→            const splitGrad = ctx.createRadialGradient(pe.escapeX, pe.escapeY, 0, pe.escapeX, pe.escapeY, Math.max(1, 20 * splitFlash));
+   806→            splitGrad.addColorStop(0, 'rgba(255,255,255,1)');
+   807→            splitGrad.addColorStop(0.3, 'rgba(168,85,247,0.6)');
+   808→            splitGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   809→            ctx.fillStyle = splitGrad;
+   810→            ctx.beginPath();
+   811→            ctx.arc(pe.escapeX, pe.escapeY, Math.max(1, 20 * splitFlash), 0, Math.PI * 2);
+   812→            ctx.fill();
+   813→            ctx.restore();
+   814→          }
+   815→
+   816→          // Inward-falling particle (red, fading)
+   817→          const inwardDist = eventHorizon * 1.2 - pe.timer * 30;
+   818→          if (inwardDist > bhRadius * 0.5) {
+   819→            pe.inwardsOpacity -= 0.015;
+   820→            const inX = cx + Math.cos(pe.escapeAngle + 0.05) * inwardDist;
+   821→            const inY = cy + Math.sin(pe.escapeAngle + 0.05) * inwardDist * 0.3;
+   822→            ctx.save();
+   823→            ctx.globalAlpha = Math.max(0, pe.inwardsOpacity) * 0.6;
+   824→            ctx.fillStyle = 'rgba(255,60,60,1)';
+   825→            ctx.beginPath();
+   826→            ctx.arc(inX, inY, 2.5, 0, Math.PI * 2);
+   827→            ctx.fill();
+   828→            ctx.globalAlpha = Math.max(0, pe.inwardsOpacity) * 0.15;
+   829→            ctx.beginPath();
+   830→            ctx.arc(inX, inY, 7, 0, Math.PI * 2);
+   831→            ctx.fill();
+   832→            ctx.restore();
+   833→          }
+   834→
+   835→          // Escaping particle (bright, high speed)
+   836→          pe.escapeVx = Math.cos(pe.escapeAngle) * pe.escapeSpeed * 3;
+   837→          pe.escapeVy = Math.sin(pe.escapeAngle) * pe.escapeSpeed * 3 * 0.3;
+   838→          pe.escapeX += pe.escapeVx;
+   839→          pe.escapeY += pe.escapeVy;
+   840→          pe.escapeOpacity -= 0.008;
+   841→
+   842→          if (pe.escapeOpacity > 0) {
+   843→            ctx.save();
+   844→            // Bright escape particle
+   845→            ctx.globalAlpha = pe.escapeOpacity;
+   846→            ctx.fillStyle = '#ffffff';
+   847→            ctx.beginPath();
+   848→            ctx.arc(pe.escapeX, pe.escapeY, pe.escapeSize, 0, Math.PI * 2);
+   849→            ctx.fill();
+   850→            // Energy gain glow (bright blue-white)
+   851→            ctx.globalAlpha = pe.escapeOpacity * 0.4;
+   852→            const escGrad = ctx.createRadialGradient(pe.escapeX, pe.escapeY, 0, pe.escapeX, pe.escapeY, Math.max(1, pe.escapeSize * 5));
+   853→            escGrad.addColorStop(0, 'rgba(200,220,255,1)');
+   854→            escGrad.addColorStop(0.3, 'rgba(6,214,160,0.5)');
+   855→            escGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   856→            ctx.fillStyle = escGrad;
+   857→            ctx.beginPath();
+   858→            ctx.arc(pe.escapeX, pe.escapeY, Math.max(1, pe.escapeSize * 5), 0, Math.PI * 2);
+   859→            ctx.fill();
+   860→            ctx.restore();
+   861→          }
+   862→
+   863→          if (pe.inwardsOpacity <= 0 && pe.escapeOpacity <= 0) {
+   864→            penroseRef.current.splice(pi, 1);
+   865→          }
+   866→        }
+   867→      }
+   868→
+   869→      if (penroseRef.current.length > 5) {
+   870→        penroseRef.current.splice(0, 2);
+   871→      }
+   872→
+   873→      // === HAWKING RADIATION (evolved: pairs emitted from horizon) ===
+   874→      if (Math.random() < 0.04 + wormholeIntensity * 0.08) {
+   875→        const emitAngle = Math.random() * Math.PI * 2;
+   876→        hawkingRef.current.push({
+   877→          angle: emitAngle,
+   878→          dist: bhRadius * 1.1,
+   879→          speed: 30 + Math.random() * 50,
+   880→          size: 1 + Math.random() * 1.5,
+   881→          opacity: 0.6 + Math.random() * 0.4,
+   882→          color: ['#a855f7', '#06d6a0', '#fbbf24', '#06b6d4'][Math.floor(Math.random() * 4)],
+   883→          vx: Math.cos(emitAngle) * 0.8,
+   884→          vy: Math.sin(emitAngle) * 0.8,
+   885→        });
+   886→        // Anti-particle (inward, absorbed)
+   887→        hawkingRef.current.push({
+   888→          angle: emitAngle + Math.PI,
+   889→          dist: bhRadius * 1.1,
+   890→          speed: 20,
+   891→          size: 0.8 + Math.random(),
+   892→          opacity: 0.3 + Math.random() * 0.2,
+   893→          color: '#e040a0',
+   894→          vx: Math.cos(emitAngle + Math.PI) * 0.3,
+   895→          vy: Math.sin(emitAngle + Math.PI) * 0.3,
+   896→        });
+   897→      }
+   898→
+   899→      for (let i = hawkingRef.current.length - 1; i >= 0; i--) {
+   900→        const hp = hawkingRef.current[i];
+   901→        hp.dist += hp.speed * 0.016;
+   902→        hp.opacity -= 0.008;
+   903→        const hpx = cx + Math.cos(hp.angle) * hp.dist;
+   904→        const hpy = cy + Math.sin(hp.angle) * hp.dist;
+   905→
+   906→        if (hp.opacity <= 0 || hp.dist > Math.min(w, h) * 0.5) {
+   907→          hawkingRef.current.splice(i, 1);
+   908→          continue;
+   909→        }
+   910→
+   911→        ctx.save();
+   912→        ctx.globalAlpha = hp.opacity;
+   913→        ctx.fillStyle = hp.color;
+   914→        ctx.beginPath();
+   915→        ctx.arc(hpx, hpy, hp.size, 0, Math.PI * 2);
+   916→        ctx.fill();
+   917→        ctx.globalAlpha = hp.opacity * 0.2;
+   918→        ctx.beginPath();
+   919→        ctx.arc(hpx, hpy, hp.size * 3, 0, Math.PI * 2);
+   920→        ctx.fill();
+   921→        ctx.restore();
+   922→      }
+   923→
+   924→      if (hawkingRef.current.length > 60) {
+   925→        hawkingRef.current.splice(0, 10);
+   926→      }
+   927→
+   928→      // === JETS (evolved: with precession) ===
+   929→      if (wormholeIntensity > 0.05) {
+   930→        drawJet(ctx, cx, cy, bhRadius, t, wormholeIntensity, -1, jetPrecessionAngle);
+   931→        drawJet(ctx, cx, cy, bhRadius, t, wormholeIntensity, 1, jetPrecessionAngle);
+   932→      }
+   933→
+   934→      // === ABSORBED PARTICLES ===
+   935→      if (hoverRef.current && Math.random() < 0.35) {
+   936→        const angle = Math.random() * Math.PI * 2;
+   937→        const r = Math.min(w, h) * 0.4;
+   938→        absorbedRef.current.push({
+   939→          x: cx + Math.cos(angle) * r,
+   940→          y: cy + Math.sin(angle) * r,
+   941→          vx: (Math.random() - 0.5) * 0.5,
+   942→          vy: (Math.random() - 0.5) * 0.5,
+   943→          size: Math.random() * 2 + 0.5,
+   944→          opacity: 0.8 + Math.random() * 0.2,
+   945→          color: ['#a855f7', '#06d6a0', '#e040a0', '#fbbf24'][Math.floor(Math.random() * 4)],
+   946→        });
+   947→      }
+   948→
+   949→      for (let i = absorbedRef.current.length - 1; i >= 0; i--) {
+   950→        const p = absorbedRef.current[i];
+   951→        const pdx = cx - p.x;
+   952→        const pdy = cy - p.y;
+   953→        const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
+   954→        const force = 600 / (pdist * pdist + 80);
+   955→        p.vx += (pdx / pdist) * force;
+   956→        p.vy += (pdy / pdist) * force;
+   957→        p.vx *= 0.99;
+   958→        p.vy *= 0.99;
+   959→        p.x += p.vx;
+   960→        p.y += p.vy;
+   961→        p.opacity -= 0.004;
+   962→
+   963→        if (p.opacity <= 0 || pdist < bhRadius) {
+   964→          absorbedRef.current.splice(i, 1);
+   965→          continue;
+   966→        }
+   967→
+   968→        ctx.save();
+   969→        ctx.globalAlpha = p.opacity * 0.5;
+   970→        ctx.fillStyle = p.color;
+   971→        ctx.beginPath();
+   972→        ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
+   973→        ctx.fill();
+   974→        ctx.globalAlpha = p.opacity * 0.8;
+   975→        ctx.beginPath();
+   976→        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+   977→        ctx.fill();
+   978→        ctx.restore();
+   979→      }
+   980→
+   981→      if (absorbedRef.current.length > 100) {
+   982→        absorbedRef.current.splice(0, 15);
+   983→      }
+   984→
+   985→      animationRef.current = requestAnimationFrame(draw);
+   986→    };
+   987→
+   988→    draw();
+   989→
+   990→    return () => {
+   991→      window.removeEventListener('resize', resize);
+   992→      canvas.removeEventListener('mousemove', handleMouseMove);
+   993→      canvas.removeEventListener('mouseenter', handleMouseMove);
+   994→      canvas.removeEventListener('mouseleave', handleMouseLeave);
+   995→      canvas.removeEventListener('click', handleClick);
+   996→      cancelAnimationFrame(animationRef.current);
+   997→    };
+   998→  }, [init, isWormholeActive, syncPhase, onWormholeTrigger]);
+   999→
+  1000→  return (
+  1001→    <canvas
+  1002→      ref={canvasRef}
+  1003→      className="w-full h-full cursor-pointer"
+  1004→      aria-label="Buraco negro evoluido com ergosfera, aneis de fotons multiples, ISCO, processo de Penrose, precessao de jatos e espalhamento superradiante"
+  1005→    />
+  1006→  );
+  1007→}

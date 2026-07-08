@@ -1,0 +1,948 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useEffect, useRef } from 'react';
+     4→     4→
+     5→     5→interface TunnelRing {
+     6→     6→  z: number;
+     7→     7→  radius: number;
+     8→     8→  speed: number;
+     9→     9→  rotation: number;
+    10→    10→  rotSpeed: number;
+    11→    11→  segments: number;
+    12→    12→  color: string;
+    13→    13→  glowColor: string;
+    14→    14→  opacity: number;
+    15→    15→  wobbleAmp: number;
+    16→    16→  wobbleFreq: number;
+    17→    17→  hueShift: number;
+    18→    18→}
+    19→    19→
+    20→    20→interface EnergyParticle {
+    21→    21→  angle: number;
+    22→    22→  z: number;
+    23→    23→  speed: number;
+    24→    24→  radius: number;
+    25→    25→  size: number;
+    26→    26→  opacity: number;
+    27→    27→  color: string;
+    28→    28→  trail: { x: number; y: number }[];
+    29→    29→  helixPhase: number;
+    30→    30→  helixAmp: number;
+    31→    31→}
+    32→    32→
+    33→    33→interface Filament {
+    34→    34→  angleOffset: number;
+    35→    35→  z: number;
+    36→    36→  speed: number;
+    37→    37→  amplitude: number;
+    38→    38→  frequency: number;
+    39→    39→  color: string;
+    40→    40→  opacity: number;
+    41→    41→  thickness: number;
+    42→    42→  branches: { spawnProgress: number; angle: number; length: number; amplitude: number }[];
+    43→    43→}
+    44→    44→
+    45→    45→interface TimeRipple {
+    46→    46→  x: number;
+    47→    47→  y: number;
+    48→    48→  radius: number;
+    49→    49→  maxRadius: number;
+    50→    50→  opacity: number;
+    51→    51→  speed: number;
+    52→    52→  color: string;
+    53→    53→}
+    54→    54→
+    55→    55→interface CausticSpot {
+    56→    56→  angle: number;
+    57→    57→  dist: number;
+    58→    58→  life: number;
+    59→    59→  maxLife: number;
+    60→    60→  size: number;
+    61→    61→  brightness: number;
+    62→    62→}
+    63→    63→
+    64→    64→interface PhotonRingConfig {
+    65→    65→  radiusFactor: number;
+    66→    66→  speed: number;
+    67→    67→  direction: number;
+    68→    68→  color: string;
+    69→    69→  dashPattern: number[];
+    70→    70→  width: number;
+    71→    71→  wobbleAmp: number;
+    72→    72→  wobbleFreq: number;
+    73→    73→}
+    74→    74→
+    75→    75→// Gravitational redshift: closer to center = red, farther = blue/purple
+    76→    76→function redshiftColor(normalizedDist: number): string {
+    77→    77→  // normalizedDist: 0 = center (red), 1 = edge (blue/purple)
+    78→    78→  const t = Math.max(0, Math.min(1, normalizedDist));
+    79→    79→  const r = Math.round(255 - t * 80);
+    80→    80→  const g = Math.round(60 + t * 40);
+    81→    81→  const b = Math.round(40 + t * 200);
+    82→    82→  return `rgba(${r},${g},${b},1)`;
+    83→    83→}
+    84→    84→
+    85→    85→export default function WormholeCanvas({
+    86→    86→  isActive,
+    87→    87→  onSyncPulse,
+    88→    88→  syncPhase,
+    89→    89→}: {
+    90→    90→  isActive: boolean;
+    91→    91→  onSyncPulse?: (phase: number) => void;
+    92→    92→  syncPhase?: number;
+    93→    93→}) {
+    94→    94→  const canvasRef = useRef<HTMLCanvasElement>(null);
+    95→    95→  const ringsRef = useRef<TunnelRing[]>([]);
+    96→    96→  const particlesRef = useRef<EnergyParticle[]>([]);
+    97→    97→  const filamentsRef = useRef<Filament[]>([]);
+    98→    98→  const ripplesRef = useRef<TimeRipple[]>([]);
+    99→    99→  const causticsRef = useRef<CausticSpot[]>([]);
+   100→   100→  const animationRef = useRef<number>(0);
+   101→   101→  const timeRef = useRef(0);
+   102→   102→  const activationRef = useRef(0);
+   103→   103→  const lastRippleRef = useRef(0);
+   104→   104→  const lastCausticRef = useRef(0);
+   105→   105→
+   106→   106→  useEffect(() => {
+   107→   107→    const canvas = canvasRef.current;
+   108→   108→    if (!canvas) return;
+   109→   109→    const ctx = canvas.getContext('2d');
+   110→   110→    if (!ctx) return;
+   111→   111→
+   112→   112→    let w = 0, h = 0;
+   113→   113→
+   114→   114→    const resize = () => {
+   115→   115→      const dpr = window.devicePixelRatio || 1;
+   116→   116→      const rect = canvas.getBoundingClientRect();
+   117→   117→      w = rect.width;
+   118→   118→      h = rect.height;
+   119→   119→      canvas.width = w * dpr;
+   120→   120→      canvas.height = h * dpr;
+   121→   121→      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+   122→   122→    };
+   123→   123→
+   124→   124→    const ringCount = 50;
+   125→   125→    const colors = ['#a855f7', '#e040a0', '#06d6a0', '#fbbf24', '#8b5cf6', '#06b6d4'];
+   126→   126→    const glowColors = ['rgba(168,85,247,0.5)', 'rgba(224,64,160,0.5)', 'rgba(6,214,160,0.5)', 'rgba(251,191,36,0.5)', 'rgba(139,92,246,0.5)', 'rgba(6,182,212,0.5)'];
+   127→   127→    const rings: TunnelRing[] = [];
+   128→   128→    for (let i = 0; i < ringCount; i++) {
+   129→   129→      const ci = i % colors.length;
+   130→   130→      rings.push({
+   131→   131→        z: i * (100 / ringCount),
+   132→   132→        radius: 25 + Math.random() * 25,
+   133→   133→        speed: 15 + Math.random() * 20,
+   134→   134→        rotation: Math.random() * Math.PI * 2,
+   135→   135→        rotSpeed: (Math.random() - 0.5) * 2.5,
+   136→   136→        segments: 5 + Math.floor(Math.random() * 5),
+   137→   137→        color: colors[ci],
+   138→   138→        glowColor: glowColors[ci],
+   139→   139→        opacity: 0.25 + Math.random() * 0.45,
+   140→   140→        wobbleAmp: 0.05 + Math.random() * 0.12,
+   141→   141→        wobbleFreq: 2 + Math.random() * 3,
+   142→   142→        hueShift: Math.random() * Math.PI * 2,
+   143→   143→      });
+   144→   144→    }
+   145→   145→    ringsRef.current = rings;
+   146→   146→
+   147→   147→    const eParticles: EnergyParticle[] = [];
+   148→   148→    for (let i = 0; i < 160; i++) {
+   149→   149→      eParticles.push({
+   150→   150→        angle: Math.random() * Math.PI * 2,
+   151→   151→        z: Math.random() * 100,
+   152→   152→        speed: 25 + Math.random() * 45,
+   153→   153→        radius: 8 + Math.random() * 65,
+   154→   154→        size: Math.random() * 2.5 + 0.5,
+   155→   155→        opacity: Math.random() * 0.7 + 0.2,
+   156→   156→        color: colors[Math.floor(Math.random() * colors.length)],
+   157→   157→        trail: [],
+   158→   158→        helixPhase: Math.random() * Math.PI * 2,
+   159→   159→        helixAmp: 3 + Math.random() * 12,
+   160→   160→      });
+   161→   161→    }
+   162→   162→    particlesRef.current = eParticles;
+   163→   163→
+   164→   164→    // Energy filaments - 14 with fractal branching
+   165→   165→    const filaments: Filament[] = [];
+   166→   166→    for (let i = 0; i < 14; i++) {
+   167→   167→      const branchCount = Math.random() < 0.5 ? 1 : 2;
+   168→   168→      const branches: Filament['branches'] = [];
+   169→   169→      for (let b = 0; b < branchCount; b++) {
+   170→   170→        branches.push({
+   171→   171→          spawnProgress: 0.25 + Math.random() * 0.55,
+   172→   172→          angle: (Math.random() - 0.5) * 1.2,
+   173→   173→          length: 0.15 + Math.random() * 0.25,
+   174→   174→          amplitude: 5 + Math.random() * 15,
+   175→   175→        });
+   176→   176→      }
+   177→   177→      filaments.push({
+   178→   178→        angleOffset: (i / 14) * Math.PI * 2,
+   179→   179→        z: Math.random() * 100,
+   180→   180→        speed: 12 + Math.random() * 15,
+   181→   181→        amplitude: 15 + Math.random() * 30,
+   182→   182→        frequency: 3 + Math.random() * 4,
+   183→   183→        color: colors[i % colors.length],
+   184→   184→        opacity: 0.15 + Math.random() * 0.25,
+   185→   185→        thickness: 1.5 + Math.random() * 2,
+   186→   186→        branches,
+   187→   187→      });
+   188→   188→    }
+   189→   189→    filamentsRef.current = filaments;
+   190→   190→
+   191→   191→    // Photon ring configs: 3 layers at different radii
+   192→   192→    const photonRings: PhotonRingConfig[] = [
+   193→   193→      {
+   194→   194→        radiusFactor: 0.45,
+   195→   195→        speed: 3.5,
+   196→   196→        direction: 1,
+   197→   197→        color: '#ff3344',
+   198→   198→        dashPattern: [6, 4],
+   199→   199→        width: 1.5,
+   200→   200→        wobbleAmp: 0.04,
+   201→   201→        wobbleFreq: 5,
+   202→   202→      },
+   203→   203→      {
+   204→   204→        radiusFactor: 0.65,
+   205→   205→        speed: -2.2,
+   206→   206→        direction: -1,
+   207→   207→        color: '#cc44ff',
+   208→   208→        dashPattern: [10, 6, 3, 6],
+   209→   209→        width: 2.5,
+   210→   210→        wobbleAmp: 0.06,
+   211→   211→        wobbleFreq: 3.5,
+   212→   212→      },
+   213→   213→      {
+   214→   214→        radiusFactor: 0.85,
+   215→   215→        speed: 1.5,
+   216→   216→        direction: 1,
+   217→   217→        color: '#4488ff',
+   218→   218→        dashPattern: [4, 8],
+   219→   219→        width: 1.8,
+   220→   220→        wobbleAmp: 0.08,
+   221→   221→        wobbleFreq: 2.5,
+   222→   222→      },
+   223→   223→    ];
+   224→   224→
+   225→   225→    resize();
+   226→   226→    window.addEventListener('resize', resize);
+   227→   227→
+   228→   228→    const draw = () => {
+   229→   229→      const dt = 0.016;
+   230→   230→      timeRef.current += dt;
+   231→   231→      const t = timeRef.current;
+   232→   232→
+   233→   233→      if (isActive) {
+   234→   234→        activationRef.current = Math.min(1, activationRef.current + dt * 0.6);
+   235→   235→      } else {
+   236→   236→        activationRef.current = Math.max(0, activationRef.current - dt * 0.4);
+   237→   237→      }
+   238→   238→      const activation = activationRef.current;
+   239→   239→
+   240→   240→      if (isActive && onSyncPulse) {
+   241→   241→        onSyncPulse(activation);
+   242→   242→      }
+   243→   243→
+   244→   244→      if (w === 0 || h === 0) { animationRef.current = requestAnimationFrame(draw); return; }
+   245→   245→
+   246→   246→      const cx = w / 2;
+   247→   247→      const cy = h / 2;
+   248→   248→      const maxZ = 100;
+   249→   249→      const portalBaseSize = Math.min(w, h) * 0.14;
+   250→   250→      const ergoRadiusX = portalBaseSize * 1.6;
+   251→   251→      const ergoRadiusY = portalBaseSize * 1.1;
+   252→   252→
+   253→   253→      ctx.clearRect(0, 0, w, h);
+   254→   254→
+   255→   255→      // === BACKGROUND: Deep vortex gradient with spiral arms ===
+   256→   256→      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h) * 0.6);
+   257→   257→      bgGrad.addColorStop(0, `rgba(168,85,247,${0.12 * activation})`);
+   258→   258→      bgGrad.addColorStop(0.25, `rgba(224,64,160,${0.06 * activation})`);
+   259→   259→      bgGrad.addColorStop(0.5, `rgba(6,214,160,${0.03 * activation})`);
+   260→   260→      bgGrad.addColorStop(0.75, `rgba(6,182,212,${0.015 * activation})`);
+   261→   261→      bgGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   262→   262→      ctx.fillStyle = bgGrad;
+   263→   263→      ctx.fillRect(0, 0, w, h);
+   264→   264→
+   265→   265→      // Spiral arms background
+   266→   266→      if (activation > 0.05) {
+   267→   267→        ctx.save();
+   268→   268→        ctx.globalAlpha = activation * 0.06;
+   269→   269→        for (let arm = 0; arm < 4; arm++) {
+   270→   270→          ctx.beginPath();
+   271→   271→          const armOffset = (arm / 4) * Math.PI * 2;
+   272→   272→          for (let s = 0; s < 200; s++) {
+   273→   273→            const progress = s / 200;
+   274→   274→            const spiralAngle = armOffset + progress * Math.PI * 4 + t * 0.5;
+   275→   275→            const spiralR = progress * Math.min(w, h) * 0.45;
+   276→   276→            const sx = cx + Math.cos(spiralAngle) * spiralR;
+   277→   277→            const sy = cy + Math.sin(spiralAngle) * spiralR;
+   278→   278→            if (s === 0) ctx.moveTo(sx, sy);
+   279→   279→            else ctx.lineTo(sx, sy);
+   280→   280→          }
+   281→   281→          ctx.strokeStyle = colors[arm % colors.length];
+   282→   282→          ctx.lineWidth = 2;
+   283→   283→          ctx.stroke();
+   284→   284→        }
+   285→   285→        ctx.restore();
+   286→   286→      }
+   287→   287→
+   288→   288→      // === TIME DILATION GRID (spacetime fabric warping) ===
+   289→   289→      if (activation > 0.05) {
+   290→   290→        ctx.save();
+   291→   291→        const gridSpacing = 40;
+   292→   292→        const gridExtent = Math.max(w, h) * 0.7;
+   293→   293→        const gridAlpha = activation * 0.06;
+   294→   294→        ctx.strokeStyle = `rgba(100,140,255,${gridAlpha})`;
+   295→   295→        ctx.lineWidth = 0.5;
+   296→   296→
+   297→   297→        // Vertical lines
+   298→   298→        for (let gx = -gridExtent; gx <= gridExtent; gx += gridSpacing) {
+   299→   299→          ctx.beginPath();
+   300→   300→          for (let gy = -gridExtent; gy <= gridExtent; gy += 4) {
+   301→   301→            const dx = gx;
+   302→   302→            const dy = gy;
+   303→   303→            const dist = Math.sqrt(dx * dx + dy * dy);
+   304→   304→            const warpStrength = Math.max(0, 1 - dist / gridExtent);
+   305→   305→            const warpFactor = warpStrength * warpStrength * 60;
+   306→   306→            const warpAngle = Math.atan2(dy, dx);
+   307→   307→            const pullX = -Math.cos(warpAngle) * warpFactor;
+   308→   308→            const pullY = -Math.sin(warpAngle) * warpFactor;
+   309→   309→            const wx = cx + gx + pullX;
+   310→   310→            const wy = cy + dy + pullY;
+   311→   311→            if (gy === -gridExtent) ctx.moveTo(wx, wy);
+   312→   312→            else ctx.lineTo(wx, wy);
+   313→   313→          }
+   314→   314→          ctx.stroke();
+   315→   315→        }
+   316→   316→
+   317→   317→        // Horizontal lines
+   318→   318→        for (let gy = -gridExtent; gy <= gridExtent; gy += gridSpacing) {
+   319→   319→          ctx.beginPath();
+   320→   320→          for (let gx = -gridExtent; gx <= gridExtent; gx += 4) {
+   321→   321→            const dx = gx;
+   322→   322→            const dy = gy;
+   323→   323→            const dist = Math.sqrt(dx * dx + dy * dy);
+   324→   324→            const warpStrength = Math.max(0, 1 - dist / gridExtent);
+   325→   325→            const warpFactor = warpStrength * warpStrength * 60;
+   326→   326→            const warpAngle = Math.atan2(dy, dx);
+   327→   327→            const pullX = -Math.cos(warpAngle) * warpFactor;
+   328→   328→            const pullY = -Math.sin(warpAngle) * warpFactor;
+   329→   329→            const wx = cx + gx + pullX;
+   330→   330→            const wy = cy + gy + pullY;
+   331→   331→            if (gx === -gridExtent) ctx.moveTo(wx, wy);
+   332→   332→            else ctx.lineTo(wx, wy);
+   333→   333→          }
+   334→   334→          ctx.stroke();
+   335→   335→        }
+   336→   336→
+   337→   337→        // Grid compression lines near center (denser grid)
+   338→   338→        ctx.strokeStyle = `rgba(140,100,220,${gridAlpha * 1.5})`;
+   339→   339→        ctx.lineWidth = 0.3;
+   340→   340→        const innerGridSpacing = gridSpacing * 0.4;
+   341→   341→        const innerExtent = portalBaseSize * 2;
+   342→   342→        for (let gx = -innerExtent; gx <= innerExtent; gx += innerGridSpacing) {
+   343→   343→          ctx.beginPath();
+   344→   344→          for (let gy = -innerExtent; gy <= innerExtent; gy += 4) {
+   345→   345→            const dx = gx;
+   346→   346→            const dy = gy;
+   347→   347→            const dist = Math.sqrt(dx * dx + dy * dy);
+   348→   348→            const warpStrength = Math.max(0, 1 - dist / (portalBaseSize * 2.5));
+   349→   349→            const warpFactor = warpStrength * warpStrength * 40;
+   350→   350→            const warpAngle = Math.atan2(dy, dx);
+   351→   351→            const pullX = -Math.cos(warpAngle) * warpFactor;
+   352→   352→            const pullY = -Math.sin(warpAngle) * warpFactor;
+   353→   353→            const wx = cx + gx + pullX;
+   354→   354→            const wy = cy + dy + pullY;
+   355→   355→            if (gy === -innerExtent) ctx.moveTo(wx, wy);
+   356→   356→            else ctx.lineTo(wx, wy);
+   357→   357→          }
+   358→   358→          ctx.stroke();
+   359→   359→        }
+   360→   360→        for (let gy = -innerExtent; gy <= innerExtent; gy += innerGridSpacing) {
+   361→   361→          ctx.beginPath();
+   362→   362→          for (let gx = -innerExtent; gx <= innerExtent; gx += 4) {
+   363→   363→            const dx = gx;
+   364→   364→            const dy = gy;
+   365→   365→            const dist = Math.sqrt(dx * dx + dy * dy);
+   366→   366→            const warpStrength = Math.max(0, 1 - dist / (portalBaseSize * 2.5));
+   367→   367→            const warpFactor = warpStrength * warpStrength * 40;
+   368→   368→            const warpAngle = Math.atan2(dy, dx);
+   369→   369→            const pullX = -Math.cos(warpAngle) * warpFactor;
+   370→   370→            const pullY = -Math.sin(warpAngle) * warpFactor;
+   371→   371→            const wx = cx + gx + pullX;
+   372→   372→            const wy = cy + gy + pullY;
+   373→   373→            if (gx === -innerExtent) ctx.moveTo(wx, wy);
+   374→   374→            else ctx.lineTo(wx, wy);
+   375→   375→          }
+   376→   376→          ctx.stroke();
+   377→   377→        }
+   378→   378→        ctx.restore();
+   379→   379→      }
+   380→   380→
+   381→   381→      // === FRAME-DRAGGING ROTATING MESH ===
+   382→   382→      if (activation > 0.1) {
+   383→   383→        ctx.save();
+   384→   384→        ctx.translate(cx, cy);
+   385→   385→        ctx.rotate(t * 0.4);
+   386→   386→        const meshRings = 5;
+   387→   387→        const meshLines = 12;
+   388→   388→        const meshMaxR = portalBaseSize * 1.3;
+   389→   389→        const meshAlpha = activation * 0.08;
+   390→   390→
+   391→   391→        ctx.strokeStyle = `rgba(168,85,247,${meshAlpha})`;
+   392→   392→        ctx.lineWidth = 0.5;
+   393→   393→
+   394→   394→        // Concentric rings with increasing warp near center
+   395→   395→        for (let mr = 0; mr < meshRings; mr++) {
+   396→   396→          const progress = (mr + 1) / meshRings;
+   397→   397→          const baseR = progress * meshMaxR;
+   398→   398→          ctx.beginPath();
+   399→   399→          for (let a = 0; a <= 360; a += 3) {
+   400→   400→            const angle = (a / 180) * Math.PI;
+   401→   401→            // Warp: compress near center (Kerr-like)
+   402→   402→            const warp = 1 + Math.sin(angle * 3 + t * 2) * (1 - progress) * 0.15;
+   403→   403→            const r = baseR * warp;
+   404→   404→            const px = Math.cos(angle) * r;
+   405→   405→            const py = Math.sin(angle) * r * 0.45; // Perspective squash
+   406→   406→            if (a === 0) ctx.moveTo(px, py);
+   407→   407→            else ctx.lineTo(px, py);
+   408→   408→          }
+   409→   409→          ctx.stroke();
+   410→   410→        }
+   411→   411→
+   412→   412→        // Radial lines
+   413→   413→        for (let ml = 0; ml < meshLines; ml++) {
+   414→   414→          const lineAngle = (ml / meshLines) * Math.PI * 2;
+   415→   415→          ctx.beginPath();
+   416→   416→          for (let lr = 0; lr <= meshRings; lr++) {
+   417→   417→            const progress = (lr + 1) / meshRings;
+   418→   418→            const baseR = progress * meshMaxR;
+   419→   419→            // Spiral twist for frame-dragging: more twist near center
+   420→   420→            const dragTwist = (1 - progress) * 0.3 * Math.sin(t * 0.5);
+   421→   421→            const spiralAngle = lineAngle + dragTwist;
+   422→   422→            const warp = 1 + Math.sin(spiralAngle * 3 + t * 2) * (1 - progress) * 0.15;
+   423→   423→            const r = baseR * warp;
+   424→   424→            const px = Math.cos(spiralAngle) * r;
+   425→   425→            const py = Math.sin(spiralAngle) * r * 0.45;
+   426→   426→            if (lr === 0) ctx.moveTo(px, py);
+   427→   427→            else ctx.lineTo(px, py);
+   428→   428→          }
+   429→   429→          ctx.stroke();
+   430→   430→        }
+   431→   431→
+   432→   432→        ctx.restore();
+   433→   433→      }
+   434→   434→
+   435→   435→      // === TIME DILATION RIPPLES ===
+   436→   436→      if (activation > 0.3 && t - lastRippleRef.current > 1.5) {
+   437→   437→        lastRippleRef.current = t;
+   438→   438→        ripplesRef.current.push({
+   439→   439→          x: cx + (Math.random() - 0.5) * 40,
+   440→   440→          y: cy + (Math.random() - 0.5) * 40,
+   441→   441→          radius: 5,
+   442→   442→          maxRadius: Math.min(w, h) * 0.4,
+   443→   443→          opacity: 0.3,
+   444→   444→          speed: 60 + Math.random() * 40,
+   445→   445→          color: colors[Math.floor(Math.random() * colors.length)],
+   446→   446→        });
+   447→   447→      }
+   448→   448→
+   449→   449→      for (let i = ripplesRef.current.length - 1; i >= 0; i--) {
+   450→   450→        const ripple = ripplesRef.current[i];
+   451→   451→        ripple.radius += ripple.speed * dt;
+   452→   452→        ripple.opacity -= dt * 0.15;
+   453→   453→        if (ripple.opacity <= 0 || ripple.radius >= ripple.maxRadius) {
+   454→   454→          ripplesRef.current.splice(i, 1);
+   455→   455→          continue;
+   456→   456→        }
+   457→   457→        ctx.save();
+   458→   458→        ctx.globalAlpha = ripple.opacity * activation;
+   459→   459→        ctx.strokeStyle = ripple.color;
+   460→   460→        ctx.lineWidth = 1;
+   461→   461→        ctx.beginPath();
+   462→   462→        ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+   463→   463→        ctx.stroke();
+   464→   464→        // Second harmonic ring
+   465→   465→        ctx.globalAlpha = ripple.opacity * activation * 0.3;
+   466→   466→        ctx.beginPath();
+   467→   467→        ctx.arc(ripple.x, ripple.y, ripple.radius * 0.7, 0, Math.PI * 2);
+   468→   468→        ctx.stroke();
+   469→   469→        ctx.restore();
+   470→   470→      }
+   471→   471→
+   472→   472→      // === ENERGY FILAMENTS (14 with fractal branching) ===
+   473→   473→      if (activation > 0.1) {
+   474→   474→        for (const fil of filamentsRef.current) {
+   475→   475→          fil.z -= fil.speed * dt * (1 + activation * 2.5);
+   476→   476→          if (fil.z < -10) fil.z = maxZ + 10;
+   477→   477→
+   478→   478→          const perspective = 350 / (350 + fil.z);
+   479→   479→          const baseScreenR = fil.amplitude * perspective * (Math.min(w, h) / 500);
+   480→   480→          const depthFade = 1 - fil.z / (maxZ + 20);
+   481→   481→
+   482→   482→          // Frame-dragging: increase rotation speed near center
+   483→   483→          const normalizedDist = fil.amplitude / 60;
+   484→   484→          const frameDragFactor = 1 + (1 - Math.min(1, normalizedDist)) * 2;
+   485→   485→
+   486→   486→          ctx.save();
+   487→   487→          ctx.globalAlpha = fil.opacity * depthFade * activation;
+   488→   488→          ctx.strokeStyle = fil.color;
+   489→   489→          ctx.lineWidth = fil.thickness * perspective;
+   490→   490→          ctx.beginPath();
+   491→   491→
+   492→   492→          const steps = 40;
+   493→   493→          const branchPoints: { x: number; y: number; progress: number }[] = [];
+   494→   494→          for (let s = 0; s <= steps; s++) {
+   495→   495→            const progress = s / steps;
+   496→   496→            const localZ = fil.z - progress * 30;
+   497→   497→            const localPerspective = 350 / (350 + Math.max(0, localZ));
+   498→   498→            const spiralAngle = fil.angleOffset + progress * fil.frequency * Math.PI + t * 1.5 * frameDragFactor;
+   499→   499→            const wobble = Math.sin(spiralAngle * 2 + t) * fil.amplitude * 0.2 * localPerspective;
+   500→   500→            const screenR = (fil.amplitude + wobble) * localPerspective * (Math.min(w, h) / 500);
+   501→   501→            const sx = cx + Math.cos(spiralAngle) * screenR;
+   502→   502→            const sy = cy + Math.sin(spiralAngle) * screenR * 0.35;
+   503→   503→            if (s === 0) ctx.moveTo(sx, sy);
+   504→   504→            else ctx.lineTo(sx, sy);
+   505→   505→
+   506→   506→            // Check if this step spawns a branch
+   507→   507→            for (const branch of fil.branches) {
+   508→   508→              if (Math.abs(progress - branch.spawnProgress) < 0.03) {
+   509→   509→                branchPoints.push({ x: sx, y: sy, progress });
+   510→   510→              }
+   511→   511→            }
+   512→   512→          }
+   513→   513→          ctx.stroke();
+   514→   514→
+   515→   515→          // Glow pass
+   516→   516→          ctx.globalAlpha = fil.opacity * depthFade * activation * 0.2;
+   517→   517→          ctx.lineWidth = fil.thickness * perspective * 4;
+   518→   518→          ctx.stroke();
+   519→   519→
+   520→   520→          // Draw branches
+   521→   521→          for (const bp of branchPoints) {
+   522→   522→            const branchAngle = fil.angleOffset + bp.progress * fil.frequency * Math.PI + t * 1.5 * frameDragFactor;
+   523→   523→            for (const branch of fil.branches) {
+   524→   524→              if (Math.abs(bp.progress - branch.spawnProgress) < 0.05) {
+   525→   525→                const bSteps = 12;
+   526→   526→                ctx.beginPath();
+   527→   527→                ctx.globalAlpha = fil.opacity * depthFade * activation * 0.7;
+   528→   528→                ctx.strokeStyle = fil.color;
+   529→   529→                ctx.lineWidth = fil.thickness * perspective * 0.6;
+   530→   530→                for (let bs = 0; bs <= bSteps; bs++) {
+   531→   531→                  const bProgress = bs / bSteps;
+   532→   532→                  const bAngle = branchAngle + branch.angle + bProgress * branch.length * Math.PI * 0.5;
+   533→   533→                  const bR = branch.amplitude * bProgress * perspective * (Math.min(w, h) / 500);
+   534→   534→                  const bx = bp.x + Math.cos(bAngle) * bR;
+   535→   535→                  const by = bp.y + Math.sin(bAngle) * bR * 0.35;
+   536→   536→                  if (bs === 0) ctx.moveTo(bx, by);
+   537→   537→                  else ctx.lineTo(bx, by);
+   538→   538→                }
+   539→   539→                ctx.stroke();
+   540→   540→              }
+   541→   541→            }
+   542→   542→          }
+   543→   543→
+   544→   544→          ctx.restore();
+   545→   545→        }
+   546→   546→      }
+   547→   547→
+   548→   548→      // === TUNNEL RINGS (evolved: wobble + hue shift + inner glow + frame-dragging) ===
+   549→   549→      const sortedRings = [...ringsRef.current].sort((a, b) => b.z - a.z);
+   550→   550→
+   551→   551→      for (const ring of sortedRings) {
+   552→   552→        ring.z -= ring.speed * dt * (1 + activation * 2.5);
+   553→   553→        // Frame-dragging: rings closer to camera (smaller z) get more rotation
+   554→   554→        const frameDragBoost = Math.max(0, 1 - ring.z / maxZ) * 1.5;
+   555→   555→        ring.rotation += (ring.rotSpeed + frameDragBoost * (ring.rotSpeed > 0 ? 1 : -1)) * dt * (1 + activation * 0.7);
+   556→   556→        ring.hueShift += dt * 0.5;
+   557→   557→
+   558→   558→        if (ring.z < -10) {
+   559→   559→          ring.z = maxZ + 10;
+   560→   560→          ring.rotation = Math.random() * Math.PI * 2;
+   561→   561→        }
+   562→   562→
+   563→   563→        const perspective = 350 / (350 + ring.z);
+   564→   564→        const screenRadius = ring.radius * perspective * (Math.min(w, h) / 500);
+   565→   565→        const wobbleX = Math.sin(ring.rotation * 0.3 + t) * 12 * perspective;
+   566→   566→        const wobbleY = Math.cos(ring.rotation * 0.2 + t * 0.7) * 8 * perspective;
+   567→   567→        const screenX = cx + wobbleX;
+   568→   568→        const screenY = cy + wobbleY;
+   569→   569→
+   570→   570→        const depthFade = 1 - ring.z / (maxZ + 20);
+   571→   571→        const alpha = ring.opacity * depthFade * Math.max(0.08, activation);
+   572→   572→
+   573→   573→        if (alpha < 0.01 || screenRadius < 1) continue;
+   574→   574→
+   575→   575→        ctx.save();
+   576→   576→        ctx.translate(screenX, screenY);
+   577→   577→        ctx.rotate(ring.rotation);
+   578→   578→
+   579→   579→        // Outer glow layer (thicker, softer)
+   580→   580→        ctx.globalAlpha = alpha * 0.15;
+   581→   581→        ctx.strokeStyle = ring.glowColor;
+   582→   582→        ctx.lineWidth = screenRadius * 0.5;
+   583→   583→        ctx.beginPath();
+   584→   584→        for (let s = 0; s <= ring.segments; s++) {
+   585→   585→          const a = (s / ring.segments) * Math.PI * 2;
+   586→   586→          const wobbleMod = 1 + Math.sin(a * ring.wobbleFreq + t * 2 + ring.hueShift) * ring.wobbleAmp;
+   587→   587→          const r = screenRadius * wobbleMod;
+   588→   588→          const px = Math.cos(a) * r;
+   589→   589→          const py = Math.sin(a) * r;
+   590→   590→          if (s === 0) ctx.moveTo(px, py);
+   591→   591→          else ctx.lineTo(px, py);
+   592→   592→        }
+   593→   593→        ctx.closePath();
+   594→   594→        ctx.stroke();
+   595→   595→
+   596→   596→        // Main ring
+   597→   597→        ctx.globalAlpha = alpha;
+   598→   598→        ctx.strokeStyle = ring.color;
+   599→   599→        ctx.lineWidth = Math.max(0.8, screenRadius * 0.07);
+   600→   600→        ctx.beginPath();
+   601→   601→        for (let s = 0; s <= ring.segments; s++) {
+   602→   602→          const a = (s / ring.segments) * Math.PI * 2;
+   603→   603→          const wobbleMod = 1 + Math.sin(a * ring.wobbleFreq + t * 2 + ring.hueShift) * ring.wobbleAmp;
+   604→   604→          const r = screenRadius * wobbleMod;
+   605→   605→          const px = Math.cos(a) * r;
+   606→   606→          const py = Math.sin(a) * r;
+   607→   607→          if (s === 0) ctx.moveTo(px, py);
+   608→   608→          else ctx.lineTo(px, py);
+   609→   609→        }
+   610→   610→        ctx.closePath();
+   611→   611→        ctx.stroke();
+   612→   612→
+   613→   613→        // Inner fill (very subtle)
+   614→   614→        if (screenRadius > 10) {
+   615→   615→          ctx.globalAlpha = alpha * 0.04;
+   616→   616→          ctx.fillStyle = ring.color;
+   617→   617→          ctx.fill();
+   618→   618→        }
+   619→   619→
+   620→   620→        // Vertex dots with glow
+   621→   621→        ctx.globalAlpha = alpha * 1.2;
+   622→   622→        for (let s = 0; s < ring.segments; s++) {
+   623→   623→          const a = (s / ring.segments) * Math.PI * 2;
+   624→   624→          const wobbleMod = 1 + Math.sin(a * ring.wobbleFreq + t * 2 + ring.hueShift) * ring.wobbleAmp;
+   625→   625→          const r = screenRadius * wobbleMod;
+   626→   626→          const px = Math.cos(a) * r;
+   627→   627→          const py = Math.sin(a) * r;
+   628→   628→          const dotSize = Math.max(1, screenRadius * 0.05);
+   629→   629→
+   630→   630→          // Glow
+   631→   631→          ctx.globalAlpha = alpha * 0.3;
+   632→   632→          ctx.fillStyle = ring.color;
+   633→   633→          ctx.beginPath();
+   634→   634→          ctx.arc(px, py, dotSize * 3, 0, Math.PI * 2);
+   635→   635→          ctx.fill();
+   636→   636→
+   637→   637→          // Core dot
+   638→   638→          ctx.globalAlpha = alpha * 1.5;
+   639→   639→          ctx.fillStyle = '#ffffff';
+   640→   640→          ctx.beginPath();
+   641→   641→          ctx.arc(px, py, dotSize, 0, Math.PI * 2);
+   642→   642→          ctx.fill();
+   643→   643→        }
+   644→   644→
+   645→   645→        ctx.restore();
+   646→   646→      }
+   647→   647→
+   648→   648→      // === ENERGY PARTICLES with helical trails + frame-dragging ===
+   649→   649→      for (const p of particlesRef.current) {
+   650→   650→        p.z -= p.speed * dt * (1 + activation * 2.5);
+   651→   651→
+   652→   652→        // Frame-dragging: particles closer to center rotate faster
+   653→   653→        const distFromCenter = p.radius / 73; // normalized 0-1
+   654→   654→        const frameDragSpeed = dt * (0.6 + (1 - Math.min(1, distFromCenter)) * 2.5);
+   655→   655→        p.angle += frameDragSpeed;
+   656→   656→        p.helixPhase += dt * 4;
+   657→   657→
+   658→   658→        if (p.z < -10) {
+   659→   659→          p.z = maxZ + 10;
+   660→   660→          p.angle = Math.random() * Math.PI * 2;
+   661→   661→          p.opacity = Math.random() * 0.7 + 0.2;
+   662→   662→          p.trail = [];
+   663→   663→        }
+   664→   664→
+   665→   665→        const perspective = 350 / (350 + p.z);
+   666→   666→        const helixOffset = Math.sin(p.helixPhase) * p.helixAmp * perspective;
+   667→   667→        const screenR = (p.radius + helixOffset) * perspective * (Math.min(w, h) / 500);
+   668→   668→        const px = cx + Math.cos(p.angle) * screenR;
+   669→   669→        const py = cy + Math.sin(p.angle) * screenR * 0.35;
+   670→   670→
+   671→   671→        // Manage trail
+   672→   672→        p.trail.push({ x: px, y: py });
+   673→   673→        if (p.trail.length > 8) p.trail.shift();
+   674→   674→
+   675→   675→        const depthFade = 1 - p.z / (maxZ + 20);
+   676→   676→        const alpha = p.opacity * depthFade * activation;
+   677→   677→
+   678→   678→        if (alpha < 0.01) continue;
+   679→   679→
+   680→   680→        ctx.save();
+   681→   681→
+   682→   682→        // Trail (gradient fade)
+   683→   683→        if (p.trail.length > 1) {
+   684→   684→          for (let ti = 1; ti < p.trail.length; ti++) {
+   685→   685→            const trailAlpha = (ti / p.trail.length) * alpha * 0.4;
+   686→   686→            ctx.globalAlpha = trailAlpha;
+   687→   687→            ctx.strokeStyle = p.color;
+   688→   688→            ctx.lineWidth = p.size * perspective * (ti / p.trail.length);
+   689→   689→            ctx.beginPath();
+   690→   690→            ctx.moveTo(p.trail[ti - 1].x, p.trail[ti - 1].y);
+   691→   691→            ctx.lineTo(p.trail[ti].x, p.trail[ti].y);
+   692→   692→            ctx.stroke();
+   693→   693→          }
+   694→   694→        }
+   695→   695→
+   696→   696→        // Particle glow
+   697→   697→        ctx.globalAlpha = alpha * 0.25;
+   698→   698→        ctx.fillStyle = p.color;
+   699→   699→        ctx.beginPath();
+   700→   700→        ctx.arc(px, py, Math.max(1, p.size * perspective * 3), 0, Math.PI * 2);
+   701→   701→        ctx.fill();
+   702→   702→
+   703→   703→        // Particle core
+   704→   704→        ctx.globalAlpha = alpha;
+   705→   705→        ctx.fillStyle = '#ffffff';
+   706→   706→        ctx.beginPath();
+   707→   707→        ctx.arc(px, py, Math.max(0.5, p.size * perspective), 0, Math.PI * 2);
+   708→   708→        ctx.fill();
+   709→   709→
+   710→   710→        ctx.restore();
+   711→   711→      }
+   712→   712→
+   713→   713→      // === ERGOSPHERE VISUALIZATION ===
+   714→   714→      if (activation > 0.1) {
+   715→   715→        ctx.save();
+   716→   716→        ctx.translate(cx, cy);
+   717→   717→        const ergoRotation = t * 0.3;
+   718→   718→        const ergoPulse = 1 + Math.sin(t * 1.5) * 0.08;
+   719→   719→        ctx.rotate(ergoRotation);
+   720→   720→
+   721→   721→        // Translucent pulsing ellipse
+   722→   722→        ctx.globalAlpha = activation * 0.12;
+   723→   723→        const ergoGrad = ctx.createRadialGradient(0, 0, portalBaseSize * 0.3, 0, 0, Math.max(1, ergoRadiusX * ergoPulse));
+   724→   724→        ergoGrad.addColorStop(0, 'rgba(168,85,247,0.3)');
+   725→   725→        ergoGrad.addColorStop(0.5, 'rgba(224,64,160,0.15)');
+   726→   726→        ergoGrad.addColorStop(0.8, 'rgba(6,214,160,0.08)');
+   727→   727→        ergoGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   728→   728→        ctx.fillStyle = ergoGrad;
+   729→   729→        ctx.beginPath();
+   730→   730→        ctx.ellipse(0, 0, ergoRadiusX * ergoPulse, ergoRadiusY * ergoPulse, 0, 0, Math.PI * 2);
+   731→   731→        ctx.fill();
+   732→   732→
+   733→   733→        // Ergosphere boundary stroke
+   734→   734→        ctx.globalAlpha = activation * 0.25;
+   735→   735→        ctx.strokeStyle = 'rgba(168,85,247,0.5)';
+   736→   736→        ctx.lineWidth = 1.2;
+   737→   737→        ctx.setLineDash([8, 6]);
+   738→   738→        ctx.lineDashOffset = -t * 15;
+   739→   739→        ctx.beginPath();
+   740→   740→        ctx.ellipse(0, 0, ergoRadiusX * ergoPulse, ergoRadiusY * ergoPulse, 0, 0, Math.PI * 2);
+   741→   741→        ctx.stroke();
+   742→   742→        ctx.setLineDash([]);
+   743→   743→
+   744→   744→        // Inner boundary line
+   745→   745→        ctx.globalAlpha = activation * 0.15;
+   746→   746→        ctx.strokeStyle = 'rgba(224,64,160,0.4)';
+   747→   747→        ctx.lineWidth = 0.8;
+   748→   748→        ctx.setLineDash([4, 8]);
+   749→   749→        ctx.lineDashOffset = t * 10;
+   750→   750→        ctx.beginPath();
+   751→   751→        ctx.ellipse(0, 0, ergoRadiusX * ergoPulse * 0.7, ergoRadiusY * ergoPulse * 0.7, 0, 0, Math.PI * 2);
+   752→   752→        ctx.stroke();
+   753→   753→        ctx.setLineDash([]);
+   754→   754→
+   755→   755→        ctx.restore();
+   756→   756→      }
+   757→   757→
+   758→   758→      // === CENTER PORTAL GLOW (evolved: multi-layer + distortion) ===
+   759→   759→      if (activation > 0.05) {
+   760→   760→        const portalPulse = 1 + Math.sin(t * 3) * 0.2 + Math.sin(t * 7) * 0.08;
+   761→   761→        const portalSize = portalBaseSize * portalPulse * activation;
+   762→   762→
+   763→   763→        // Outer distortion halo
+   764→   764→        const haloGrad = ctx.createRadialGradient(cx, cy, portalSize * 0.8, cx, cy, portalSize * 2);
+   765→   765→        haloGrad.addColorStop(0, `rgba(168,85,247,${0.08 * activation})`);
+   766→   766→        haloGrad.addColorStop(0.5, `rgba(224,64,160,${0.04 * activation})`);
+   767→   767→        haloGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   768→   768→        ctx.fillStyle = haloGrad;
+   769→   769→        ctx.beginPath();
+   770→   770→        ctx.arc(cx, cy, portalSize * 2, 0, Math.PI * 2);
+   771→   771→        ctx.fill();
+   772→   772→
+   773→   773→        // Core portal
+   774→   774→        const portalGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(1, portalSize));
+   775→   775→        portalGrad.addColorStop(0, `rgba(255,255,255,${0.95 * activation})`);
+   776→   776→        portalGrad.addColorStop(0.15, `rgba(168,85,247,${0.7 * activation})`);
+   777→   777→        portalGrad.addColorStop(0.35, `rgba(224,64,160,${0.4 * activation})`);
+   778→   778→        portalGrad.addColorStop(0.6, `rgba(6,214,160,${0.15 * activation})`);
+   779→   779→        portalGrad.addColorStop(0.85, `rgba(6,182,212,${0.05 * activation})`);
+   780→   780→        portalGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   781→   781→        ctx.fillStyle = portalGrad;
+   782→   782→        ctx.beginPath();
+   783→   783→        ctx.arc(cx, cy, portalSize, 0, Math.PI * 2);
+   784→   784→        ctx.fill();
+   785→   785→
+   786→   786→        // === MULTIPLE PHOTON RING LAYERS (3 layers with gravitational lensing wobble) ===
+   787→   787→        for (const pr of photonRings) {
+   788→   788→          const ringRadius = portalSize * pr.radiusFactor;
+   789→   789→          const wobble = Math.sin(t * pr.wobbleFreq) * pr.wobbleAmp * ringRadius;
+   790→   790→          const currentRadius = Math.max(1, ringRadius + wobble);
+   791→   791→
+   792→   792→          ctx.save();
+   793→   793→          ctx.translate(cx, cy);
+   794→   794→
+   795→   795→          // Gravitational lensing distortion: slight elliptical wobble
+   796→   796→          const lensWobbleX = 1 + Math.sin(t * 1.3 + pr.radiusFactor * 10) * 0.03;
+   797→   797→          const lensWobbleY = 1 + Math.cos(t * 1.7 + pr.radiusFactor * 8) * 0.03;
+   798→   798→
+   799→   799→          // Ring glow
+   800→   800→          ctx.globalAlpha = activation * 0.15;
+   801→   801→          ctx.strokeStyle = pr.color;
+   802→   802→          ctx.lineWidth = pr.width * 4;
+   803→   803→          ctx.setLineDash([]);
+   804→   804→          ctx.beginPath();
+   805→   805→          ctx.ellipse(0, 0, currentRadius * lensWobbleX, currentRadius * lensWobbleY, 0, 0, Math.PI * 2);
+   806→   806→          ctx.stroke();
+   807→   807→
+   808→   808→          // Main ring with dash pattern
+   809→   809→          ctx.globalAlpha = activation * 0.6;
+   810→   810→          ctx.strokeStyle = pr.color;
+   811→   811→          ctx.lineWidth = pr.width;
+   812→   812→          ctx.setLineDash(pr.dashPattern);
+   813→   813→          ctx.lineDashOffset = -t * pr.speed * 30 * pr.direction;
+   814→   814→          ctx.beginPath();
+   815→   815→          ctx.ellipse(0, 0, currentRadius * lensWobbleX, currentRadius * lensWobbleY, 0, 0, Math.PI * 2);
+   816→   816→          ctx.stroke();
+   817→   817→          ctx.setLineDash([]);
+   818→   818→
+   819→   819→          ctx.restore();
+   820→   820→        }
+   821→   821→
+   822→   822→        // === CAUSTIC LIGHT PATTERNS ===
+   823→   823→        // Spawn new caustic spots
+   824→   824→        if (t - lastCausticRef.current > 0.3 && activation > 0.3) {
+   825→   825→          lastCausticRef.current = t;
+   826→   826→          causticsRef.current.push({
+   827→   827→            angle: Math.random() * Math.PI * 2,
+   828→   828→            dist: 0.1 + Math.random() * 0.8,
+   829→   829→            life: 0,
+   830→   830→            maxLife: 0.8 + Math.random() * 1.2,
+   831→   831→            size: 3 + Math.random() * 8,
+   832→   832→            brightness: 0.3 + Math.random() * 0.7,
+   833→   833→          });
+   834→   834→        }
+   835→   835→
+   836→   836→        // Draw caustics
+   837→   837→        for (let ci = causticsRef.current.length - 1; ci >= 0; ci--) {
+   838→   838→          const caustic = causticsRef.current[ci];
+   839→   839→          caustic.life += dt;
+   840→   840→
+   841→   841→          if (caustic.life >= caustic.maxLife) {
+   842→   842→            causticsRef.current.splice(ci, 1);
+   843→   843→            continue;
+   844→   844→          }
+   845→   845→
+   846→   846→          const lifeProgress = caustic.life / caustic.maxLife;
+   847→   847→          // Fade in, then fade out
+   848→   848→          const fadeEnvelope = lifeProgress < 0.2
+   849→   849→            ? lifeProgress / 0.2
+   850→   850→            : 1 - (lifeProgress - 0.2) / 0.8;
+   851→   851→          const causticAlpha = fadeEnvelope * caustic.brightness * activation;
+   852→   852→
+   853→   853→          const causticR = portalSize * caustic.dist;
+   854→   854→          const causticAngle = caustic.angle + t * 0.5;
+   855→   855→          const causticX = cx + Math.cos(causticAngle) * causticR;
+   856→   856→          const causticY = cy + Math.sin(causticAngle) * causticR;
+   857→   857→
+   858→   858→          // Bright spot with gradient
+   859→   859→          ctx.save();
+   860→   860→          const causticGrad = ctx.createRadialGradient(
+   861→   861→            causticX, causticY, 0,
+   862→   862→            causticX, causticY, Math.max(1, caustic.size * fadeEnvelope)
+   863→   863→          );
+   864→   864→          causticGrad.addColorStop(0, `rgba(255,255,255,${causticAlpha * 0.9})`);
+   865→   865→          causticGrad.addColorStop(0.3, `rgba(200,180,255,${causticAlpha * 0.5})`);
+   866→   866→          causticGrad.addColorStop(0.6, `rgba(168,85,247,${causticAlpha * 0.2})`);
+   867→   867→          causticGrad.addColorStop(1, 'rgba(0,0,0,0)');
+   868→   868→          ctx.fillStyle = causticGrad;
+   869→   869→          ctx.beginPath();
+   870→   870→          ctx.arc(causticX, causticY, Math.max(1, caustic.size * 1.5 * fadeEnvelope), 0, Math.PI * 2);
+   871→   871→          ctx.fill();
+   872→   872→
+   873→   873→          // Secondary caustic ray
+   874→   874→          ctx.globalAlpha = causticAlpha * 0.3;
+   875→   875→          ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+   876→   876→          ctx.lineWidth = 0.5;
+   877→   877→          const rayLen = caustic.size * 2 * fadeEnvelope;
+   878→   878→          const rayAngle = causticAngle + Math.PI * 0.5;
+   879→   879→          ctx.beginPath();
+   880→   880→          ctx.moveTo(causticX - Math.cos(rayAngle) * rayLen, causticY - Math.sin(rayAngle) * rayLen);
+   881→   881→          ctx.lineTo(causticX + Math.cos(rayAngle) * rayLen, causticY + Math.sin(rayAngle) * rayLen);
+   882→   882→          ctx.stroke();
+   883→   883→
+   884→   884→          ctx.restore();
+   885→   885→        }
+   886→   886→
+   887→   887→        // Keep caustics array bounded
+   888→   888→        if (causticsRef.current.length > 30) {
+   889→   889→          causticsRef.current.splice(0, 5);
+   890→   890→        }
+   891→   891→
+   892→   892→        // Original rotating arcs (kept)
+   893→   893→        ctx.save();
+   894→   894→        ctx.translate(cx, cy);
+   895→   895→        const arcConfigs = [
+   896→   896→          { speed: 2, start: 0, len: 0.8, color: '#a855f7', width: 2.5 },
+   897→   897→          { speed: -1.5, start: Math.PI, len: 0.9, color: '#06d6a0', width: 2 },
+   898→   898→          { speed: 2.5, start: Math.PI * 1.2, len: 0.7, color: '#e040a0', width: 2 },
+   899→   899→          { speed: -3, start: Math.PI * 0.5, len: 0.5, color: '#fbbf24', width: 1.5 },
+   900→   900→        ];
+   901→   901→        for (const arc of arcConfigs) {
+   902→   902→          ctx.globalAlpha = 0.5 * activation;
+   903→   903→          ctx.strokeStyle = arc.color;
+   904→   904→          ctx.lineWidth = arc.width;
+   905→   905→          ctx.beginPath();
+   906→   906→          ctx.arc(0, 0, portalSize * 0.55, t * arc.speed + arc.start, t * arc.speed + arc.start + arc.len);
+   907→   907→          ctx.stroke();
+   908→   908→        }
+   909→   909→        ctx.restore();
+   910→   910→      }
+   911→   911→
+   912→   912→      // === IDLE STATE: triple pulsing rings ===
+   913→   913→      if (activation < 0.1) {
+   914→   914→        for (let ir = 0; ir < 3; ir++) {
+   915→   915→          const idlePulse = Math.sin(t * 1.2 + ir * 0.8) * 0.5 + 0.5;
+   916→   916→          ctx.save();
+   917→   917→          ctx.globalAlpha = idlePulse * 0.15;
+   918→   918→          ctx.strokeStyle = colors[ir];
+   919→   919→          ctx.lineWidth = 1;
+   920→   920→          ctx.setLineDash([4 + ir * 2, 8 + ir * 3]);
+   921→   921→          ctx.lineDashOffset = -t * (20 + ir * 10) * (ir % 2 === 0 ? 1 : -1);
+   922→   922→          ctx.beginPath();
+   923→   923→          ctx.arc(cx, cy, Math.min(w, h) * (0.12 + ir * 0.04), 0, Math.PI * 2);
+   924→   924→          ctx.stroke();
+   925→   925→          ctx.setLineDash([]);
+   926→   926→          ctx.restore();
+   927→   927→        }
+   928→   928→      }
+   929→   929→
+   930→   930→      animationRef.current = requestAnimationFrame(draw);
+   931→   931→    };
+   932→   932→
+   933→   933→    draw();
+   934→   934→
+   935→   935→    return () => {
+   936→   936→      window.removeEventListener('resize', resize);
+   937→   937→      cancelAnimationFrame(animationRef.current);
+   938→   938→    };
+   939→   939→  }, [isActive, onSyncPulse, syncPhase]);
+   940→   940→
+   941→   941→  return (
+   942→   942→    <canvas
+   943→   943→      ref={canvasRef}
+   944→   944→      className="w-full h-full"
+   945→   945→      aria-label="Tunel de wormhole evoluido com arrasto de quadros, ergosfera, anéis de fótons, rede de dilatação temporal e padrões de cáustica"
+   946→   946→    />
+   947→   947→  );
+   948→   948→}

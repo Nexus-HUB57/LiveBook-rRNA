@@ -100,6 +100,16 @@ interface ObsidianKnowledgeGraphProps {
   onNodeClick?: (nodeId: string) => void;
 }
 
+// ---- Temporal Edge Interface ----
+interface TemporalEdge {
+  from: string;
+  to: string;
+  phase: number;
+  speed: number;
+  active: boolean;
+  dataFlow: number;
+}
+
 // Draw a rounded rect using arcTo (no roundRect)
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D,
@@ -211,6 +221,51 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
       });
     });
 
+    // ---- Initialize Temporal Edges (10 edges with traveling packets) ----
+    const temporalEdges: TemporalEdge[] = [];
+    const edgePairsForTemporal: [string, string][] = [
+      ['meta', 'rag-core'],
+      ['rag-core', 'claude'],
+      ['claude', 'fable'],
+      ['rag-core', 'vector-db'],
+      ['vault-hub', 'obsidian'],
+      ['claude', 'llm-router'],
+      ['memory-buffer', 'cache-layer'],
+      ['chunker', 'vector-db'],
+      ['quantum-bridge', 'symbiosis'],
+      ['retriever', 'reranker'],
+    ];
+    edgePairsForTemporal.forEach(([from, to]) => {
+      temporalEdges.push({
+        from,
+        to,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.3 + Math.random() * 0.7,
+        active: false,
+        dataFlow: Math.random(),
+      });
+    });
+
+    // ---- Build adjacency for semantic proximity (2-3 hop neighborhoods) ----
+    const buildNeighborhood = (startId: string, maxHops: number): Set<string> => {
+      const visited = new Set<string>();
+      const queue: { id: string; hops: number }[] = [{ id: startId, hops: 0 }];
+      visited.add(startId);
+      while (queue.length > 0) {
+        const { id: current, hops } = queue.shift()!;
+        if (hops >= maxHops) continue;
+        const node = INITIAL_NODES.find(n => n.id === current);
+        if (!node) continue;
+        node.connections.forEach(connId => {
+          if (!visited.has(connId)) {
+            visited.add(connId);
+            queue.push({ id: connId, hops: hops + 1 });
+          }
+        });
+      }
+      return visited;
+    };
+
     const simulate = () => {
       const nodes = nodesRef.current;
       const w2 = canvas.getBoundingClientRect().width;
@@ -282,7 +337,6 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
         const dy = n.y - cy;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist > 10) {
-          // Tangential force for orbital motion
           const orbitalSpeed = 0.00003;
           n.vx += (-dy / dist) * orbitalSpeed * dist;
           n.vy += (dx / dist) * orbitalSpeed * dist;
@@ -334,7 +388,6 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
           n.vy *= 0.92;
           n.x += n.vx;
           n.y += n.vy;
-          // Bounds
           n.x = Math.max(n.size + 10, Math.min(w2 - n.size - 10, n.x));
           n.y = Math.max(n.size + 10, Math.min(h2 - n.size - 10, n.y));
         }
@@ -356,7 +409,6 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
         n.active = n.id === activeNode;
         n.pulsePhase += 0.03;
 
-        // Update activity history (shift and push new value)
         const newActivity = n.active
           ? 0.7 + Math.sin(time * 5) * 0.3
           : 0.1 + Math.sin(n.pulsePhase) * 0.1;
@@ -366,7 +418,7 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
         }
       });
 
-      // ---- Draw cluster zones ----
+      // ---- Draw cluster zones with pulsing boundaries ----
       const categoryNodes: Record<string, GraphNode[]> = {};
       nodes.forEach(n => {
         if (!categoryNodes[n.category]) categoryNodes[n.category] = [];
@@ -393,23 +445,94 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
         const zh = maxY - minY + padY * 2;
         const zr = 14;
 
+        // Check if any node in this cluster is active
+        const hasActiveNode = catNodes.some(n => n.active);
+        const pulseAlpha = hasActiveNode
+          ? 0.12 + Math.sin(time * 3) * 0.06
+          : 0.12;
+
         ctx.beginPath();
         drawRoundedRect(ctx, zx, zy, zw, zh, zr);
+
+        // Enhanced fill with pulse
+        const zoneAlpha = hasActiveNode ? 0.06 + Math.sin(time * 2) * 0.02 : 0.04;
         ctx.fillStyle = CLUSTER_ZONE_COLORS[category] || 'rgba(136, 136, 170, 0.03)';
         ctx.fill();
+
+        // Pulsing border
         ctx.strokeStyle = CLUSTER_BORDER_COLORS[category] || 'rgba(136, 136, 170, 0.08)';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = hasActiveNode ? 1.5 : 1;
         ctx.setLineDash([4, 6]);
+        ctx.lineDashOffset = -time * 15;
         ctx.stroke();
         ctx.setLineDash([]);
 
+        // Glow pulse on active cluster border
+        if (hasActiveNode) {
+          ctx.beginPath();
+          drawRoundedRect(ctx, zx - 2, zy - 2, zw + 4, zh + 4, zr + 2);
+          const glowColor = CLUSTER_BORDER_COLORS[category] || 'rgba(136, 136, 170, 0.08)';
+          ctx.strokeStyle = glowColor.replace(/[\d.]+\)$/, `${0.08 + Math.sin(time * 4) * 0.04})`);
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+
         // Category label
         ctx.font = '7px monospace';
-        ctx.fillStyle = (CATEGORY_COLORS[category] || '#666688') + '66';
+        ctx.fillStyle = (CATEGORY_COLORS[category] || '#666688') + (hasActiveNode ? 'aa' : '66');
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillText(category.toUpperCase(), zx + 8, zy + 5);
       });
+
+      // ---- Semantic Proximity Regions (gradient fills between close nodes, 2-3 hops) ----
+      if (isActive) {
+        const drawnRegions = new Set<string>();
+        nodes.forEach(n => {
+          const neighborhood = buildNeighborhood(n.id, 2);
+          neighborhood.forEach(neighborId => {
+            const regionKey = [n.id, neighborId].sort().join('::');
+            if (drawnRegions.has(regionKey) || n.id === neighborId) return;
+            drawnRegions.add(regionKey);
+
+            const neighbor = nodes.find(nn => nn.id === neighborId);
+            if (!neighbor) return;
+
+            const dx = neighbor.x - n.x;
+            const dy = neighbor.y - n.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Only draw for reasonably close nodes (within 2-hop semantic neighborhood)
+            if (dist < 160 && dist > 20) {
+              const regionAlpha = 0.03 + Math.sin(time * 0.5 + n.pulsePhase) * 0.015;
+              const midX = (n.x + neighbor.x) / 2;
+              const midY = (n.y + neighbor.y) / 2;
+              const radius = dist * 0.35;
+
+              // Gradient-filled ellipse between the two nodes
+              const grad = ctx.createRadialGradient(midX, midY, 0, midX, midY, radius);
+              const blendColor = n.color === neighbor.color ? n.color : '#8888aa';
+              // Parse hex color to rgba
+              const r = parseInt(blendColor.slice(1, 3), 16);
+              const g = parseInt(blendColor.slice(3, 5), 16);
+              const b = parseInt(blendColor.slice(5, 7), 16);
+              grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${regionAlpha})`);
+              grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+              ctx.save();
+              ctx.translate(midX, midY);
+              ctx.rotate(Math.atan2(dy, dx));
+              ctx.scale(dist / (radius * 2), 1);
+              ctx.translate(-midX, -midY);
+              ctx.beginPath();
+              ctx.arc(midX, midY, radius, 0, Math.PI * 2);
+              ctx.fillStyle = grad;
+              ctx.fill();
+              ctx.restore();
+            }
+          });
+        });
+      }
 
       // ---- Quantum pulse wave from active node ----
       if (activeNode) {
@@ -458,7 +581,6 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
 
           if (isActiveConn) {
             // ---- Quantum entanglement visualization ----
-            // Dashed animated line
             ctx.beginPath();
             if (isCurved) {
               const midX = (n.x + target.x) / 2;
@@ -498,7 +620,6 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
             // Bidirectional flowing particles (entanglement particles)
             const particleCount = 3;
             for (let pi = 0; pi < particleCount; pi++) {
-              // Forward particle
               const fwdPos = ((time * 1.5 + pi / particleCount) % 1);
               let fwdX: number, fwdY: number;
               if (isCurved) {
@@ -522,7 +643,6 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
               ctx.fillStyle = n.color + '22';
               ctx.fill();
 
-              // Reverse particle
               const revPos = ((time * 1.2 + pi / particleCount + 0.5) % 1);
               let revX: number, revY: number;
               if (isCurved) {
@@ -563,7 +683,7 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
             ctx.lineWidth = 0.8 + weight * 0.8;
             ctx.stroke();
           } else {
-            // Normal edge with weight-based thickness
+            // Normal edge with weight-based thickness (1-4px range)
             ctx.beginPath();
             if (isCurved) {
               const midX = (n.x + target.x) / 2;
@@ -576,13 +696,123 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
               ctx.moveTo(n.x, n.y);
               ctx.lineTo(target.x, target.y);
             }
-            const alpha = isActive ? 0.12 : 0.06;
-            ctx.strokeStyle = `rgba(136, 136, 170, ${alpha + weight * 0.06})`;
-            ctx.lineWidth = 0.3 + weight * 0.6;
+            const baseAlpha = isActive ? 0.12 : 0.06;
+            const edgeAlpha = baseAlpha + weight * 0.06;
+            ctx.strokeStyle = `rgba(136, 136, 170, ${edgeAlpha})`;
+            // Edge thickness proportional to weight (1-4px)
+            ctx.lineWidth = 1 + weight * 3;
             ctx.stroke();
+
+            // ---- Animated dots flowing along high-weight edges ----
+            if (weight > 0.6 && isActive) {
+              const dotCount = Math.floor(weight * 2);
+              for (let di = 0; di < dotCount; di++) {
+                const dotPos = ((time * 0.5 * (0.5 + weight * 0.5) + di / dotCount) % 1);
+                let dotX: number, dotY: number;
+                if (isCurved) {
+                  const midX = (n.x + target.x) / 2;
+                  const midY = (n.y + target.y) / 2;
+                  const perpX = -(target.y - n.y) / dist * 20;
+                  const perpY = (target.x - n.x) / dist * 20;
+                  const t = dotPos;
+                  dotX = (1 - t) * (1 - t) * n.x + 2 * (1 - t) * t * (midX + perpX) + t * t * target.x;
+                  dotY = (1 - t) * (1 - t) * n.y + 2 * (1 - t) * t * (midY + perpY) + t * t * target.y;
+                } else {
+                  dotX = n.x + dx * dotPos;
+                  dotY = n.y + dy * dotPos;
+                }
+                const dotAlpha = (weight - 0.6) * 0.5;
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, 1.2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(200, 200, 230, ${dotAlpha})`;
+                ctx.fill();
+              }
+            }
           }
         });
       });
+
+      // ---- Draw Temporal Edges with traveling packets ----
+      if (isActive) {
+        temporalEdges.forEach(te => {
+          const fromNode = nodes.find(nn => nn.id === te.from);
+          const toNode = nodes.find(nn => nn.id === te.to);
+          if (!fromNode || !toNode) return;
+
+          // Check if this temporal edge should be active
+          te.active = fromNode.active || toNode.active || (isActive && Math.sin(time * 0.3 + te.phase) > 0.3);
+          te.dataFlow = (te.dataFlow + 0.004 * te.speed) % 1;
+
+          const dx = toNode.x - fromNode.x;
+          const dy = toNode.y - fromNode.y;
+          const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+
+          // Draw temporal edge line with gradient showing data transformation
+          const edgeGrad = ctx.createLinearGradient(fromNode.x, fromNode.y, toNode.x, toNode.y);
+          const fromR = parseInt(fromNode.color.slice(1, 3), 16);
+          const fromG = parseInt(fromNode.color.slice(3, 5), 16);
+          const fromB = parseInt(fromNode.color.slice(5, 7), 16);
+          const toR = parseInt(toNode.color.slice(1, 3), 16);
+          const toG = parseInt(toNode.color.slice(3, 5), 16);
+          const toB = parseInt(toNode.color.slice(5, 7), 16);
+          const tempAlpha = te.active ? 0.2 : 0.06;
+          edgeGrad.addColorStop(0, `rgba(${fromR}, ${fromG}, ${fromB}, ${tempAlpha})`);
+          edgeGrad.addColorStop(1, `rgba(${toR}, ${toG}, ${toB}, ${tempAlpha})`);
+
+          ctx.beginPath();
+          ctx.moveTo(fromNode.x, fromNode.y);
+          ctx.lineTo(toNode.x, toNode.y);
+          ctx.strokeStyle = edgeGrad;
+          ctx.lineWidth = te.active ? 1.5 : 0.5;
+          ctx.stroke();
+
+          // Active temporal edges glow brighter
+          if (te.active) {
+            ctx.beginPath();
+            ctx.moveTo(fromNode.x, fromNode.y);
+            ctx.lineTo(toNode.x, toNode.y);
+            ctx.strokeStyle = `rgba(${fromR}, ${fromG}, ${fromB}, 0.05)`;
+            ctx.lineWidth = 5;
+            ctx.stroke();
+          }
+
+          // Traveling packet (bright dot moving along the edge)
+          const packetX = fromNode.x + dx * te.dataFlow;
+          const packetY = fromNode.y + dy * te.dataFlow;
+
+          // Interpolate color along the path
+          const pR = Math.round(fromR + (toR - fromR) * te.dataFlow);
+          const pG = Math.round(fromG + (toG - fromG) * te.dataFlow);
+          const pB = Math.round(fromB + (toB - fromB) * te.dataFlow);
+
+          // Packet glow
+          const packetAlpha = te.active ? 0.6 : 0.25;
+          ctx.beginPath();
+          ctx.arc(packetX, packetY, te.active ? 4 : 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${pR}, ${pG}, ${pB}, ${packetAlpha * 0.3})`;
+          ctx.fill();
+
+          // Packet core
+          ctx.beginPath();
+          ctx.arc(packetX, packetY, te.active ? 2 : 1.2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${pR}, ${pG}, ${pB}, ${packetAlpha})`;
+          ctx.fill();
+
+          // Trail behind packet
+          const trailLen = 3;
+          for (let ti = 1; ti <= trailLen; ti++) {
+            const trailPos = te.dataFlow - ti * 0.02 * te.speed;
+            if (trailPos < 0) continue;
+            const trailX = fromNode.x + dx * trailPos;
+            const trailY = fromNode.y + dy * trailPos;
+            const trailA = packetAlpha * (1 - ti / (trailLen + 1)) * 0.4;
+            ctx.beginPath();
+            ctx.arc(trailX, trailY, 1, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${pR}, ${pG}, ${pB}, ${trailA})`;
+            ctx.fill();
+          }
+        });
+      }
 
       // ---- Draw nodes with sparklines ----
       hoveredRef = null;

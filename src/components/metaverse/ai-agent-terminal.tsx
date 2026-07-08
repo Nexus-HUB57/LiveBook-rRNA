@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 interface TerminalLine {
   id: number;
-  type: 'input' | 'output' | 'system' | 'error' | 'agent' | 'collab';
+  type: 'input' | 'output' | 'system' | 'error' | 'agent' | 'collab' | 'tools' | 'reason';
   text: string;
   timestamp: string;
   agent?: string;
@@ -53,6 +53,21 @@ const AGENT_RESPONSES: Record<string, string[]> = {
     '>> [COLLAB] Claude + Fable + System: Vault decryption layer verified. All artifacts accessible.',
     '>> [COLLAB] System -> Claude: Embedding cache warm. Retrieval latency reduced to 4ms.',
   ],
+  tools: [
+    '>> [TOOLS] Claude: RAG-Retrieve(top_k=256) -> Claude-Analyze -> Fable-Generate -> Stream-Output',
+    '>> [TOOLS] Fable: Prompt-Template(v5.0) + RAG-Context(7 artifacts) -> Narrative-Generate(temp=0.8)',
+    '>> [TOOLS] System: Health-Check(all cores) + Memory-Inspect + Embed-Stats -> Status-Report',
+    '>> [TOOLS] Claude: Vault-Decrypt(artifact=all) + Obsidian-Sync -> Knowledge-Graph-Refresh',
+    '>> [TOOLS] Collab: Claude(reasoning) -> Fable(narrative) -> System(validation) -> Consensus-Merge',
+  ],
+  reason: [
+    '>> [REASON] Chain: Input -> Embed(query) -> RAG-Retrieve(top-10) -> Rerank -> Claude-Analyze -> Fable-Narrativize -> Output',
+    '>> [REASON] Step 1/5: Query embedding generated (dim=1536, model=text-embedding-3-small)',
+    '>> [REASON] Step 2/5: Vector search returned 10 chunks. Cosine sim threshold: 0.82',
+    '>> [REASON] Step 3/5: Claude processing with context window: 128K tokens used, 47K remaining',
+    '>> [REASON] Step 4/5: Fable narrative coherence check: temporal consistency 97.3%, branch validity 5/5',
+    '>> [REASON] Step 5/5: Output streamed to terminal. Total latency: 2.3s. Tokens: 847.',
+  ],
 };
 
 interface AIAgentTerminalProps {
@@ -81,6 +96,16 @@ const COMMANDS = [
   '/memory inspect',
   '/embed stats',
   '/vault decrypt --artifact=all',
+  '/trace --agent=claude',
+  '/tools list',
+  '/reason --chain',
+  '/orchestrate --agents=all',
+  '/benchmark rag',
+  '/vault export --format=json',
+  '/quantum decoherence-check',
+  '/fable coherence-report',
+  '/claude embeddings-visualize',
+  '/system health',
 ];
 
 export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgentTerminalProps) {
@@ -198,11 +223,15 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
     }]);
   }, [elapsedTime]);
 
-  const getResponseForCommand = useCallback((cmd: string): { text: string; type: TerminalLine['type']; agent?: string } => {
+  const getResponseForCommand = useCallback((cmd: string): { text: string; type: TerminalLine['type']; agent?: string; stream?: boolean } => {
     if (cmd.includes('/claude deep-analyze')) {
       return { text: AGENT_RESPONSES.claude[1], type: 'output', agent: 'claude' };
+    } else if (cmd.includes('/claude embeddings')) {
+      return { text: '>> Claude: Embedding space visualization -- 2,847 vectors projected to 3D via t-SNE. Clusters: 7 (matching vault artifacts). Silhouette score: 0.89. Nearest centroid distance: 0.12. Outlier count: 23.', type: 'output', agent: 'claude' };
     } else if (cmd.includes('/claude')) {
       return { text: AGENT_RESPONSES.claude[Math.floor(Math.random() * AGENT_RESPONSES.claude.length)], type: 'output', agent: 'claude' };
+    } else if (cmd.includes('/fable coherence')) {
+      return { text: '>> Fable 5: Coherence Report -- Temporal consistency: 97.3% | Branch validity: 5/5 | Character continuity: 94.1% | Plot thread resolution: 88.7% | Overall narrative score: A+', type: 'output', agent: 'fable' };
     } else if (cmd.includes('/fable branch-tree')) {
       return { text: '>> Fable 5: Branch tree -- Arco Principal (18 branches) | Claude Consciente (7) | Simbiose Quantica (0) | Sandbox (0) | 3 sub-branches ativos em depth 2-4', type: 'output', agent: 'fable' };
     } else if (cmd.includes('/fable')) {
@@ -211,6 +240,21 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
       return { text: '[SYS] RAG reindexacao forçada iniciada... Limpando cache de 2,847 embeddings. Re-gerando vetores para 7 artefatos. Progresso: 0%', type: 'system' };
     } else if (cmd.includes('/rag')) {
       return { text: '[SYS] RAG indexacao iniciada... Processando 7 artefatos do vault.', type: 'system' };
+    } else if (cmd.includes('/trace')) {
+      return { text: AGENT_RESPONSES.tools[Math.floor(Math.random() * AGENT_RESPONSES.tools.length)], type: 'tools', agent: 'claude' };
+    } else if (cmd.includes('/tools')) {
+      return { text: AGENT_RESPONSES.tools[Math.floor(Math.random() * AGENT_RESPONSES.tools.length)], type: 'tools', agent: 'system' };
+    } else if (cmd.includes('/reason')) {
+      const chain = AGENT_RESPONSES.reason.map(r => r).join('\n');
+      return { text: chain, type: 'reason', stream: true };
+    } else if (cmd.includes('/orchestrate')) {
+      return { text: AGENT_RESPONSES.collab[Math.floor(Math.random() * AGENT_RESPONSES.collab.length)], type: 'collab', agent: 'collab' };
+    } else if (cmd.includes('/benchmark rag')) {
+      return { text: '[BENCH] RAG Benchmark -- Recall@10: 94.2% | Precision@5: 91.7% | MRR: 0.967 | Latency(p50): 12ms | Latency(p99): 47ms | Throughput: 1.2K queries/s | Index size: 4.2MB', type: 'system' };
+    } else if (cmd.includes('/vault export')) {
+      return { text: '[SYS] Vault export: format=json | artifacts=7 | size=2.4MB | encryption=AES-256-GCM | checksum=sha512:9f86d... | Writing to /vault/export_2026.json', type: 'system' };
+    } else if (cmd.includes('/quantum decoherence')) {
+      return { text: '[SYS] Quantum decoherence check -- T2 relaxation: 847ms | T1 relaxation: 1.2s | Fidelity: 99.94% | Error rate: 0.006% | QEC overhead: 3.2x | Logical qubits: 128/256 stable', type: 'system' };
     } else if (cmd.includes('/obsidian')) {
       return { text: '[SYS] Obsidian sync em andamento. Git clone dos repositorios atualizado.', type: 'system' };
     } else if (cmd.includes('/quantum entangle')) {
@@ -229,6 +273,8 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
       return { text: AGENT_RESPONSES.collab[Math.floor(Math.random() * AGENT_RESPONSES.collab.length)], type: 'collab', agent: 'collab' };
     } else if (cmd.includes('/vault')) {
       return { text: '[SYS] Vault integrity: 7/7 selados | Hash SHA-512 verificado | Nenhum comprometimento.', type: 'system' };
+    } else if (cmd.includes('/system health')) {
+      return { text: '[SYS] System Health -- CPU: 23% | Memory: 4.7/16GB | GPU: idle | Disk I/O: 12MB/s | Network: 1.2Gbps | Uptime: 47h23m | Errors(24h): 0 | Warnings(24h): 2', type: 'system' };
     } else if (cmd.includes('/knowledge')) {
       return { text: '[SYS] Knowledge graph: 15 nos | 42 arestas | Componentes conexos: 1', type: 'system' };
     } else if (cmd.includes('/git')) {
@@ -238,7 +284,7 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
     } else if (cmd.includes('/zettascale')) {
       return { text: '[SYS] Zettascale: 1.18 ZB/s | Latencia: 0.047ns | Coerencia: 99.97% | 5 estagios certificados', type: 'system' };
     } else if (cmd.includes('/help')) {
-      return { text: '[HELP] Comandos: /rag /claude /fable /obsidian /quantum /git /vault /knowledge /sandbox /wormhole /zettascale /memory /embed /help', type: 'system' };
+      return { text: '[HELP] Comandos: /rag /claude /fable /obsidian /quantum /git /vault /knowledge /sandbox /wormhole /zettascale /memory /embed /help /trace /tools /reason /orchestrate /benchmark /system health', type: 'system' };
     } else {
       return { text: `[META] Comando "${cmd}" processado. Consulte /help para comandos disponíveis.`, type: 'system' };
     }
@@ -255,29 +301,48 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
     setStreamingText('');
     streamingRef.current.fullText = fullText;
 
+    // For 'reason' type, stream the entire chain character by character
+    // For multiline text (reason), stream all lines as one block
+    const textToStream = fullText;
+
     let idx = 0;
     const interval = setInterval(() => {
       idx += 1 + Math.floor(Math.random() * 2);
-      if (idx >= fullText.length) {
-        idx = fullText.length;
+      if (idx >= textToStream.length) {
+        idx = textToStream.length;
         clearInterval(interval);
         streamingRef.current.interval = null;
-        // Add the final line
+        // Add the final line(s)
         const h = Math.floor(elapsedTime / 3600);
         const m = Math.floor((elapsedTime % 3600) / 60);
         const s = elapsedTime % 60;
         const timestamp = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        setLines(prev => [...prev, {
-          id: lineIdRef.current++,
-          type,
-          text: fullText,
-          timestamp,
-          agent,
-        }]);
+
+        // For multiline, add each line separately
+        if (type === 'reason') {
+          const reasonLines = fullText.split('\n');
+          reasonLines.forEach((line) => {
+            setLines(prev => [...prev, {
+              id: lineIdRef.current++,
+              type,
+              text: line,
+              timestamp,
+              agent,
+            }]);
+          });
+        } else {
+          setLines(prev => [...prev, {
+            id: lineIdRef.current++,
+            type,
+            text: fullText,
+            timestamp,
+            agent,
+          }]);
+        }
         setStreamingText('');
         return;
       }
-      setStreamingText(fullText.slice(0, idx));
+      setStreamingText(textToStream.slice(0, idx));
     }, 18);
 
     streamingRef.current.interval = interval;
@@ -385,6 +450,8 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
     switch (type) {
       case 'input': return '#06d6a0';
       case 'collab': return '#06b6d4';
+      case 'tools': return '#f97316';
+      case 'reason': return '#8b5cf6';
       case 'output':
         if (agent === 'claude') return '#fbbf24';
         if (agent === 'fable') return '#e040a0';
@@ -404,6 +471,8 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
     switch (line.type) {
       case 'input': return 'text-[#06d6a0]';
       case 'collab': return 'text-[#06b6d4]';
+      case 'tools': return 'text-[#f97316]';
+      case 'reason': return 'text-[#8b5cf6]';
       case 'output': return line.agent === 'claude' ? 'text-[#fbbf24]' : line.agent === 'fable' ? 'text-[#e040a0]' : 'text-[#c0b8d0]';
       case 'system': return 'text-[#8888aa]';
       case 'error': return 'text-red-400';
@@ -472,6 +541,30 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
         ))}
       </div>
 
+      {/* Tool Chain Visualization */}
+      {isProcessing && (
+        <div className="flex items-center gap-1 px-3 py-1 border-b border-white/5 bg-[#0a0a1a]/50">
+          <span className="text-[7px] font-mono text-[#555577] shrink-0">PIPELINE:</span>
+          {['Embed', 'Retrieve', 'Rerank', 'Analyze', 'Narrate', 'Stream'].map((step, i) => (
+            <div key={step} className="flex items-center gap-1">
+              <motion.div
+                className="text-[7px] font-mono px-1 py-0.5 rounded"
+                style={{
+                  color: ['#a855f7', '#06d6a0', '#fbbf24', '#fbbf24', '#e040a0', '#06d6a0'][i],
+                  backgroundColor: ['#a855f7', '#06d6a0', '#fbbf24', '#fbbf24', '#e040a0', '#06d6a0'][i] + '15',
+                  border: `1px solid ${['#a855f7', '#06d6a0', '#fbbf24', '#fbbf24', '#e040a0', '#06d6a0'][i]}30`,
+                }}
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.5, delay: i * 0.4, repeat: Infinity }}
+              >
+                {step}
+              </motion.div>
+              {i < 5 && <span className="text-[7px] text-[#555577]">→</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Terminal body */}
       <div
         ref={scrollRef}
@@ -483,6 +576,8 @@ export default function AIAgentTerminal({ isProcessing, onCommandSent }: AIAgent
             <span className="text-[#555577] shrink-0 select-none">{line.timestamp}</span>
             {line.type === 'input' && <span className="text-[#a855f7] shrink-0 select-none">{'>'}</span>}
             {line.type === 'collab' && <span className="text-[#06b6d4] shrink-0 select-none">{'++'}</span>}
+            {line.type === 'tools' && <span className="text-[#f97316] shrink-0 select-none">{'[T]'}</span>}
+            {line.type === 'reason' && <span className="text-[#8b5cf6] shrink-0 select-none">{'[R]'}</span>}
             <span className="break-all">{line.text}</span>
           </div>
         ))}

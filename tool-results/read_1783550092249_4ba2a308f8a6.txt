@@ -1,0 +1,904 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useState, useEffect, useCallback, useRef } from 'react';
+     4→     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→     5→import { Cpu, Zap, RefreshCw, ArrowLeftRight, Shield, Thermometer, Activity, Layers, AlertTriangle, Link2 } from 'lucide-react';
+     6→     6→import TrinuclearSandboxCanvas from './trinuclear-sandbox-canvas';
+     7→     7→
+     8→     8→type SandboxPhase = 'offline' | 'booting' | 'synchronizing' | 'active' | 'stress-test';
+     9→     9→type CoreId = 'ollama' | 'llama4' | 'openai';
+    10→    10→type StressTestSubPhase = 'ramp-up' | 'peak-load' | 'error-injection' | 'none';
+    11→    11→
+    12→    12→interface CoreStatus {
+    13→    13→  id: CoreId;
+    14→    14→  name: string;
+    15→    15→  engine: string;
+    16→    16→  version: string;
+    17→    17→  status: 'offline' | 'loading' | 'ready' | 'processing' | 'error';
+    18→    18→  temperature: number;
+    19→    19→  tokensPerSec: number;
+    20→    20→  memoryGB: number;
+    21→    21→  model: string;
+    22→    22→  latency: number;
+    23→    23→  color: string;
+    24→    24→  uptime: number;
+    25→    25→  requests: number;
+    26→    26→  accuracy: number;
+    27→    27→}
+    28→    28→
+    29→    29→const INITIAL_CORES: CoreStatus[] = [
+    30→    30→  {
+    31→    31→    id: 'ollama', name: 'Ollama', engine: 'llama.cpp', version: '0.5.4',
+    32→    32→    status: 'offline', temperature: 0.7, tokensPerSec: 0, memoryGB: 0,
+    33→    33→    model: 'Llama 4 Maverick (Local)', latency: 0, color: '#06d6a0', uptime: 0, requests: 0, accuracy: 0,
+    34→    34→  },
+    35→    35→  {
+    36→    36→    id: 'llama4', name: 'Llama 4 Maverick', engine: 'PyTorch', version: '4.0-maverick',
+    37→    37→    status: 'offline', temperature: 0.5, tokensPerSec: 0, memoryGB: 0,
+    38→    38→    model: 'Meta Llama 4 Maverick 128E', latency: 0, color: '#fbbf24', uptime: 0, requests: 0, accuracy: 0,
+    39→    39→  },
+    40→    40→  {
+    41→    41→    id: 'openai', name: 'OpenAI', engine: 'Native API', version: 'v1.84',
+    42→    42→    status: 'offline', temperature: 0.3, tokensPerSec: 0, memoryGB: 0,
+    43→    43→    model: 'GPT-4o / o3-mini', latency: 0, color: '#e040a0', uptime: 0, requests: 0, accuracy: 0,
+    44→    44→  },
+    45→    45→];
+    46→    46→
+    47→    47→interface InferenceLog {
+    48→    48→  id: number;
+    49→    49→  core: CoreId;
+    50→    50→  prompt: string;
+    51→    51→  response: string;
+    52→    52→  tokens: number;
+    53→    53→  latency: number;
+    54→    54→  timestamp: string;
+    55→    55→}
+    56→    56→
+    57→    57→const SAMPLE_INFERENCE: Record<CoreId, { prompt: string; response: string }[]> = {
+    58→    58→  ollama: [
+    59→    59→    { prompt: 'Analise a integridade do vault...', response: 'Vault integrity verified: 7/7 sealed. SHA-512 hash confirmado.' },
+    60→    60→    { prompt: 'Gere embedding RAG para artefato 2026...', response: 'Embedding gerado: 4096 dims, cosine_sim=0.947. Indexado no VectorDB.' },
+    61→    61→    { prompt: 'Simbiose quantica status...', response: 'Pares EPR ativos: 128/128. Coerencia: 99.97%. Camada rRNA sincronizada.' },
+    62→    62→  ],
+    63→    63→  llama4: [
+    64→    64→    { prompt: 'Navegue no knowledge graph...', response: '15 nos mapeados. Caminho critico: MetaTempo -> RAG -> Claude -> Fable. Profundidade: 4.' },
+    65→    65→    { prompt: 'Gere arco narrativo Fable 5...', response: 'Arco gerado: "O Legado" com 7 capitulos. Coerencia: 0.94. Branches: 12.' },
+    66→    66→    { prompt: 'Valide zettascale metrics...', response: 'Throughput: 1.18 ZB/s. Latencia: 0.047ns. Todos os nucleos certificados.' },
+    67→    67→  ],
+    68→    68→  openai: [
+    69→    69→    { prompt: 'Claude: analyze temporal artifacts...', response: 'Analysis complete. 2026 artifacts show 97.3% coherence with 2077 projections.' },
+    70→    70→    { prompt: 'Optimize RAG retrieval pipeline...', response: 'Pipeline optimized. Top-K: 128 -> 256. Recall improved 23%. Latency -18ms.' },
+    71→    71→    { prompt: 'Sandbox sync verification...', response: 'All 3 cores synchronized via OpenClaw. Entanglement verified. System stable.' },
+    72→    72→  ],
+    73→    73→};
+    74→    74→
+    75→    75→const STRESS_PHASE_LABELS: Record<StressTestSubPhase, string> = {
+    76→    76→  none: '',
+    77→    77→  'ramp-up': 'Phase 1: Ramp Up',
+    78→    78→  'peak-load': 'Phase 2: Peak Load',
+    79→    79→  'error-injection': 'Phase 3: Error Injection',
+    80→    80→};
+    81→    81→
+    82→    82→const STRESS_PHASE_COLORS: Record<StressTestSubPhase, string> = {
+    83→    83→  none: '#8888aa',
+    84→    84→  'ramp-up': '#fbbf24',
+    85→    85→  'peak-load': '#e040a0',
+    86→    86→  'error-injection': '#ef4444',
+    87→    87→};
+    88→    88→
+    89→    89→function LatencyChart({ cores }: { cores: CoreStatus[] }) {
+    90→    90→  const canvasRef = useRef<HTMLCanvasElement>(null);
+    91→    91→  const historyRef = useRef<Record<CoreId, number[]>>({
+    92→    92→    ollama: [],
+    93→    93→    llama4: [],
+    94→    94→    openai: [],
+    95→    95→  });
+    96→    96→
+    97→    97→  useEffect(() => {
+    98→    98→    cores.forEach(c => {
+    99→    99→      if (c.status !== 'offline' && c.status !== 'loading' && c.latency > 0) {
+   100→   100→        historyRef.current[c.id].push(c.latency);
+   101→   101→        if (historyRef.current[c.id].length > 30) {
+   102→   102→          historyRef.current[c.id] = historyRef.current[c.id].slice(-30);
+   103→   103→        }
+   104→   104→      }
+   105→   105→    });
+   106→   106→
+   107→   107→    const canvas = canvasRef.current;
+   108→   108→    if (!canvas) return;
+   109→   109→    const ctx = canvas.getContext('2d');
+   110→   110→    if (!ctx) return;
+   111→   111→
+   112→   112→    const rect = canvas.getBoundingClientRect();
+   113→   113→    const dpr = window.devicePixelRatio || 1;
+   114→   114→    canvas.width = rect.width * dpr;
+   115→   115→    canvas.height = rect.height * dpr;
+   116→   116→    ctx.scale(dpr, dpr);
+   117→   117→
+   118→   118→    const w = rect.width;
+   119→   119→    const h = rect.height;
+   120→   120→    const padX = 2;
+   121→   121→    const padY = 2;
+   122→   122→    const chartW = w - padX * 2;
+   123→   123→    const chartH = h - padY * 2;
+   124→   124→
+   125→   125→    ctx.clearRect(0, 0, w, h);
+   126→   126→
+   127→   127→    // Find max value across all histories
+   128→   128→    let maxVal = 50;
+   129→   129→    Object.values(historyRef.current).forEach(hist => {
+   130→   130→      hist.forEach(v => { if (v > maxVal) maxVal = v; });
+   131→   131→    });
+   132→   132→    maxVal = Math.ceil(maxVal / 20) * 20;
+   133→   133→
+   134→   134→    const coreColors: Record<CoreId, string> = {
+   135→   135→      ollama: '#06d6a0',
+   136→   136→      llama4: '#fbbf24',
+   137→   137→      openai: '#e040a0',
+   138→   138→    };
+   139→   139→
+   140→   140→    (Object.keys(historyRef.current) as CoreId[]).forEach(coreId => {
+   141→   141→      const data = historyRef.current[coreId];
+   142→   142→      if (data.length < 2) return;
+   143→   143→
+   144→   144→      ctx.beginPath();
+   145→   145→      data.forEach((val, i) => {
+   146→   146→        const x = padX + (i / 29) * chartW;
+   147→   147→        const y = padY + chartH - (val / maxVal) * chartH;
+   148→   148→        if (i === 0) ctx.moveTo(x, y);
+   149→   149→        else ctx.lineTo(x, y);
+   150→   150→      });
+   151→   151→      ctx.strokeStyle = coreColors[coreId];
+   152→   152→      ctx.lineWidth = 1.2;
+   153→   153→      ctx.globalAlpha = 0.8;
+   154→   154→      ctx.stroke();
+   155→   155→      ctx.globalAlpha = 1;
+   156→   156→    });
+   157→   157→
+   158→   158→    // Y-axis labels
+   159→   159→    ctx.font = '7px monospace';
+   160→   160→    ctx.fillStyle = '#555577';
+   161→   161→    ctx.textAlign = 'right';
+   162→   162→    ctx.textBaseline = 'top';
+   163→   163→    ctx.fillText(`${maxVal}`, w - 2, padY);
+   164→   164→    ctx.fillText('0', w - 2, padY + chartH - 8);
+   165→   165→  }, [cores]);
+   166→   166→
+   167→   167→  return (
+   168→   168→    <div className="col-span-2 sm:col-span-2">
+   169→   169→      <canvas
+   170→   170→        ref={canvasRef}
+   171→   171→        className="block w-full"
+   172→   172→        style={{ height: '40px' }}
+   173→   173→      />
+   174→   174→    </div>
+   175→   175→  );
+   176→   176→}
+   177→   177→
+   178→   178→export default function SandboxTrinuclearSection() {
+   179→   179→  const [phase, setPhase] = useState<SandboxPhase>('offline');
+   180→   180→  const [cores, setCores] = useState<CoreStatus[]>(INITIAL_CORES);
+   181→   181→  const [logs, setLogs] = useState<InferenceLog[]>([]);
+   182→   182→  const [syncIntensity, setSyncIntensity] = useState(0);
+   183→   183→  const [cycleCount, setCycleCount] = useState(0);
+   184→   184→  const [elapsedSec, setElapsedSec] = useState(0);
+   185→   185→  const [stressSubPhase, setStressSubPhase] = useState<StressTestSubPhase>('none');
+   186→   186→  const [crossCoreActive, setCrossCoreActive] = useState<CoreId[]>([]);
+   187→   187→  const [errorCount, setErrorCount] = useState(0);
+   188→   188→  const [errorFlashCore, setErrorFlashCore] = useState<CoreId | null>(null);
+   189→   189→  const logIdRef = useRef(0);
+   190→   190→  const intervalRefs = useRef<ReturnType<typeof setInterval>[]>([]);
+   191→   191→
+   192→   192→  // Timer
+   193→   193→  useEffect(() => {
+   194→   194→    const interval = setInterval(() => {
+   195→   195→      setElapsedSec(prev => prev + 1);
+   196→   196→    }, 1000);
+   197→   197→    return () => clearInterval(interval);
+   198→   198→  }, []);
+   199→   199→
+   200→   200→  // Live metric fluctuation
+   201→   201→  useEffect(() => {
+   202→   202→    if (phase !== 'active' && phase !== 'stress-test') return;
+   203→   203→    const interval = setInterval(() => {
+   204→   204→      setCores(prev => prev.map(c => {
+   205→   205→        if (c.status === 'offline' || c.status === 'loading') return c;
+   206→   206→        return {
+   207→   207→          ...c,
+   208→   208→          tokensPerSec: Math.max(0, c.tokensPerSec + (Math.random() - 0.45) * 5),
+   209→   209→          latency: Math.max(1, c.latency + (Math.random() - 0.5) * 2),
+   210→   210→          requests: c.requests + (phase === 'stress-test' ? Math.floor(Math.random() * 3) : Math.random() > 0.7 ? 1 : 0),
+   211→   211→          uptime: c.uptime + 1,
+   212→   212→        };
+   213→   213→      }));
+   214→   214→    }, 1000);
+   215→   215→    intervalRefs.current.push(interval);
+   216→   216→    return () => clearInterval(interval);
+   217→   217→  }, [phase]);
+   218→   218→
+   219→   219→  const clearIntervals = useCallback(() => {
+   220→   220→    intervalRefs.current.forEach(clearInterval);
+   221→   221→    intervalRefs.current = [];
+   222→   222→  }, []);
+   223→   223→
+   224→   224→  const addLog = useCallback((core: CoreId, sample: { prompt: string; response: string }, tokens: number, latency: number) => {
+   225→   225→    const s = elapsedSec;
+   226→   226→    const h = Math.floor(s / 3600);
+   227→   227→    const m = Math.floor((s % 3600) / 60);
+   228→   228→    const sec = s % 60;
+   229→   229→    const timestamp = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+   230→   230→    setLogs(prev => [...prev.slice(-49), {
+   231→   231→      id: logIdRef.current++,
+   232→   232→      core,
+   233→   233→      prompt: sample.prompt,
+   234→   234→      response: sample.response,
+   235→   235→      tokens,
+   236→   236→      latency,
+   237→   237→      timestamp,
+   238→   238→    }]);
+   239→   239→  }, [elapsedSec]);
+   240→   240→
+   241→   241→  const bootSequence = useCallback(() => {
+   242→   242→    if (phase !== 'offline') return;
+   243→   243→    setPhase('booting');
+   244→   244→    clearIntervals();
+   245→   245→    setCores(INITIAL_CORES.map(c => ({ ...c, status: 'loading' as const })));
+   246→   246→    setSyncIntensity(0);
+   247→   247→    setStressSubPhase('none');
+   248→   248→    setCrossCoreActive([]);
+   249→   249→    setErrorCount(0);
+   250→   250→    setErrorFlashCore(null);
+   251→   251→
+   252→   252→    const bootTargets = [
+   253→   253→      { idx: 0, delay: 800 },
+   254→   254→      { idx: 1, delay: 2200 },
+   255→   255→      { idx: 2, delay: 3600 },
+   256→   256→    ];
+   257→   257→
+   258→   258→    const timeouts: ReturnType<typeof setTimeout>[] = [];
+   259→   259→
+   260→   260→    bootTargets.forEach(({ idx, delay }) => {
+   261→   261→      timeouts.push(setTimeout(() => {
+   262→   262→        setCores(prev => {
+   263→   263→          const next = [...prev];
+   264→   264→          next[idx] = {
+   265→   265→            ...next[idx],
+   266→   266→            status: 'ready',
+   267→   267→            tokensPerSec: 45 + Math.random() * 30,
+   268→   268→            memoryGB: 8 + Math.random() * 12,
+   269→   269→            latency: 15 + Math.random() * 25,
+   270→   270→            accuracy: 0.92 + Math.random() * 0.07,
+   271→   271→          };
+   272→   272→          return next;
+   273→   273→        });
+   274→   274→      }, delay));
+   275→   275→    });
+   276→   276→
+   277→   277→    timeouts.push(setTimeout(() => {
+   278→   278→      setPhase('synchronizing');
+   279→   279→      let syncProg = 0;
+   280→   280→      const syncInterval = setInterval(() => {
+   281→   281→        syncProg += 0.03 + Math.random() * 0.04;
+   282→   282→        setSyncIntensity(Math.min(1, syncProg));
+   283→   283→        if (syncProg >= 1) {
+   284→   284→          clearInterval(syncInterval);
+   285→   285→          setPhase('active');
+   286→   286→          setSyncIntensity(1);
+   287→   287→        }
+   288→   288→      }, 200);
+   289→   289→      intervalRefs.current.push(syncInterval);
+   290→   290→    }, 5000));
+   291→   291→
+   292→   292→    return () => timeouts.forEach(clearTimeout);
+   293→   293→  }, [phase, clearIntervals]);
+   294→   294→
+   295→   295→  // Auto inference during active/stress-test
+   296→   296→  useEffect(() => {
+   297→   297→    if (phase !== 'active' && phase !== 'stress-test') return;
+   298→   298→
+   299→   299→    const interval = setInterval(() => {
+   300→   300→      const coreId = ['ollama', 'llama4', 'openai'][Math.floor(Math.random() * 3)] as CoreId;
+   301→   301→      const samples = SAMPLE_INFERENCE[coreId];
+   302→   302→      const sample = samples[Math.floor(Math.random() * samples.length)];
+   303→   303→      const tokens = 120 + Math.floor(Math.random() * 380);
+   304→   304→      const latency = 20 + Math.floor(Math.random() * 180);
+   305→   305→
+   306→   306→      setCores(prev => prev.map(c =>
+   307→   307→        c.id === coreId ? { ...c, status: 'processing' as const } : c
+   308→   308→      ));
+   309→   309→
+   310→   310→      // Cross-core inference during stress test peak-load phase
+   311→   311→      if (phase === 'stress-test' && stressSubPhase === 'peak-load' && Math.random() > 0.6) {
+   312→   312→        const otherCores = ['ollama', 'llama4', 'openai'].filter(c => c !== coreId);
+   313→   313→        const numCollaborators = 1 + Math.floor(Math.random() * 2);
+   314→   314→        const collaborators = otherCores.sort(() => Math.random() - 0.5).slice(0, numCollaborators);
+   315→   315→        setCrossCoreActive([coreId, ...collaborators] as CoreId[]);
+   316→   316→        setTimeout(() => setCrossCoreActive([]), 1500);
+   317→   317→
+   318→   318→        collaborators.forEach(cc => {
+   319→   319→          setCores(prev => prev.map(c =>
+   320→   320→            c.id === cc ? { ...c, status: 'processing' as const } : c
+   321→   321→          ));
+   322→   322→        });
+   323→   323→
+   324→   324→        setTimeout(() => {
+   325→   325→          collaborators.forEach(cc => {
+   326→   326→            setCores(prev => prev.map(c =>
+   327→   327→              c.id === cc ? { ...c, status: 'ready' as const } : c
+   328→   328→            ));
+   329→   329→          });
+   330→   330→        }, 600);
+   331→   331→      }
+   332→   332→
+   333→   333→      setTimeout(() => {
+   334→   334→        addLog(coreId, sample, tokens, latency);
+   335→   335→        setCores(prev => prev.map(c =>
+   336→   336→          c.id === coreId ? { ...c, status: 'ready' as const, requests: c.requests + 1 } : c
+   337→   337→        ));
+   338→   338→      }, 200);
+   339→   339→    }, phase === 'stress-test' ? 800 : 2500);
+   340→   340→
+   341→   341→    intervalRefs.current.push(interval);
+   342→   342→    return () => clearInterval(interval);
+   343→   343→  }, [phase, stressSubPhase, addLog]);
+   344→   344→
+   345→   345→  const shutdown = useCallback(() => {
+   346→   346→    clearIntervals();
+   347→   347→    setPhase('offline');
+   348→   348→    setSyncIntensity(0);
+   349→   349→    setCores(INITIAL_CORES);
+   350→   350→    setStressSubPhase('none');
+   351→   351→    setCrossCoreActive([]);
+   352→   352→  }, [clearIntervals]);
+   353→   353→
+   354→   354→  const runStressTest = useCallback(() => {
+   355→   355→    if (phase === 'offline' || phase === 'booting') return;
+   356→   356→    setPhase('stress-test');
+   357→   357→    setSyncIntensity(1);
+   358→   358→    setErrorCount(0);
+   359→   359→
+   360→   360→    let stressTime = 0;
+   361→   361→    const interval = setInterval(() => {
+   362→   362→      stressTime++;
+   363→   363→
+   364→   364→      // Phase 1: Gradual ramp up (0-5s)
+   365→   365→      if (stressTime <= 5) {
+   366→   366→        setStressSubPhase('ramp-up');
+   367→   367→        const rampFactor = stressTime / 5;
+   368→   368→        setCores(prev => prev.map(c => ({
+   369→   369→          ...c,
+   370→   370→          temperature: Math.min(1.2, c.temperature + 0.003 * rampFactor),
+   371→   371→          tokensPerSec: Math.max(20, c.tokensPerSec + (Math.random() - 0.4) * 8 * rampFactor),
+   372→   372→        })));
+   373→   373→      }
+   374→   374→      // Phase 2: Peak load with cross-core (5-10s)
+   375→   375→      else if (stressTime <= 10) {
+   376→   376→        setStressSubPhase('peak-load');
+   377→   377→        setCores(prev => prev.map(c => ({
+   378→   378→          ...c,
+   379→   379→          temperature: Math.min(1.8, c.temperature + 0.008 + Math.random() * 0.01),
+   380→   380→          tokensPerSec: Math.max(30, c.tokensPerSec + (Math.random() - 0.35) * 15),
+   381→   381→        })));
+   382→   382→      }
+   383→   383→      // Phase 3: Error injection and recovery (10-15s)
+   384→   384→      else if (stressTime <= 15) {
+   385→   385→        setStressSubPhase('error-injection');
+   386→   386→
+   387→   387→        // Occasionally inject an error
+   388→   388→        if (stressTime === 11 || stressTime === 13) {
+   389→   389→          const errorCore = INITIAL_CORES[Math.floor(Math.random() * 3)];
+   390→   390→          setErrorCount(prev => prev + 1);
+   391→   391→          setErrorFlashCore(errorCore.id);
+   392→   392→          setCores(prev => prev.map(c =>
+   393→   393→            c.id === errorCore.id ? { ...c, status: 'error' as const, latency: c.latency * 3 } : c
+   394→   394→          ));
+   395→   395→          // Recover after 800ms
+   396→   396→          setTimeout(() => {
+   397→   397→            setErrorFlashCore(null);
+   398→   398→            setCores(prev => prev.map(c =>
+   399→   399→              c.id === errorCore.id ? { ...c, status: 'ready' as const, latency: 20 + Math.random() * 15 } : c
+   400→   400→            ));
+   401→   401→          }, 800);
+   402→   402→        }
+   403→   403→
+   404→   404→        setCores(prev => prev.map(c => ({
+   405→   405→          ...c,
+   406→   406→          temperature: Math.max(0.5, c.temperature - 0.005),
+   407→   407→          tokensPerSec: Math.max(40, c.tokensPerSec + (Math.random() - 0.5) * 10),
+   408→   408→        })));
+   409→   409→      }
+   410→   410→
+   411→   411→      if (stressTime >= 15) {
+   412→   412→        clearInterval(interval);
+   413→   413→        setPhase('active');
+   414→   414→        setStressSubPhase('none');
+   415→   415→        setCrossCoreActive([]);
+   416→   416→        setCores(prev => prev.map(c => ({
+   417→   417→          ...c,
+   418→   418→          status: 'ready' as const,
+   419→   419→          temperature: 0.5 + Math.random() * 0.3,
+   420→   420→          tokensPerSec: 50 + Math.random() * 30,
+   421→   421→        })));
+   422→   422→      }
+   423→   423→    }, 1000);
+   424→   424→    intervalRefs.current.push(interval);
+   425→   425→  }, [phase]);
+   426→   426→
+   427→   427→  const resetCores = useCallback(() => {
+   428→   428→    shutdown();
+   429→   429→    setTimeout(() => bootSequence(), 500);
+   430→   430→    setCycleCount(prev => prev + 1);
+   431→   431→  }, [shutdown, bootSequence]);
+   432→   432→
+   433→   433→  const corePower: Record<string, number> = {};
+   434→   434→  cores.forEach(c => {
+   435→   435→    corePower[c.id] = c.status === 'offline' ? 0 : c.status === 'loading' ? 0.3 : Math.min(1, (c.tokensPerSec / 80));
+   436→   436→  });
+   437→   437→
+   438→   438→  const formatTime = (s: number) => {
+   439→   439→    const h = Math.floor(s / 3600);
+   440→   440→    const m = Math.floor((s % 3600) / 60);
+   441→   441→    const sec = s % 60;
+   442→   442→    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+   443→   443→  };
+   444→   444→
+   445→   445→  const phaseLabel: Record<SandboxPhase, string> = {
+   446→   446→    offline: 'OFFLINE', booting: 'BOOTING', synchronizing: 'SYNCING', active: 'ACTIVE', 'stress-test': 'STRESS TEST',
+   447→   447→  };
+   448→   448→  const phaseColor: Record<SandboxPhase, string> = {
+   449→   449→    offline: '#8888aa', booting: '#fbbf24', synchronizing: '#a855f7', active: '#06d6a0', 'stress-test': '#e040a0',
+   450→   450→  };
+   451→   451→
+   452→   452→  const totalTPS = cores.reduce((s, c) => s + c.tokensPerSec, 0);
+   453→   453→  const totalReqs = cores.reduce((s, c) => s + c.requests, 0);
+   454→   454→  const avgAccuracy = cores.reduce((s, c) => s + c.accuracy, 0) / 3;
+   455→   455→  const avgLatency = cores.reduce((s, c) => s + c.latency, 0) / 3;
+   456→   456→
+   457→   457→  return (
+   458→   458→    <section className="relative py-20 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+   459→   459→      {/* Background atmosphere */}
+   460→   460→      <div className="absolute inset-0 pointer-events-none">
+   461→   461→        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] opacity-[0.03]"
+   462→   462→          style={{ background: 'radial-gradient(ellipse, #a855f7 0%, transparent 60%)', filter: 'blur(100px)' }}
+   463→   463→        />
+   464→   464→      </div>
+   465→   465→
+   466→   466→      <div className="max-w-7xl mx-auto relative z-10">
+   467→   467→        {/* Header */}
+   468→   468→        <div className="text-center mb-10 sm:mb-14">
+   469→   469→          <motion.span
+   470→   470→            className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.3em] uppercase text-[#a855f7] mb-4 border border-[#a855f7]/20 px-4 py-2 rounded-full"
+   471→   471→            initial={{ opacity: 0, y: 20 }}
+   472→   472→            whileInView={{ opacity: 1, y: 0 }}
+   473→   473→            viewport={{ once: true }}
+   474→   474→            transition={{ duration: 0.6 }}
+   475→   475→          >
+   476→   476→            <Shield className="w-3 h-3" />
+   477→   477→            OpenClaw Native
+   478→   478→          </motion.span>
+   479→   479→          <motion.h2
+   480→   480→            className="text-3xl sm:text-4xl md:text-5xl font-bold"
+   481→   481→            initial={{ opacity: 0, y: 20 }}
+   482→   482→            whileInView={{ opacity: 1, y: 0 }}
+   483→   483→            viewport={{ once: true }}
+   484→   484→            transition={{ duration: 0.6, delay: 0.15 }}
+   485→   485→          >
+   486→   486→            <span className="text-white">Sandbox </span>
+   487→   487→            <span className="bg-gradient-to-r from-[#06d6a0] via-[#fbbf24] to-[#e040a0] bg-clip-text text-transparent">
+   488→   488→              Trinuclear
+   489→   489→            </span>
+   490→   490→          </motion.h2>
+   491→   491→          <motion.p
+   492→   492→            className="mt-4 text-[#8888aa] max-w-2xl mx-auto text-sm sm:text-base leading-relaxed px-4"
+   493→   493→            initial={{ opacity: 0, y: 20 }}
+   494→   494→            whileInView={{ opacity: 1, y: 0 }}
+   495→   495→            viewport={{ once: true }}
+   496→   496→            transition={{ duration: 0.6, delay: 0.3 }}
+   497→   497→          >
+   498→   498→            Tres nucleos de inferencia nativos sincronizados via OpenClaw:
+   499→   499→            Ollama (runtime local), Llama 4 Maverick (Meta), e OpenAI (API nativa).
+   500→   500→            Sandbox isolado com validacao de estresse em tempo real.
+   501→   501→          </motion.p>
+   502→   502→        </div>
+   503→   503→
+   504→   504→        {/* Live stats bar (6 stats) */}
+   505→   505→        <motion.div
+   506→   506→          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6 sm:mb-8"
+   507→   507→          initial={{ opacity: 0, y: 20 }}
+   508→   508→          whileInView={{ opacity: 1, y: 0 }}
+   509→   509→          viewport={{ once: true }}
+   510→   510→          transition={{ duration: 0.6, delay: 0.35 }}
+   511→   511→        >
+   512→   512→          {[
+   513→   513→            { label: 'Throughput', value: `${totalTPS.toFixed(0)} tok/s`, color: '#06d6a0', icon: <Zap className="w-4 h-4" /> },
+   514→   514→            { label: 'Requests', value: totalReqs.toLocaleString(), color: '#fbbf24', icon: <Activity className="w-4 h-4" /> },
+   515→   515→            { label: 'Latencia Media', value: `${avgLatency.toFixed(1)}ms`, color: '#a855f7', icon: <Cpu className="w-4 h-4" /> },
+   516→   516→            { label: 'Uptime', value: formatTime(elapsedSec), color: '#e040a0', icon: <Layers className="w-4 h-4" /> },
+   517→   517→            { label: 'Acuracia Media', value: `${(avgAccuracy * 100).toFixed(1)}%`, color: '#8b5cf6', icon: <Shield className="w-4 h-4" /> },
+   518→   518→            { label: 'Ciclos', value: String(cycleCount), color: '#06b6d4', icon: <RefreshCw className="w-4 h-4" /> },
+   519→   519→          ].map(stat => (
+   520→   520→            <div key={stat.label} className="glass rounded-xl p-3 flex items-center gap-3 border border-white/5">
+   521→   521→              <div style={{ color: stat.color }}>{stat.icon}</div>
+   522→   522→              <div>
+   523→   523→                <div className="text-[10px] text-[#8888aa] uppercase tracking-wider">{stat.label}</div>
+   524→   524→                <div className="text-sm font-bold font-mono text-white">{stat.value}</div>
+   525→   525→              </div>
+   526→   526→            </div>
+   527→   527→          ))}
+   528→   528→        </motion.div>
+   529→   529→
+   530→   530→        {/* Live Latency Chart */}
+   531→   531→        {(phase === 'active' || phase === 'stress-test') && (
+   532→   532→          <motion.div
+   533→   533→            className="glass rounded-xl p-3 border border-white/5 mb-6 sm:mb-8"
+   534→   534→            initial={{ opacity: 0, y: 10 }}
+   535→   535→            animate={{ opacity: 1, y: 0 }}
+   536→   536→            transition={{ duration: 0.4 }}
+   537→   537→          >
+   538→   538→            <div className="flex items-center justify-between mb-1">
+   539→   539→              <span className="text-[9px] font-mono text-[#8888aa] uppercase tracking-wider">Latencia por Core (30 samples)</span>
+   540→   540→              <div className="flex items-center gap-3">
+   541→   541→                {cores.map(c => (
+   542→   542→                  <span key={c.id} className="flex items-center gap-1">
+   543→   543→                    <span className="w-2 h-0.5 rounded-full" style={{ backgroundColor: c.color }} />
+   544→   544→                    <span className="text-[7px] font-mono" style={{ color: c.color }}>{c.name}</span>
+   545→   545→                  </span>
+   546→   546→                ))}
+   547→   547→              </div>
+   548→   548→            </div>
+   549→   549→            <LatencyChart cores={cores} />
+   550→   550→          </motion.div>
+   551→   551→        )}
+   552→   552→
+   553→   553→        {/* Cross-Core Inference Protocol Indicator */}
+   554→   554→        <AnimatePresence>
+   555→   555→          {crossCoreActive.length > 0 && (
+   556→   556→            <motion.div
+   557→   557→              className="mb-4 flex items-center justify-center gap-2"
+   558→   558→              initial={{ opacity: 0, scale: 0.9 }}
+   559→   559→              animate={{ opacity: 1, scale: 1 }}
+   560→   560→              exit={{ opacity: 0, scale: 0.9 }}
+   561→   561→              transition={{ duration: 0.3 }}
+   562→   562→            >
+   563→   563→              <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#fbbf24]/30 bg-[#fbbf24]/10">
+   564→   564→                <Link2 className="w-3.5 h-3.5 text-[#fbbf24]" />
+   565→   565→                <span className="text-[10px] font-mono font-bold text-[#fbbf24]">CROSS-CORE</span>
+   566→   566→                <span className="text-[8px] font-mono text-[#fbbf24]/70">
+   567→   567→                  {crossCoreActive.map(id => cores.find(c => c.id === id)?.name).join(' + ')}
+   568→   568→                </span>
+   569→   569→                {/* Animated connection lines visual */}
+   570→   570→                <div className="flex items-center gap-1">
+   571→   571→                  {crossCoreActive.map((id, i) => (
+   572→   572→                    <span key={id}>
+   573→   573→                      <motion.span
+   574→   574→                        className="inline-block w-1.5 h-1.5 rounded-full"
+   575→   575→                        style={{ backgroundColor: cores.find(c => c.id === id)?.color }}
+   576→   576→                        animate={{ scale: [0.8, 1.4, 0.8] }}
+   577→   577→                        transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
+   578→   578→                      />
+   579→   579→                      {i < crossCoreActive.length - 1 && (
+   580→   580→                        <motion.span
+   581→   581→                          className="inline-block w-4 h-[1px] mx-0.5"
+   582→   582→                          style={{ backgroundColor: '#fbbf24' }}
+   583→   583→                          animate={{ opacity: [0.3, 1, 0.3] }}
+   584→   584→                          transition={{ duration: 0.4, repeat: Infinity }}
+   585→   585→                        />
+   586→   586→                      )}
+   587→   587→                    </span>
+   588→   588→                  ))}
+   589→   589→                </div>
+   590→   590→              </div>
+   591→   591→            </motion.div>
+   592→   592→          )}
+   593→   593→        </AnimatePresence>
+   594→   594→
+   595→   595→        {/* Error Recovery Visualization */}
+   596→   596→        <AnimatePresence>
+   597→   597→          {errorFlashCore && (
+   598→   598→            <motion.div
+   599→   599→              className="mb-4 flex items-center justify-center gap-2"
+   600→   600→              initial={{ opacity: 0, y: -5 }}
+   601→   601→              animate={{ opacity: 1, y: 0 }}
+   602→   602→              exit={{ opacity: 0, y: -5 }}
+   603→   603→              transition={{ duration: 0.3 }}
+   604→   604→            >
+   605→   605→              <div
+   606→   606→                className="flex items-center gap-2 px-4 py-2 rounded-xl border bg-[#ef4444]/10 animate-pulse"
+   607→   607→                style={{ borderColor: '#ef444440' }}
+   608→   608→              >
+   609→   609→                <AlertTriangle className="w-3.5 h-3.5 text-[#ef4444]" />
+   610→   610→                <span className="text-[10px] font-mono font-bold text-[#ef4444]">
+   611→   611→                  ERROR: {cores.find(c => c.id === errorFlashCore)?.name}
+   612→   612→                </span>
+   613→   613→                <span className="text-[8px] font-mono text-[#ef4444]/70">Recovering...</span>
+   614→   614→              </div>
+   615→   615→            </motion.div>
+   616→   616→          )}
+   617→   617→        </AnimatePresence>
+   618→   618→
+   619→   619→        {/* Main Grid: Canvas + Core Cards */}
+   620→   620→        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 mb-6">
+   621→   621→          {/* Trinuclear Canvas */}
+   622→   622→          <motion.div
+   623→   623→            className="lg:col-span-7 relative rounded-2xl overflow-hidden glass gradient-border"
+   624→   624→            style={{ minHeight: '420px' }}
+   625→   625→            initial={{ opacity: 0, x: -30 }}
+   626→   626→            whileInView={{ opacity: 1, x: 0 }}
+   627→   627→            viewport={{ once: true }}
+   628→   628→            transition={{ duration: 0.7 }}
+   629→   629→          >
+   630→   630→            <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+   631→   631→              <div className={`w-2 h-2 rounded-full transition-colors duration-500 ${
+   632→   632→                phase === 'active' ? 'bg-[#06d6a0]' :
+   633→   633→                phase === 'stress-test' ? 'bg-[#e040a0] animate-pulse' :
+   634→   634→                phase === 'booting' || phase === 'synchronizing' ? 'bg-[#fbbf24] animate-pulse' :
+   635→   635→                'bg-[#8888aa]'
+   636→   636→              }`} />
+   637→   637→              <span className="text-[10px] font-mono text-[#8888aa] tracking-wider uppercase">
+   638→   638→                {phaseLabel[phase]}
+   639→   639→              </span>
+   640→   640→              {phase === 'stress-test' && stressSubPhase !== 'none' && (
+   641→   641→                <span className="text-[8px] font-mono px-1.5 py-0.5 rounded-full ml-1"
+   642→   642→                  style={{
+   643→   643→                    color: STRESS_PHASE_COLORS[stressSubPhase],
+   644→   644→                    backgroundColor: STRESS_PHASE_COLORS[stressSubPhase] + '15',
+   645→   645→                    border: `1px solid ${STRESS_PHASE_COLORS[stressSubPhase]}30`,
+   646→   646→                  }}
+   647→   647→                >
+   648→   648→                  {STRESS_PHASE_LABELS[stressSubPhase]}
+   649→   649→                </span>
+   650→   650→              )}
+   651→   651→            </div>
+   652→   652→            <div className="absolute top-3 right-3 z-10">
+   653→   653→              <span className="text-[9px] font-mono border px-2 py-0.5 rounded-full"
+   654→   654→                style={{ color: phaseColor[phase], borderColor: phaseColor[phase] + '33', backgroundColor: phaseColor[phase] + '11' }}
+   655→   655→              >
+   656→   656→                OPENCLAW SANDBOX
+   657→   657→              </span>
+   658→   658→            </div>
+   659→   659→            <TrinuclearSandboxCanvas
+   660→   660→              isActive={phase !== 'offline' && phase !== 'booting'}
+   661→   661→              corePower={corePower}
+   662→   662→              syncIntensity={syncIntensity}
+   663→   663→            />
+   664→   664→          </motion.div>
+   665→   665→
+   666→   666→          {/* Core Status Cards */}
+   667→   667→          <div className="lg:col-span-5 space-y-3">
+   668→   668→            {cores.map((core, i) => (
+   669→   669→              <motion.div
+   670→   670→                key={core.id}
+   671→   671→                className="glass rounded-xl p-4 border border-white/5 hover:border-white/10 transition-colors relative overflow-hidden"
+   672→   672→                style={{
+   673→   673→                  borderColor: core.status !== 'offline' ? core.color + '22' : undefined,
+   674→   674→                  boxShadow: errorFlashCore === core.id ? '0 0 20px rgba(239,68,68,0.3), inset 0 0 30px rgba(239,68,68,0.1)' : undefined,
+   675→   675→                }}
+   676→   676→                initial={{ opacity: 0, x: 30 }}
+   677→   677→                whileInView={{ opacity: 1, x: 0 }}
+   678→   678→                viewport={{ once: true }}
+   679→   679→                transition={{ duration: 0.5, delay: 0.1 * i }}
+   680→   680→              >
+   681→   681→                {/* Error flash overlay */}
+   682→   682→                <AnimatePresence>
+   683→   683→                  {errorFlashCore === core.id && (
+   684→   684→                    <motion.div
+   685→   685→                      className="absolute inset-0 bg-[#ef4444] pointer-events-none"
+   686→   686→                      initial={{ opacity: 0.3 }}
+   687→   687→                      animate={{ opacity: 0 }}
+   688→   688→                      exit={{ opacity: 0 }}
+   689→   689→                      transition={{ duration: 0.8 }}
+   690→   690→                    />
+   691→   691→                  )}
+   692→   692→                </AnimatePresence>
+   693→   693→
+   694→   694→                <div className="flex items-center justify-between mb-3">
+   695→   695→                  <div className="flex items-center gap-2.5">
+   696→   696→                    <div className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+   697→   697→                      core.status === 'offline' ? 'bg-[#555577]' :
+   698→   698→                      core.status === 'loading' ? 'bg-[#fbbf24] animate-pulse' :
+   699→   699→                      core.status === 'processing' ? 'bg-[#e040a0] animate-pulse' :
+   700→   700→                      core.status === 'error' ? 'bg-[#ef4444] animate-pulse' :
+   701→   701→                      'bg-[#06d6a0]'
+   702→   702→                    }`} />
+   703→   703→                    <span className="text-sm font-bold text-white">{core.name}</span>
+   704→   704→                    <span className="text-[9px] font-mono text-[#8888aa]">{core.engine} {core.version}</span>
+   705→   705→                  </div>
+   706→   706→                  <div className="flex items-center gap-1.5">
+   707→   707→                    {crossCoreActive.includes(core.id) && (
+   708→   708→                      <span className="text-[7px] font-mono text-[#fbbf24] bg-[#fbbf24]/10 border border-[#fbbf24]/25 px-1.5 py-0.5 rounded-full">
+   709→   709→                        CROSS
+   710→   710→                      </span>
+   711→   711→                    )}
+   712→   712→                    <span className="text-[8px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full"
+   713→   713→                      style={{
+   714→   714→                        color: core.status === 'offline' ? '#8888aa' : core.status === 'error' ? '#ef4444' : core.color,
+   715→   715→                        borderColor: core.status === 'offline' ? '#8888aa33' : core.status === 'error' ? '#ef444433' : core.color + '33',
+   716→   716→                        backgroundColor: core.status === 'offline' ? '#8888aa11' : core.status === 'error' ? '#ef444411' : core.color + '11',
+   717→   717→                        border: '1px solid',
+   718→   718→                      }}
+   719→   719→                    >
+   720→   720→                      {core.status.toUpperCase()}
+   721→   721→                    </span>
+   722→   722→                  </div>
+   723→   723→                </div>
+   724→   724→
+   725→   725→                <div className="text-[10px] font-mono text-[#8888aa] mb-3">{core.model}</div>
+   726→   726→
+   727→   727→                <div className="grid grid-cols-4 gap-2">
+   728→   728→                  {[
+   729→   729→                    { label: 'tok/s', value: core.tokensPerSec > 0 ? core.tokensPerSec.toFixed(0) : '--', color: core.color },
+   730→   730→                    { label: 'Memory', value: core.memoryGB > 0 ? `${core.memoryGB.toFixed(1)}GB` : '--', color: core.color },
+   731→   731→                    { label: 'Lat.', value: core.latency > 0 ? `${core.latency.toFixed(0)}ms` : '--', color: core.color },
+   732→   732→                    { label: 'Acc.', value: core.accuracy > 0 ? `${(core.accuracy * 100).toFixed(1)}%` : '--', color: core.color },
+   733→   733→                  ].map(m => (
+   734→   734→                    <div key={m.label} className="text-center">
+   735→   735→                      <div className="text-[8px] text-[#555577] uppercase">{m.label}</div>
+   736→   736→                      <div className="text-[11px] font-bold font-mono" style={{ color: m.value !== '--' ? m.color : '#555577' }}>
+   737→   737→                        {m.value}
+   738→   738→                      </div>
+   739→   739→                    </div>
+   740→   740→                  ))}
+   741→   741→                </div>
+   742→   742→
+   743→   743→                {/* Temperature bar */}
+   744→   744→                {core.status !== 'offline' && (
+   745→   745→                  <div className="mt-3 flex items-center gap-2">
+   746→   746→                    <Thermometer className="w-3 h-3 text-[#8888aa]" />
+   747→   747→                    <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+   748→   748→                      <motion.div
+   749→   749→                        className="h-full rounded-full transition-colors duration-300"
+   750→   750→                        style={{
+   751→   751→                          backgroundColor: core.temperature > 1.2 ? '#ef4444' : core.temperature > 0.8 ? '#fbbf24' : core.color,
+   752→   752→                        }}
+   753→   753→                        animate={{ width: `${Math.min(100, (core.temperature / 2) * 100)}%` }}
+   754→   754→                      />
+   755→   755→                    </div>
+   756→   756→                    <span className="text-[8px] font-mono text-[#8888aa]">{core.temperature.toFixed(2)}</span>
+   757→   757→                  </div>
+   758→   758→                )}
+   759→   759→              </motion.div>
+   760→   760→            ))}
+   761→   761→
+   762→   762→            {/* Error count metric during stress test */}
+   763→   763→            {phase === 'stress-test' && (
+   764→   764→              <motion.div
+   765→   765→                className="glass rounded-xl p-3 border border-[#ef4444]/15 flex items-center gap-3"
+   766→   766→                initial={{ opacity: 0, y: 10 }}
+   767→   767→                animate={{ opacity: 1, y: 0 }}
+   768→   768→              >
+   769→   769→                <AlertTriangle className="w-4 h-4 text-[#ef4444]" />
+   770→   770→                <div>
+   771→   771→                  <div className="text-[10px] text-[#8888aa] uppercase tracking-wider">Erros Injetados</div>
+   772→   772→                  <div className="text-sm font-bold font-mono text-[#ef4444]">{errorCount}</div>
+   773→   773→                </div>
+   774→   774→                <div className="ml-auto text-[8px] font-mono text-[#8888aa]">Recovered: {errorCount}</div>
+   775→   775→              </motion.div>
+   776→   776→            )}
+   777→   777→          </div>
+   778→   778→        </div>
+   779→   779→
+   780→   780→        {/* Inference Log */}
+   781→   781→        <motion.div
+   782→   782→          className="glass rounded-xl overflow-hidden border border-white/5 mb-6"
+   783→   783→          initial={{ opacity: 0, y: 20 }}
+   784→   784→          whileInView={{ opacity: 1, y: 0 }}
+   785→   785→          viewport={{ once: true }}
+   786→   786→          transition={{ duration: 0.6, delay: 0.4 }}
+   787→   787→        >
+   788→   788→          <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-[#0a0a1a]">
+   789→   789→            <div className="flex items-center gap-2">
+   790→   790→              <ArrowLeftRight className="w-3.5 h-3.5 text-[#a855f7]" />
+   791→   791→              <span className="text-[10px] font-mono text-[#8888aa] tracking-wider uppercase">Inference Log</span>
+   792→   792→            </div>
+   793→   793→            <div className="flex items-center gap-3">
+   794→   794→              {phase === 'active' && <span className="text-[8px] text-[#06d6a0] font-mono animate-pulse">LIVE</span>}
+   795→   795→              {phase === 'stress-test' && <span className="text-[8px] text-[#e040a0] font-mono animate-pulse">STRESS</span>}
+   796→   796→              <span className="text-[9px] font-mono text-[#8888aa]">{logs.length} entries</span>
+   797→   797→            </div>
+   798→   798→          </div>
+   799→   799→          <div className="max-h-[180px] overflow-y-auto p-2 space-y-1">
+   800→   800→            {logs.length === 0 && (
+   801→   801→              <div className="text-center text-[10px] text-[#555577] py-6 font-mono">
+   802→   802→                Aguardando inicializacao do sandbox...
+   803→   803→              </div>
+   804→   804→            )}
+   805→   805→            {logs.slice().reverse().map(log => {
+   806→   806→              const coreColor = cores.find(c => c.id === log.core)?.color || '#8888aa';
+   807→   807→              return (
+   808→   808→                <div key={log.id} className="flex items-start gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.02] text-[10px] font-mono">
+   809→   809→                  <span className="text-[#555577] shrink-0 pt-0.5">{log.timestamp}</span>
+   810→   810→                  <span className="shrink-0 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase"
+   811→   811→                    style={{ color: coreColor, backgroundColor: coreColor + '15' }}
+   812→   812→                  >
+   813→   813→                    {log.core}
+   814→   814→                  </span>
+   815→   815→                  <span className="text-[#c0b8d0] flex-1 min-w-0 truncate">{log.prompt}</span>
+   816→   816→                  <span className="text-[#8888aa] shrink-0">{log.latency}ms</span>
+   817→   817→                  <span className="text-[#555577] shrink-0">{log.tokens}t</span>
+   818→   818→                </div>
+   819→   819→              );
+   820→   820→            })}
+   821→   821→          </div>
+   822→   822→        </motion.div>
+   823→   823→
+   824→   824→        {/* Control Bar */}
+   825→   825→        <motion.div
+   826→   826→          className="flex flex-col sm:flex-row items-center justify-between gap-4"
+   827→   827→          initial={{ opacity: 0, y: 20 }}
+   828→   828→          whileInView={{ opacity: 1, y: 0 }}
+   829→   829→          viewport={{ once: true }}
+   830→   830→          transition={{ duration: 0.6, delay: 0.5 }}
+   831→   831→        >
+   832→   832→          <div className="flex items-center gap-4 flex-wrap justify-center">
+   833→   833→            <div className="flex items-center gap-2">
+   834→   834→              <Cpu className="w-4 h-4 text-[#a855f7]" />
+   835→   835→              <span className="text-sm font-semibold text-white">Sandbox Trinuclear</span>
+   836→   836→            </div>
+   837→   837→            <span className="text-[10px] font-mono uppercase tracking-wider px-3 py-1 rounded-full border"
+   838→   838→              style={{
+   839→   839→                color: phaseColor[phase],
+   840→   840→                borderColor: phaseColor[phase] + '33',
+   841→   841→                backgroundColor: phaseColor[phase] + '11',
+   842→   842→              }}
+   843→   843→            >
+   844→   844→              {phaseLabel[phase]}
+   845→   845→            </span>
+   846→   846→            {cycleCount > 0 && (
+   847→   847→              <span className="text-[9px] text-[#8888aa] font-mono">{cycleCount} ciclo(s)</span>
+   848→   848→            )}
+   849→   849→            {phase !== 'offline' && (
+   850→   850→              <span className="text-[9px] text-[#8888aa] font-mono">
+   851→   851→                Sync: {(syncIntensity * 100).toFixed(0)}% · Acc: {(avgAccuracy * 100).toFixed(1)}%
+   852→   852→              </span>
+   853→   853→            )}
+   854→   854→          </div>
+   855→   855→
+   856→   856→          <div className="flex items-center gap-2">
+   857→   857→            {phase === 'offline' && (
+   858→   858→              <motion.button
+   859→   859→                onClick={bootSequence}
+   860→   860→                className="px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 cursor-pointer bg-gradient-to-r from-[#06d6a0] via-[#fbbf24] to-[#e040a0] text-[#050510] hover:shadow-[0_0_20px_rgba(6,214,160,0.4)] transition-shadow"
+   861→   861→                whileHover={{ scale: 1.05 }}
+   862→   862→                whileTap={{ scale: 0.97 }}
+   863→   863→              >
+   864→   864→                <Zap className="w-4 h-4" />
+   865→   865→                Iniciar Sandbox
+   866→   866→              </motion.button>
+   867→   867→            )}
+   868→   868→            {(phase === 'active' || phase === 'stress-test') && (
+   869→   869→              <>
+   870→   870→                <motion.button
+   871→   871→                  onClick={runStressTest}
+   872→   872→                  disabled={phase === 'stress-test'}
+   873→   873→                  className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer border border-[#e040a0]/30 text-[#e040a0] hover:bg-[#e040a0]/10 transition-colors disabled:opacity-40"
+   874→   874→                  whileHover={{ scale: 1.03 }}
+   875→   875→                  whileTap={{ scale: 0.97 }}
+   876→   876→                >
+   877→   877→                  <Activity className="w-3.5 h-3.5" />
+   878→   878→                  Stress Test
+   879→   879→                </motion.button>
+   880→   880→                <motion.button
+   881→   881→                  onClick={resetCores}
+   882→   882→                  className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer border border-[#fbbf24]/30 text-[#fbbf24] hover:bg-[#fbbf24]/10 transition-colors"
+   883→   883→                  whileHover={{ scale: 1.03 }}
+   884→   884→                  whileTap={{ scale: 0.97 }}
+   885→   885→                >
+   886→   886→                  <RefreshCw className="w-3.5 h-3.5" />
+   887→   887→                  Reset
+   888→   888→                </motion.button>
+   889→   889→                <motion.button
+   890→   890→                  onClick={shutdown}
+   891→   891→                  className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer border border-[#8888aa]/30 text-[#8888aa] hover:bg-white/5 transition-colors"
+   892→   892→                  whileHover={{ scale: 1.03 }}
+   893→   893→                  whileTap={{ scale: 0.97 }}
+   894→   894→                >
+   895→   895→                  Shutdown
+   896→   896→                </motion.button>
+   897→   897→              </>
+   898→   898→            )}
+   899→   899→          </div>
+   900→   900→        </motion.div>
+   901→   901→      </div>
+   902→   902→    </section>
+   903→   903→  );
+   904→   904→}

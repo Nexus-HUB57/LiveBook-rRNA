@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BlackHoleCanvas from './black-hole-canvas';
 import WormholeCanvas from './wormhole-canvas';
-import { Activity, Radio, Zap, Orbit, Waves, Thermometer, Gauge, RotateCcw } from 'lucide-react';
+import { Activity, Radio, Zap, Orbit, Waves, Thermometer, Gauge, RotateCcw, Link2, Shield, Clock } from 'lucide-react';
 
 type SyncState = 'idle' | 'syncing' | 'synchronized' | 'traversing';
 
@@ -46,6 +46,8 @@ export default function WormholeBlackholeSection() {
   const [entropy, setEntropy] = useState(0.73);
   const [frameDragRate, setFrameDragRate] = useState(0);
   const [tidalForce, setTidalForce] = useState(0);
+  const [hawkingFlux, setHawkingFlux] = useState(0);
+  const [eprPairs, setEprPairs] = useState(0);
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sparklineRef = useRef<HTMLCanvasElement>(null);
   const sparklineDataRef = useRef<number[]>(SPARKLINE_DATA);
@@ -123,6 +125,8 @@ export default function WormholeBlackholeSection() {
       setEntropy(0.73 - phase * 0.45 + (Math.random() - 0.5) * 0.02);
       setFrameDragRate(phase * (0.85 + Math.random() * 0.14));
       setTidalForce(phase * (2.1 + Math.random() * 0.8));
+      setHawkingFlux(phase * (0.01 + Math.random() * 0.09));
+      setEprPairs(128 + Math.floor(phase * 128));
 
       // Update sparkline
       sparklineDataRef.current.push(phase + (Math.random() - 0.5) * 0.15);
@@ -492,7 +496,7 @@ export default function WormholeBlackholeSection() {
             </div>
 
             {/* Secondary Metrics - 4 columns (evolved) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
               {[
                 {
                   label: 'Entropia BH',
@@ -551,6 +555,63 @@ export default function WormholeBlackholeSection() {
               ))}
             </div>
 
+            {/* Tertiary Metrics - Entanglement & Temporal */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                {
+                  label: 'Pares EPR',
+                  value: isActive ? `${128 + Math.floor(syncPhase * 128)}` : '0',
+                  color: '#06b6d4',
+                  Icon: Link2,
+                  bar: isActive ? syncPhase : 0,
+                },
+                {
+                  label: 'Fluxo Hawking',
+                  value: isActive ? `${(0.01 + syncPhase * 0.09).toFixed(3)}` : '0.000',
+                  unit: 'J/s',
+                  color: '#f97316',
+                  Icon: Thermometer,
+                  bar: isActive ? syncPhase * 0.8 : 0,
+                },
+                {
+                  label: 'Materia Exotica',
+                  value: isActive ? (syncPhase > 0.7 ? 'Estavel' : syncPhase > 0.3 ? 'Formando' : 'Instavel') : 'N/A',
+                  color: isActive ? (syncPhase > 0.7 ? '#06d6a0' : syncPhase > 0.3 ? '#fbbf24' : '#e040a0') : '#555577',
+                  Icon: Shield,
+                  bar: isActive ? Math.min(1, syncPhase * 1.2) : 0,
+                },
+                {
+                  label: 'Distorcao Temporal',
+                  value: isActive ? `${(syncPhase * 3.7).toFixed(1)}` : '0.0',
+                  unit: isActive ? 'tau' : '',
+                  color: isActive ? '#a855f7' : '#555577',
+                  Icon: Clock,
+                  bar: isActive ? syncPhase : 0,
+                },
+              ].map((metric) => (
+                <div key={metric.label} className="p-2.5 rounded-xl bg-[#0a0a1a]/30 border border-white/5">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <metric.Icon className="w-3 h-3" style={{ color: metric.color }} />
+                    <span className="text-[9px] text-[#8888aa] uppercase tracking-wider">{metric.label}</span>
+                  </div>
+                  <div className="text-xs font-bold font-mono" style={{ color: metric.color }}>
+                    {metric.value}
+                    {'unit' in metric && metric.unit && (
+                      <span className="text-[9px] text-[#8888aa] ml-0.5">{metric.unit}</span>
+                    )}
+                  </div>
+                  <div className="mt-1.5 h-1 rounded-full bg-white/5 overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: metric.color }}
+                      animate={{ width: `${(metric.bar ?? 0) * 100}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* Physics info footer */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[9px] text-[#555577] font-mono">
               <span>Kerr: a/M = 0.998</span>
@@ -562,6 +623,12 @@ export default function WormholeBlackholeSection() {
               <span>Penrose process: {isActive ? 'ACTIVE' : 'STANDBY'}</span>
               <span>|</span>
               <span>Jet precession: 20s</span>
+              <span>|</span>
+              <span>EPR pairs: {isActive ? `${128 + Math.floor(syncPhase * 128)}` : '0'}</span>
+              <span>|</span>
+              <span>Exotic matter: {isActive ? 'STABLE' : 'UNSTABLE'}</span>
+              <span>|</span>
+              <span>Temporal tau: {isActive ? `${(syncPhase * 3.7).toFixed(1)}` : '0.0'}</span>
             </div>
           </div>
         </motion.div>

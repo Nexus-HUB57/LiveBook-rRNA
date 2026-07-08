@@ -79,6 +79,30 @@ interface SuperradiantFlash {
   maxOpacity: number;
 }
 
+interface ErgosphereConfig {
+  oblateness: number;
+  rotationSpeed: number;
+  baseRadius: number;
+  color: string;
+  pulseFreq: number;
+}
+
+interface FrameDragLine {
+  angle: number;
+  length: number;
+  speed: number;
+  opacity: number;
+  thickness: number;
+}
+
+interface GravWaveRipple {
+  radius: number;
+  opacity: number;
+  speed: number;
+  amplitude: number;
+  freq: number;
+}
+
 function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   let r: number, g: number, b: number;
   if (s === 0) {
@@ -142,6 +166,16 @@ export default function BlackHoleCanvas({
   const sizeRef = useRef({ w: 0, h: 0 });
   const lastPenroseRef = useRef(0);
   const lastSuperradiantRef = useRef(0);
+  const ergosphereConfigRef = useRef<ErgosphereConfig>({
+    oblateness: 0.7,
+    rotationSpeed: 0.2,
+    baseRadius: 1,
+    color: '#b8860b',
+    pulseFreq: 0.8,
+  });
+  const frameDragRef = useRef<FrameDragLine[]>([]);
+  const gravWaveRef = useRef<GravWaveRipple[]>([]);
+  const lastGravWaveRef = useRef(0);
 
   const init = useCallback((w: number, h: number) => {
     sizeRef.current = { w, h };
@@ -199,6 +233,19 @@ export default function BlackHoleCanvas({
       });
     }
     iscoRef.current = iscoOrbiters;
+
+    // Frame-dragging spiral lines: 8 logarithmic spirals
+    const frameDragLines: FrameDragLine[] = [];
+    for (let i = 0; i < 8; i++) {
+      frameDragLines.push({
+        angle: (i / 8) * Math.PI * 2,
+        length: 80 + Math.random() * 60,
+        speed: 0.3 + Math.random() * 0.2,
+        opacity: 0.08 + Math.random() * 0.07,
+        thickness: 0.5 + Math.random() * 0.8,
+      });
+    }
+    frameDragRef.current = frameDragLines;
   }, []);
 
   useEffect(() => {
@@ -455,6 +502,52 @@ export default function BlackHoleCanvas({
         ctx.restore();
       }
 
+      // === ERGOSPHERE VISUALIZATION (oblate, amber/gold, before accretion disk) ===
+      {
+        const ergoCfg = ergosphereConfigRef.current;
+        const ergoBreathOblateness = ergoCfg.oblateness
+          + Math.sin(t * ergoCfg.pulseFreq) * 0.06
+          + (wormholeIntensity > 0.1 ? wormholeIntensity * 0.08 : 0);
+        const ergoVisBaseR = eventHorizon * 1.35;
+        const ergoVisPulseAlpha = 0.05 + Math.sin(t * ergoCfg.pulseFreq * 1.5) * 0.03
+          + (wormholeIntensity > 0.1 ? wormholeIntensity * 0.07 : 0);
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(t * ergoCfg.rotationSpeed);
+
+        // Semi-transparent filled ellipse (dark amber/gold)
+        ctx.globalAlpha = Math.min(0.12, ergoVisPulseAlpha);
+        ctx.fillStyle = 'rgba(180,134,11,1)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, ergoVisBaseR, ergoVisBaseR * ergoBreathOblateness, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dashed border line for the ergosphere boundary
+        ctx.globalAlpha = Math.min(0.25, ergoVisPulseAlpha * 2.5);
+        ctx.strokeStyle = 'rgba(200,160,40,0.6)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 4]);
+        ctx.lineDashOffset = -t * 15;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, ergoVisBaseR, ergoVisBaseR * ergoBreathOblateness, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Subtle inner gradient to enhance depth
+        const ergoInnerGrad = ctx.createRadialGradient(0, 0, bhRadius, 0, 0, Math.max(2, ergoVisBaseR));
+        ergoInnerGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        ergoInnerGrad.addColorStop(0.6, `rgba(180,134,11,${0.02 + wormholeIntensity * 0.03})`);
+        ergoInnerGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = ergoInnerGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, ergoVisBaseR, ergoVisBaseR * ergoBreathOblateness, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
       // === ACCRETION DISK (back half) ===
       drawAccretionHalf(ctx, cx, cy, bhRadius, t, wormholeIntensity, true, ergoRadiusX, ergoRadiusY);
 
@@ -501,6 +594,34 @@ export default function BlackHoleCanvas({
         ctx.beginPath();
         ctx.arc(cx, cy, bhRadius, 0, Math.PI * 2);
         ctx.fill();
+      }
+
+      // === FRAME-DRAGGING SPIRAL LINES (logarithmic spirals near event horizon) ===
+      {
+        ctx.save();
+        const fdRotationBase = t * 0.1 + wormholeIntensity * 0.2;
+        for (const fdl of frameDragRef.current) {
+          const fdStartAngle = fdl.angle + fdRotationBase;
+          const fdA = eventHorizon * 1.05;
+          const fdB = 0.15;
+          ctx.beginPath();
+          const fdSteps = 80;
+          let fdLastValid = false;
+          for (let fdi = 0; fdi <= fdSteps; fdi++) {
+            const fdTheta = (fdi / fdSteps) * fdl.length * 0.02;
+            const fdR = fdA * Math.exp(fdB * fdTheta);
+            if (fdR > eventHorizon * 2.5) break;
+            const fdX = cx + Math.cos(fdStartAngle + fdTheta) * fdR;
+            const fdY = cy + Math.sin(fdStartAngle + fdTheta) * fdR;
+            if (!fdLastValid) { ctx.moveTo(fdX, fdY); fdLastValid = true; }
+            else ctx.lineTo(fdX, fdY);
+          }
+          ctx.globalAlpha = fdl.opacity + wormholeIntensity * 0.07;
+          ctx.strokeStyle = 'rgba(200,160,60,1)';
+          ctx.lineWidth = fdl.thickness;
+          ctx.stroke();
+        }
+        ctx.restore();
       }
 
       // === ACCRETION DISK (front half) ===
@@ -562,77 +683,64 @@ export default function BlackHoleCanvas({
 
       ctx.restore();
 
-      // === MULTIPLE PHOTON SPHERES (3 layers) ===
-      // Inner: thin, bright, fast pulse
-      const innerPulse = 0.4 + wormholeIntensity * 0.4 + Math.sin(t * 4) * 0.15;
-      ctx.save();
-      ctx.globalAlpha = innerPulse;
-      ctx.strokeStyle = `rgba(168,85,247,${0.8 + wormholeIntensity * 0.2})`;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(cx, cy, eventHorizon * 0.88, 0, Math.PI * 2);
-  ctx.stroke();
-  // Fast pulse glow
-  ctx.globalAlpha = innerPulse * 0.3;
-  ctx.lineWidth = 4;
-  ctx.stroke();
-  ctx.restore();
+      // === MULTI-SHELL PHOTON SPHERES (3 distinct shells with wobble) ===
+      const photonShell1R = eventHorizon * 1.5 + Math.sin(t * 3.2) * 2;
+      const photonShell2R = eventHorizon * 1.8 + Math.sin(t * 2.1 + 1) * 2;
+      const photonShell3R = eventHorizon * 2.2 + Math.sin(t * 1.4 + 2) * 2;
 
-  // Middle: medium, with orbiting light points
-  const middlePulse = 0.3 + wormholeIntensity * 0.35 + Math.sin(t * 2) * 0.1;
-  ctx.save();
-  ctx.globalAlpha = middlePulse;
-  ctx.strokeStyle = `rgba(200,140,255,${0.5 + wormholeIntensity * 0.3})`;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(cx, cy, eventHorizon * 1.0, 0, Math.PI * 2);
-  ctx.stroke();
-  // Glow
-  ctx.globalAlpha = middlePulse * 0.2;
-  ctx.lineWidth = 6;
-  ctx.stroke();
+      // Shell 1 (innermost): r = 1.5 * eventHorizon, bright white-gold, thin, fast rotation
+      {
+        const shell1Alpha = 0.5 + wormholeIntensity * 0.3 + Math.sin(t * 3.2) * 0.1;
+        ctx.save();
+        // Core ring
+        ctx.globalAlpha = shell1Alpha;
+        ctx.strokeStyle = `rgba(255,240,200,${0.8 + wormholeIntensity * 0.2})`;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, Math.max(1, photonShell1R), 0, Math.PI * 2);
+        ctx.stroke();
+        // Thin glow
+        ctx.globalAlpha = shell1Alpha * 0.3;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.restore();
+      }
 
-  // Orbiting light points on middle ring
-  const orbitLightCount = 5;
-  for (let oli = 0; oli < orbitLightCount; oli++) {
-    const olAngle = (oli / orbitLightCount) * Math.PI * 2 + t * 3;
-    const olR = eventHorizon * 1.0;
-    const olx = cx + Math.cos(olAngle) * olR;
-    const oly = cy + Math.sin(olAngle) * olR;
-    ctx.globalAlpha = middlePulse * 0.8;
-    ctx.fillStyle = 'rgba(255,255,255,1)';
-    ctx.beginPath();
-    ctx.arc(olx, oly, 2, 0, Math.PI * 2);
-    ctx.fill();
-    // Light point glow
-    ctx.globalAlpha = middlePulse * 0.3;
-    ctx.fillStyle = 'rgba(200,140,255,1)';
-    ctx.beginPath();
-    ctx.arc(olx, oly, 6, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
+      // Shell 2 (middle): r = 1.8 * eventHorizon, medium gold, medium thickness
+      {
+        const shell2Alpha = 0.35 + wormholeIntensity * 0.25 + Math.sin(t * 2.1) * 0.08;
+        ctx.save();
+        // Core ring
+        ctx.globalAlpha = shell2Alpha;
+        ctx.strokeStyle = `rgba(200,160,60,${0.6 + wormholeIntensity * 0.2})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, Math.max(1, photonShell2R), 0, Math.PI * 2);
+        ctx.stroke();
+        // Glow
+        ctx.globalAlpha = shell2Alpha * 0.2;
+        ctx.lineWidth = 7;
+        ctx.stroke();
+        ctx.restore();
+      }
 
-  // Outer: wider, diffuse, slower
-  const outerPulse = 0.2 + wormholeIntensity * 0.25 + Math.sin(t * 1.2) * 0.08;
-  ctx.save();
-  ctx.globalAlpha = outerPulse;
-  ctx.strokeStyle = `rgba(251,191,36,${0.3 + wormholeIntensity * 0.2})`;
-  ctx.lineWidth = 3;
-  ctx.setLineDash([8, 6]);
-  ctx.lineDashOffset = t * 8;
-  ctx.beginPath();
-  ctx.arc(cx, cy, eventHorizon * 1.15, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  // Diffuse glow
-  ctx.globalAlpha = outerPulse * 0.15;
-  ctx.lineWidth = 12;
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.arc(cx, cy, eventHorizon * 1.15, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
+      // Shell 3 (outermost): r = 2.2 * eventHorizon, faint purple, thick and diffuse
+      {
+        const shell3Alpha = 0.2 + wormholeIntensity * 0.15 + Math.sin(t * 1.4) * 0.06;
+        ctx.save();
+        // Core ring
+        ctx.globalAlpha = shell3Alpha;
+        ctx.strokeStyle = `rgba(160,100,220,${0.3 + wormholeIntensity * 0.15})`;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, Math.max(1, photonShell3R), 0, Math.PI * 2);
+        ctx.stroke();
+        // Diffuse glow
+        ctx.globalAlpha = shell3Alpha * 0.1;
+        ctx.lineWidth = 14;
+        ctx.stroke();
+        ctx.restore();
+      }
 
       // === ISCO RING with orbiting particles ===
       const iscoRadius = bhRadius * 3;
@@ -980,6 +1088,49 @@ export default function BlackHoleCanvas({
 
       if (absorbedRef.current.length > 100) {
         absorbedRef.current.splice(0, 15);
+      }
+
+      // === GRAVITATIONAL WAVE RIPPLES (topmost layer) ===
+      {
+        if (t - lastGravWaveRef.current > 3 && wormholeIntensity > 0.05) {
+          lastGravWaveRef.current = t;
+          if (gravWaveRef.current.length < 3) {
+            gravWaveRef.current.push({
+              radius: eventHorizon * 1.2,
+              opacity: 0.12,
+              speed: 40 + Math.random() * 20,
+              amplitude: 3 + Math.random() * 3,
+              freq: 6 + Math.random() * 4,
+            });
+          }
+        }
+
+        for (let gi = gravWaveRef.current.length - 1; gi >= 0; gi--) {
+          const gw = gravWaveRef.current[gi];
+          gw.radius += gw.speed * 0.016;
+          gw.opacity -= 0.0008;
+          if (gw.opacity <= 0 || gw.radius > Math.min(w, h) * 0.45) {
+            gravWaveRef.current.splice(gi, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = gw.opacity;
+          ctx.strokeStyle = 'rgba(130,100,200,1)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          const gwSteps = 120;
+          for (let gwi = 0; gwi <= gwSteps; gwi++) {
+            const gwAngle = (gwi / gwSteps) * Math.PI * 2;
+            const gwR = gw.radius + Math.sin(gwAngle * gw.freq + t * gw.speed * 0.05) * gw.amplitude;
+            const gwx = cx + Math.cos(gwAngle) * gwR;
+            const gwy = cy + Math.sin(gwAngle) * gwR;
+            if (gwi === 0) ctx.moveTo(gwx, gwy);
+            else ctx.lineTo(gwx, gwy);
+          }
+          ctx.closePath();
+          ctx.stroke();
+          ctx.restore();
+        }
       }
 
       animationRef.current = requestAnimationFrame(draw);

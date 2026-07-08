@@ -57,6 +57,21 @@ interface CoreThroughput {
   values: number[];
 }
 
+interface NeuralMeshNode {
+  x: number;
+  y: number;
+  connections: number[];
+  activation: number;
+}
+
+interface CoherenceArc {
+  startAngle: number;
+  endAngle: number;
+  radius: number;
+  coherence: number;
+  color: string;
+}
+
 export default function TrinuclearSandboxCanvas({ isActive, corePower, syncIntensity }: TrinuclearSandboxCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<EnergyParticle[]>([]);
@@ -81,6 +96,8 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
       return sats;
     })
   );
+  const neuralMeshRef = useRef<NeuralMeshNode[]>([]);
+  const coherenceArcsRef = useRef<CoherenceArc[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -121,6 +138,44 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         });
       }
     }
+
+    // Initialize neural mesh nodes (12 nodes distributed inside triangle)
+    const initNeuralMesh = (corePositions: { x: number; y: number }[]) => {
+      const nodes: NeuralMeshNode[] = [];
+      // Distribute 12 nodes inside the triangle using barycentric coordinates
+      for (let i = 0; i < 12; i++) {
+        const t1 = 0.15 + Math.random() * 0.7;
+        const t2 = 0.15 + Math.random() * (1 - t1 - 0.15);
+        const t3 = Math.max(0.15, 1 - t1 - t2);
+        const total = t1 + t2 + t3;
+        const nx = (corePositions[0].x * t1 + corePositions[1].x * t2 + corePositions[2].x * t3) / total;
+        const ny = (corePositions[0].y * t1 + corePositions[1].y * t2 + corePositions[2].y * t3) / total;
+        nodes.push({ x: nx, y: ny, connections: [], activation: 0 });
+      }
+      // Connect each node to 3-4 nearest neighbors
+      nodes.forEach((node, i) => {
+        const distances = nodes.map((n, j) => ({
+          idx: j,
+          dist: Math.hypot(n.x - node.x, n.y - node.y),
+        })).filter(d => d.idx !== i).sort((a, b) => a.dist - b.dist);
+        const numConnections = 3 + (i % 2); // 3 or 4
+        node.connections = distances.slice(0, numConnections).map(d => d.idx);
+      });
+      return nodes;
+    };
+
+    // Initialize coherence arcs for each core
+    const initCoherenceArcs = (): CoherenceArc[] => {
+      return CORES.map((core, i) => ({
+        startAngle: (Math.PI * 2 / 3) * i,
+        endAngle: (Math.PI * 2 / 3) * i + Math.PI * 0.4,
+        radius: 48 + i * 6,
+        coherence: 0,
+        color: core.color,
+      }));
+    };
+
+    let meshInitialized = false;
 
     const getCorePos = (coreIdx: number, w: number, h: number) => {
       const cx = w / 2;
@@ -334,6 +389,238 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
       });
     };
 
+    // Draw neural network mesh between cores
+    const drawNeuralMesh = (corePositions: { x: number; y: number }[]) => {
+      if (!isActive) return;
+
+      // Initialize mesh nodes once based on current core positions (re-init periodically)
+      if (!meshInitialized || neuralMeshRef.current.length === 0) {
+        neuralMeshRef.current = initNeuralMesh(corePositions);
+        meshInitialized = true;
+      }
+
+      // Update node positions to follow the triangle (barycentric interpolation)
+      const positions = neuralMeshRef.current.map((node, idx) => {
+        // Keep nodes roughly distributed inside the moving triangle
+        const ratio1 = 0.15 + (idx % 4) * 0.2;
+        const ratio2 = 0.15 + (idx % 3) * 0.2;
+        const ratio3 = Math.max(0.15, 1 - ratio1 - ratio2);
+        const total = ratio1 + ratio2 + ratio3;
+        const nx = (corePositions[0].x * ratio1 + corePositions[1].x * ratio2 + corePositions[2].x * ratio3) / total;
+        const ny = (corePositions[0].y * ratio1 + corePositions[1].y * ratio2 + corePositions[2].y * ratio3) / total;
+        return { x: nx, y: ny };
+      });
+
+      // Update positions and calculate activations
+      const avgPower = (corePower['ollama'] || 0 + corePower['llama4'] || 0 + corePower['openai'] || 0) / 3;
+      neuralMeshRef.current.forEach((node, i) => {
+        node.x = positions[i].x;
+        node.y = positions[i].y;
+        // Activation pulses based on core power + time-based oscillation
+        const coreInfluence = (corePower[CORES[0].id] || 0) * 0.3 + (corePower[CORES[1].id] || 0) * 0.3 + (corePower[CORES[2].id] || 0) * 0.4;
+        node.activation = coreInfluence * (0.5 + 0.5 * Math.sin(time * 3 + i * 0.8));
+      });
+
+      // Draw connections (faint lines)
+      const drawnPairs = new Set<string>();
+      neuralMeshRef.current.forEach((node, i) => {
+        node.connections.forEach(j => {
+          const pairKey = `${Math.min(i, j)}-${Math.max(i, j)}`;
+          if (drawnPairs.has(pairKey)) return;
+          drawnPairs.add(pairKey);
+          const target = neuralMeshRef.current[j];
+          if (!target) return;
+
+          const avgActivation = (node.activation + target.activation) / 2;
+          ctx.beginPath();
+          ctx.moveTo(node.x, node.y);
+          ctx.lineTo(target.x, target.y);
+          ctx.strokeStyle = `rgba(168, 85, 247, ${0.04 + avgActivation * 0.12})`;
+          ctx.lineWidth = 0.5 + avgActivation * 0.5;
+          ctx.stroke();
+        });
+      });
+
+      // Draw mesh nodes (small circles with brightness = activation)
+      neuralMeshRef.current.forEach((node) => {
+        const nodeRadius = 2 + node.activation * 2;
+        const nodeAlpha = 0.15 + node.activation * 0.5;
+
+        // Glow
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius + 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(168, 85, 247, ${nodeAlpha * 0.2})`;
+        ctx.fill();
+
+        // Core dot
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+        const nodeGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, nodeRadius);
+        nodeGrad.addColorStop(0, `rgba(200, 170, 255, ${nodeAlpha})`);
+        nodeGrad.addColorStop(1, `rgba(168, 85, 247, ${nodeAlpha * 0.3})`);
+        ctx.fillStyle = nodeGrad;
+        ctx.fill();
+      });
+    };
+
+    // Draw interference patterns between cores
+    const drawInterferencePatterns = (corePositions: { x: number; y: number }[]) => {
+      if (!isActive || syncIntensity < 0.5) return;
+
+      const interferenceAlpha = (syncIntensity - 0.5) * 2; // 0 to 1 as sync goes 0.5 to 1
+      const ringSpacing = 18;
+      const maxRings = 8;
+
+      for (let c = 0; c < 3; c++) {
+        const pos = corePositions[c];
+        for (let r = 1; r <= maxRings; r++) {
+          const radius = r * ringSpacing + Math.sin(time * 2 + r) * 3;
+          const ringAlpha = (0.02 + interferenceAlpha * 0.02) * (1 - r / (maxRings + 1));
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = CORES[c].color;
+          ctx.globalAlpha = ringAlpha;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+    };
+
+    // Draw quantum coherence arcs around nexus
+    const drawCoherenceArcs = (cx: number, cy: number) => {
+      if (!isActive) return;
+
+      if (coherenceArcsRef.current.length === 0) {
+        coherenceArcsRef.current = initCoherenceArcs();
+      }
+
+      coherenceArcsRef.current.forEach((arc, i) => {
+        const power = corePower[CORES[i].id] || 0;
+        arc.coherence = power;
+
+        // Arc length proportional to core's power/coherence
+        const arcLength = Math.PI * 0.4 * arc.coherence;
+        const startAngle = (Math.PI * 2 / 3) * i + time * 0.2;
+        const endAngle = startAngle + arcLength;
+        const radius = 48 + i * 6;
+
+        if (arcLength < 0.05) return;
+
+        // Draw arc
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, startAngle, endAngle);
+        ctx.strokeStyle = arc.color;
+        ctx.globalAlpha = 0.35 * arc.coherence;
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        ctx.lineCap = 'butt';
+        ctx.globalAlpha = 1;
+
+        // Pulsing glow at arc start endpoint
+        const glowPulse = 0.5 + 0.5 * Math.sin(time * 4 + i * 2);
+        const startPx = cx + Math.cos(startAngle) * radius;
+        const startPy = cy + Math.sin(startAngle) * radius;
+        ctx.beginPath();
+        ctx.arc(startPx, startPy, 4 + glowPulse * 2, 0, Math.PI * 2);
+        ctx.fillStyle = arc.color;
+        ctx.globalAlpha = 0.15 * arc.coherence * glowPulse;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Pulsing glow at arc end endpoint
+        const endPx = cx + Math.cos(endAngle) * radius;
+        const endPy = cy + Math.sin(endAngle) * radius;
+        ctx.beginPath();
+        ctx.arc(endPx, endPy, 4 + glowPulse * 2, 0, Math.PI * 2);
+        ctx.fillStyle = arc.color;
+        ctx.globalAlpha = 0.15 * arc.coherence * glowPulse;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+    };
+
+    // Draw enhanced mouse interaction
+    const drawMouseInteraction = (corePositions: { x: number; y: number }[]) => {
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
+      if (mx < 0 || my < 0) return;
+
+      // Check proximity to each core
+      let nearestCore: CoreDef | null = null;
+      let nearestPos: { x: number; y: number } | null = null;
+      let nearestDist = Infinity;
+
+      corePositions.forEach((pos, i) => {
+        const dist = Math.hypot(mx - pos.x, my - pos.y);
+        if (dist < 60 && dist < nearestDist) {
+          nearestDist = dist;
+          nearestCore = CORES[i];
+          nearestPos = pos;
+        }
+      });
+
+      // Draw connection probe line from mouse to nearest core
+      if (nearestCore && nearestPos) {
+        // Dashed probe line
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(nearestPos.x, nearestPos.y);
+        ctx.strokeStyle = nearestCore.color;
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 4]);
+        ctx.lineDashOffset = -time * 80;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+
+        // Floating label near mouse showing core stats
+        const power = corePower[nearestCore.id] || 0;
+        const labelX = mx + 15;
+        const labelY = my - 15;
+
+        // Label background
+        ctx.fillStyle = 'rgba(10, 10, 26, 0.85)';
+        const labelText1 = nearestCore.label;
+        const labelText2 = `Power: ${(power * 100).toFixed(0)}%`;
+        ctx.font = 'bold 9px monospace';
+        const tw1 = ctx.measureText(labelText1).width;
+        ctx.font = '8px monospace';
+        const tw2 = ctx.measureText(labelText2).width;
+        const boxW = Math.max(tw1, tw2) + 16;
+        const boxH = 32;
+
+        ctx.beginPath();
+        ctx.roundRect(labelX - 4, labelY - 10, boxW, boxH, 4);
+        ctx.fill();
+        ctx.strokeStyle = nearestCore.color + '44';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        // Label text
+        ctx.fillStyle = nearestCore.color;
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(labelText1, labelX + 4, labelY - 6);
+        ctx.fillStyle = '#8888aa';
+        ctx.font = '8px monospace';
+        ctx.fillText(labelText2, labelX + 4, labelY + 6);
+      }
+
+      // Subtle gravitational pull on nearby particles
+      particlesRef.current.forEach(p => {
+        const dist = Math.hypot(mx - p.x, my - p.y);
+        if (dist < 80 && dist > 1) {
+          const force = 0.3 / dist;
+          p.x += (mx - p.x) * force * 0.15;
+          p.y += (my - p.y) * force * 0.15;
+        }
+      });
+    };
+
     const animate = () => {
       const w = canvas.getBoundingClientRect().width;
       const h = canvas.getBoundingClientRect().height;
@@ -368,6 +655,12 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
       triGrad.addColorStop(1, `rgba(224, 64, 160, ${triAlpha})`);
       ctx.fillStyle = triGrad;
       ctx.fill();
+
+      // Neural Network Mesh (AFTER triangle fill, BEFORE cores)
+      drawNeuralMesh(corePositions);
+
+      // Interference patterns (subtle concentric rings from each core)
+      drawInterferencePatterns(corePositions);
 
       // Cross-core inference mesh
       if (isActive && syncIntensity > 0.2) {
@@ -494,6 +787,9 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         ctx.lineWidth = 2;
         ctx.stroke();
       }
+
+      // Quantum coherence arcs around nexus
+      drawCoherenceArcs(cx, cy);
 
       // Nexus label
       ctx.fillStyle = '#ffffff';
@@ -690,14 +986,8 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         ctx.fillText(`${(power * 100).toFixed(0)}%`, pos.x, pos.y + coreSize + 40);
       });
 
-      // Mouse interaction: repel nearby particles
-      if (mouseRef.current.x > 0) {
-        ctx.beginPath();
-        ctx.arc(mouseRef.current.x, mouseRef.current.y, 60, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(168, 85, 247, 0.1)';
-        ctx.lineWidth = 0.5;
-        ctx.stroke();
-      }
+      // Enhanced mouse interaction
+      drawMouseInteraction(corePositions);
 
       animRef.current = requestAnimationFrame(animate);
     };

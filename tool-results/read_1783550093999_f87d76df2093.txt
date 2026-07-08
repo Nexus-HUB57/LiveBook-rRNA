@@ -1,0 +1,817 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useEffect, useRef, useState } from 'react';
+     4→     4→
+     5→     5→interface VaultFile {
+     6→     6→  name: string;
+     7→     7→  type: 'keyvault' | 'wallet' | 'key' | 'config' | 'pool' | 'legacy';
+     8→     8→  integrity: number;
+     9→     9→  status: 'sealed' | 'syncing' | 'active';
+    10→    10→  size: string;
+    11→    11→  color: string;
+    12→    12→  x: number;
+    13→    13→  y: number;
+    14→    14→  vx: number;
+    15→    15→  vy: number;
+    16→    16→  pulsePhase: number;
+    17→    17→}
+    18→    18→
+    19→    19→const VAULT_FILES: Omit<VaultFile, 'x' | 'y' | 'vx' | 'vy' | 'pulsePhase' | 'integrity'>[] = [
+    20→    20→  { name: 'keyvault_master_backup_2026-01-29.json', type: 'keyvault', status: 'sealed', size: '2.4 ZB', color: '#fbbf24' },
+    21→    21→  { name: 'wallets_export.json', type: 'wallet', status: 'sealed', size: '890 YB', color: '#06d6a0' },
+    22→    22→  { name: 'Ben_chave.txt', type: 'key', status: 'sealed', size: '128 KB', color: '#a855f7' },
+    23→    23→  { name: 'bitcoin-keys-hex-...314453356.txt', type: 'key', status: 'sealed', size: '256 KB', color: '#a855f7' },
+    24→    24→  { name: 'derive-keys.yml.txt', type: 'config', status: 'sealed', size: '64 KB', color: '#e040a0' },
+    25→    25→  { name: 'pool-keys.zip', type: 'pool', status: 'sealed', size: '1.1 ZB', color: '#8b5cf6' },
+    26→    26→  { name: 'Legado Lucas', type: 'legacy', status: 'sealed', size: 'infinity', color: '#fbbf24' },
+    27→    27→];
+    28→    28→
+    29→    29→const TYPE_ICONS: Record<string, string> = {
+    30→    30→  keyvault: 'diamond', wallet: 'square', key: 'key', config: 'gear', pool: 'circle', legacy: 'star',
+    31→    31→};
+    32→    32→
+    33→    33→interface KnowledgeVaultCanvasProps {
+    34→    34→  isActive: boolean;
+    35→    35→  ragPhase: 'idle' | 'indexing' | 'retrieving' | 'generating' | 'streaming';
+    36→    36→  onFileActivate: (file: VaultFile) => void;
+    37→    37→}
+    38→    38→
+    39→    39→const CLUSTER_NAMES = [
+    40→    40→  'RAG-Index',
+    41→    41→  'RAG-Embed',
+    42→    42→  'RAG-Retrieve',
+    43→    43→  'RAG-Generate',
+    44→    44→  'Claude-Process',
+    45→    45→  'Fable-Narrative',
+    46→    46→  'Vault-Storage',
+    47→    47→  'Quantum-Bridge',
+    48→    48→];
+    49→    49→
+    50→    50→const CLUSTER_COLORS = [
+    51→    51→  '168,85,247',
+    52→    52→  '6,214,160',
+    53→    53→  '224,64,160',
+    54→    54→  '251,191,36',
+    55→    55→  '6,182,212',
+    56→    56→  '244,114,182',
+    57→    57→  '139,92,246',
+    58→    58→  '52,211,153',
+    59→    59→];
+    60→    60→
+    61→    61→const RAG_PIPELINE_STAGES = ['INDEX', 'EMBED', 'RETRIEVE', 'GENERATE', 'STREAM'] as const;
+    62→    62→const PHASE_TO_STAGE: Record<string, number> = {
+    63→    63→  idle: -1,
+    64→    64→  indexing: 0,
+    65→    65→  retrieving: 2,
+    66→    66→  generating: 3,
+    67→    67→  streaming: 4,
+    68→    68→};
+    69→    69→
+    70→    70→export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivate }: KnowledgeVaultCanvasProps) {
+    71→    71→  const canvasRef = useRef<HTMLCanvasElement>(null);
+    72→    72→  const filesRef = useRef<VaultFile[]>([]);
+    73→    73→  const mouseRef = useRef({ x: -1000, y: -1000 });
+    74→    74→  const hoveredFileRef = useRef<number | null>(null);
+    75→    75→  const animRef = useRef<number>(0);
+    76→    76→  const [hoveredFile, setHoveredFile] = useState<string | null>(null);
+    77→    77→  const prevRagPhaseRef = useRef<string>('idle');
+    78→    78→  const activationWavesRef = useRef<{ startTime: number; cx: number; cy: number }[]>([]);
+    79→    79→
+    80→    80→  useEffect(() => {
+    81→    81→    const canvas = canvasRef.current;
+    82→    82→    if (!canvas) return;
+    83→    83→    const ctx = canvas.getContext('2d');
+    84→    84→    if (!ctx) return;
+    85→    85→
+    86→    86→    const resize = () => {
+    87→    87→      const rect = canvas.getBoundingClientRect();
+    88→    88→      const dpr = window.devicePixelRatio || 1;
+    89→    89→      canvas.width = rect.width * dpr;
+    90→    90→      canvas.height = rect.height * dpr;
+    91→    91→      ctx.scale(dpr, dpr);
+    92→    92→    };
+    93→    93→    resize();
+    94→    94→    window.addEventListener('resize', resize);
+    95→    95→
+    96→    96→    const initW = canvas.getBoundingClientRect().width;
+    97→    97→    const initH = canvas.getBoundingClientRect().height;
+    98→    98→
+    99→    99→    // Initialize files in orbital arrangement
+   100→   100→    if (filesRef.current.length === 0) {
+   101→   101→      const cx = initW / 2;
+   102→   102→      const cy = initH / 2;
+   103→   103→      filesRef.current = VAULT_FILES.map((f, i) => {
+   104→   104→        const angle = (i / VAULT_FILES.length) * Math.PI * 2;
+   105→   105→        const rx = Math.min(cx, cy) * 0.55;
+   106→   106→        const ry = Math.min(cx, cy) * 0.35;
+   107→   107→        return {
+   108→   108→          ...f,
+   109→   109→          x: cx + Math.cos(angle) * rx,
+   110→   110→          y: cy + Math.sin(angle) * ry,
+   111→   111→          vx: (Math.random() - 0.5) * 0.3,
+   112→   112→          vy: (Math.random() - 0.5) * 0.3,
+   113→   113→          pulsePhase: Math.random() * Math.PI * 2,
+   114→   114→          integrity: 85 + Math.random() * 15,
+   115→   115→        };
+   116→   116→      });
+   117→   117→    }
+   118→   118→
+   119→   119→    const handleMouseMove = (e: MouseEvent) => {
+   120→   120→      const rect = canvas.getBoundingClientRect();
+   121→   121→      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+   122→   122→    };
+   123→   123→    const handleClick = () => {
+   124→   124→      if (hoveredFileRef.current !== null) {
+   125→   125→        onFileActivate(filesRef.current[hoveredFileRef.current]);
+   126→   126→      }
+   127→   127→    };
+   128→   128→    canvas.addEventListener('mousemove', handleMouseMove);
+   129→   129→    canvas.addEventListener('click', handleClick);
+   130→   130→
+   131→   131→    // ---- 160 neurons / 8 clusters ----
+   132→   132→    const NEURON_COUNT = 160;
+   133→   133→    const CLUSTER_COUNT = 8;
+   134→   134→    const neurons: {
+   135→   135→      x: number; y: number; vx: number; vy: number; size: number;
+   136→   136→      connections: number[]; cluster: number; activation: number;
+   137→   137→    }[] = [];
+   138→   138→    for (let i = 0; i < NEURON_COUNT; i++) {
+   139→   139→      const cluster = i % CLUSTER_COUNT;
+   140→   140→      neurons.push({
+   141→   141→        x: Math.random() * initW,
+   142→   142→        y: Math.random() * (initH - 60),
+   143→   143→        vx: (Math.random() - 0.5) * 0.15,
+   144→   144→        vy: (Math.random() - 0.5) * 0.15,
+   145→   145→        size: 1 + Math.random() * 2.5,
+   146→   146→        connections: Array.from({ length: 2 + Math.floor(Math.random() * 4) }, () => Math.floor(Math.random() * NEURON_COUNT)).filter(
+   147→   147→          (v, idx, arr) => arr.indexOf(v) === idx && v !== i
+   148→   148→        ),
+   149→   149→        cluster,
+   150→   150→        activation: 0.1 + Math.random() * 0.2,
+   151→   151→      });
+   152→   152→    }
+   153→   153→
+   154→   154→    // ---- Synaptic plasticity: connection weight map ----
+   155→   155→    const connectionWeights: Map<string, number> = new Map();
+   156→   156→    const getWeightKey = (a: number, b: number) => `${Math.min(a, b)}-${Math.max(a, b)}`;
+   157→   157→    neurons.forEach(n => {
+   158→   158→      n.connections.forEach(t => {
+   159→   159→        const key = getWeightKey(neurons.indexOf(n), t);
+   160→   160→        if (!connectionWeights.has(key)) {
+   161→   161→          connectionWeights.set(key, 0.3 + Math.random() * 0.2);
+   162→   162→        }
+   163→   163→      });
+   164→   164→    });
+   165→   165→
+   166→   166→    // ---- Particle trails for data flow ----
+   167→   167→    interface ParticleTrail {
+   168→   168→      trail: { x: number; y: number }[];
+   169→   169→      size: number;
+   170→   170→      color: string;
+   171→   171→      progress: number;
+   172→   172→      speed: number;
+   173→   173→      isRetrieve: boolean;
+   174→   174→      fileIdx: number;
+   175→   175→    }
+   176→   176→    const particleTrails: ParticleTrail[] = [];
+   177→   177→
+   178→   178→    // ---- Encryption orbit particles for file nodes ----
+   179→   179→    interface EncryptionOrbit {
+   180→   180→      fileIdx: number;
+   181→   181→      angle: number;
+   182→   182→      speed: number;
+   183→   183→      radius: number;
+   184→   184→      color: string;
+   185→   185→      baseSpeed: number;
+   186→   186→    }
+   187→   187→    const encryptionOrbits: EncryptionOrbit[] = [];
+   188→   188→    filesRef.current.forEach((file, idx) => {
+   189→   189→      const count = 3;
+   190→   190→      for (let p = 0; p < count; p++) {
+   191→   191→        const isSealed = file.status === 'sealed';
+   192→   192→        encryptionOrbits.push({
+   193→   193→          fileIdx: idx,
+   194→   194→          angle: (p / count) * Math.PI * 2,
+   195→   195→          speed: isSealed ? 0.015 : 0.005,
+   196→   196→          radius: 18 + Math.random() * 4,
+   197→   197→          color: isSealed ? '#06d6a0' : '#fbbf24',
+   198→   198→          baseSpeed: isSealed ? 0.015 : 0.005,
+   199→   199→        });
+   200→   200→      }
+   201→   201→    });
+   202→   202→
+   203→   203→    let time = 0;
+   204→   204→    let waveIdCounter = 0;
+   205→   205→
+   206→   206→    const animate = () => {
+   207→   207→      const w = canvas.getBoundingClientRect().width;
+   208→   208→      const h = canvas.getBoundingClientRect().height;
+   209→   209→      const cx = w / 2;
+   210→   210→      const cy = h / 2;
+   211→   211→
+   212→   212→      ctx.clearRect(0, 0, w, h);
+   213→   213→      time += 0.005;
+   214→   214→
+   215→   215→      // ---- Trigger activation waves on RAG phase changes ----
+   216→   216→      if (ragPhase !== prevRagPhaseRef.current && ragPhase !== 'idle') {
+   217→   217→        activationWavesRef.current.push({
+   218→   218→          startTime: time,
+   219→   219→          cx: cx,
+   220→   220→          cy: cy,
+   221→   221→        });
+   222→   222→        waveIdCounter++;
+   223→   223→        if (activationWavesRef.current.length > 6) {
+   224→   224→          activationWavesRef.current.shift();
+   225→   225→        }
+   226→   226→      }
+   227→   227→      prevRagPhaseRef.current = ragPhase;
+   228→   228→
+   229→   229→      // ---- Draw neural activation waves ----
+   230→   230→      const wavesToKeep: typeof activationWavesRef.current = [];
+   231→   231→      activationWavesRef.current.forEach(wave => {
+   232→   232→        const elapsed = time - wave.startTime;
+   233→   233→        const waveRadius = elapsed * 120;
+   234→   234→        const maxRadius = Math.max(w, h) * 0.7;
+   235→   235→        if (waveRadius < maxRadius) {
+   236→   236→          const alpha = Math.max(0, (1 - waveRadius / maxRadius) * 0.25);
+   237→   237→          if (alpha > 0.005) {
+   238→   238→            ctx.beginPath();
+   239→   239→            ctx.arc(wave.cx, wave.cy, waveRadius, 0, Math.PI * 2);
+   240→   240→            ctx.strokeStyle = `rgba(168, 85, 247, ${alpha})`;
+   241→   241→            ctx.lineWidth = 2.5 - (waveRadius / maxRadius) * 2;
+   242→   242→            ctx.stroke();
+   243→   243→
+   244→   244→            // Inner ring
+   245→   245→            ctx.beginPath();
+   246→   246→            ctx.arc(wave.cx, wave.cy, waveRadius * 0.7, 0, Math.PI * 2);
+   247→   247→            ctx.strokeStyle = `rgba(6, 214, 160, ${alpha * 0.4})`;
+   248→   248→            ctx.lineWidth = 1;
+   249→   249→            ctx.stroke();
+   250→   250→          }
+   251→   251→          wavesToKeep.push(wave);
+   252→   252→        }
+   253→   253→      });
+   254→   254→      activationWavesRef.current = wavesToKeep;
+   255→   255→
+   256→   256→      // ---- Hebbian synaptic plasticity update ----
+   257→   257→      if (isActive && ragPhase !== 'idle') {
+   258→   258→        connectionWeights.forEach((weight, key) => {
+   259→   259→          const [aStr, bStr] = key.split('-');
+   260→   260→          const a = parseInt(aStr, 10);
+   261→   261→          const b = parseInt(bStr, 10);
+   262→   262→          const nA = neurons[a];
+   263→   263→          const nB = neurons[b];
+   264→   264→          if (!nA || !nB) return;
+   265→   265→          // Hebbian rule: if both active, strengthen
+   266→   266→          if (nA.activation > 0.5 && nB.activation > 0.5) {
+   267→   267→            const newWeight = Math.min(2.0, weight + 0.002);
+   268→   268→            connectionWeights.set(key, newWeight);
+   269→   269→          } else {
+   270→   270→            // Slow decay
+   271→   271→            const newWeight = Math.max(0.2, weight - 0.0003);
+   272→   272→            connectionWeights.set(key, newWeight);
+   273→   273→          }
+   274→   274→        });
+   275→   275→      }
+   276→   276→
+   277→   277→      // ---- Draw neurons with synaptic plasticity ----
+   278→   278→      neurons.forEach((n) => {
+   279→   279→        // Cluster attraction
+   280→   280→        const sameCluster = neurons.filter(m => m.cluster === n.cluster && m !== n);
+   281→   281→        sameCluster.forEach(m => {
+   282→   282→          const dx = m.x - n.x;
+   283→   283→          const dy = m.y - n.y;
+   284→   284→          const dist = Math.sqrt(dx * dx + dy * dy);
+   285→   285→          if (dist > 80 && dist < 200) {
+   286→   286→            n.vx += (dx / dist) * 0.002;
+   287→   287→            n.vy += (dy / dist) * 0.002;
+   288→   288→          }
+   289→   289→        });
+   290→   290→
+   291→   291→        n.x += n.vx;
+   292→   292→        n.y += n.vy;
+   293→   293→        if (n.x < 0 || n.x > w) n.vx *= -1;
+   294→   294→        if (n.y < 0 || n.y > h - 60) n.vy *= -1;
+   295→   295→        n.vx *= 0.995;
+   296→   296→        n.vy *= 0.995;
+   297→   297→
+   298→   298→        // Activation propagation
+   299→   299→        if (isActive && ragPhase !== 'idle') {
+   300→   300→          n.activation = Math.min(1, n.activation + 0.001);
+   301→   301→        } else {
+   302→   302→          n.activation = Math.max(0.1, n.activation - 0.0005);
+   303→   303→        }
+   304→   304→
+   305→   305→        // Draw connections with synaptic weight
+   306→   306→        const nIdx = neurons.indexOf(n);
+   307→   307→        n.connections.forEach((targetIdx) => {
+   308→   308→          const target = neurons[targetIdx];
+   309→   309→          if (!target) return;
+   310→   310→          const dx = n.x - target.x;
+   311→   311→          const dy = n.y - target.y;
+   312→   312→          const dist = Math.sqrt(dx * dx + dy * dy);
+   313→   313→          const maxDist = 130;
+   314→   314→          if (dist < maxDist) {
+   315→   315→            const weightKey = getWeightKey(nIdx, targetIdx);
+   316→   316→            const synWeight = connectionWeights.get(weightKey) || 0.3;
+   317→   317→            const baseAlpha = (1 - dist / maxDist) * 0.06;
+   318→   318→            const activationBoost = (n.activation + target.activation) * 0.5;
+   319→   319→            const alpha = baseAlpha * (0.3 + activationBoost * 0.7) * Math.min(synWeight, 1.0);
+   320→   320→            const cc = CLUSTER_COLORS[n.cluster];
+   321→   321→            ctx.beginPath();
+   322→   322→            ctx.moveTo(n.x, n.y);
+   323→   323→            ctx.lineTo(target.x, target.y);
+   324→   324→            ctx.strokeStyle = `rgba(${cc}, ${alpha})`;
+   325→   325→            // Thickness proportional to synaptic weight
+   326→   326→            ctx.lineWidth = (0.4 + activationBoost * 0.6) * Math.min(synWeight, 1.5);
+   327→   327→            ctx.stroke();
+   328→   328→
+   329→   329→            // Synaptic strengthening glow for strong connections
+   330→   330→            if (synWeight > 0.8 && n.activation > 0.4) {
+   331→   331→              ctx.beginPath();
+   332→   332→              ctx.moveTo(n.x, n.y);
+   333→   333→              ctx.lineTo(target.x, target.y);
+   334→   334→              ctx.strokeStyle = `rgba(${cc}, ${alpha * 0.3})`;
+   335→   335→              ctx.lineWidth = (0.4 + activationBoost * 0.6) * synWeight * 2;
+   336→   336→              ctx.stroke();
+   337→   337→            }
+   338→   338→
+   339→   339→            // Active connection pulse
+   340→   340→            if (n.activation > 0.5 && Math.random() < 0.02) {
+   341→   341→              const pp = Math.random();
+   342→   342→              const px = n.x + (target.x - n.x) * pp;
+   343→   343→              const py = n.y + (target.y - n.y) * pp;
+   344→   344→              ctx.beginPath();
+   345→   345→              ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+   346→   346→              ctx.fillStyle = `rgba(${cc}, ${0.6 * activationBoost})`;
+   347→   347→              ctx.fill();
+   348→   348→            }
+   349→   349→          }
+   350→   350→        });
+   351→   351→
+   352→   352→        const distToCenter = Math.sqrt((n.x - cx) ** 2 + (n.y - cy) ** 2);
+   353→   353→        const cc = CLUSTER_COLORS[n.cluster];
+   354→   354→        const glow = n.activation * (0.3 + Math.sin(time * 3 + distToCenter * 0.01) * 0.15);
+   355→   355→        ctx.beginPath();
+   356→   356→        ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2);
+   357→   357→        ctx.fillStyle = `rgba(${cc}, ${glow})`;
+   358→   358→        ctx.fill();
+   359→   359→        if (n.activation > 0.4) {
+   360→   360→          ctx.beginPath();
+   361→   361→          ctx.arc(n.x, n.y, n.size + 3, 0, Math.PI * 2);
+   362→   362→          ctx.fillStyle = `rgba(${cc}, ${glow * 0.15})`;
+   363→   363→          ctx.fill();
+   364→   364→        }
+   365→   365→      });
+   366→   366→
+   367→   367→      // ---- RAG bidirectional data flow with particle trails ----
+   368→   368→      if (ragPhase !== 'idle' && filesRef.current.length > 0) {
+   369→   369→        const fileIdx1 = Math.floor(time * 8) % filesRef.current.length;
+   370→   370→        const fileIdx2 = (fileIdx1 + 3) % filesRef.current.length;
+   371→   371→        const retrieveFile = filesRef.current[fileIdx1];
+   372→   372→        const generateFile = filesRef.current[fileIdx2];
+   373→   373→
+   374→   374→        // Retrieve stream (file -> core)
+   375→   375→        const cp1x = (retrieveFile.x + cx) / 2 + Math.sin(time * 5) * 35;
+   376→   376→        const cp1y = (retrieveFile.y + cy) / 2 + Math.cos(time * 5) * 35;
+   377→   377→        ctx.beginPath();
+   378→   378→        ctx.moveTo(retrieveFile.x, retrieveFile.y);
+   379→   379→        ctx.quadraticCurveTo(cp1x, cp1y, cx, cy);
+   380→   380→        const grad1 = ctx.createLinearGradient(retrieveFile.x, retrieveFile.y, cx, cy);
+   381→   381→        grad1.addColorStop(0, retrieveFile.color + '50');
+   382→   382→        grad1.addColorStop(1, 'rgba(6,214,160,0.3)');
+   383→   383→        ctx.strokeStyle = grad1;
+   384→   384→        ctx.lineWidth = 1.5;
+   385→   385→        ctx.setLineDash([4, 8]);
+   386→   386→        ctx.lineDashOffset = -time * 200;
+   387→   387→        ctx.stroke();
+   388→   388→        ctx.setLineDash([]);
+   389→   389→
+   390→   390→        // Generate stream (core -> file)
+   391→   391→        const cp2x = (cx + generateFile.x) / 2 + Math.sin(time * 4 + 2) * 35;
+   392→   392→        const cp2y = (cy + generateFile.y) / 2 + Math.cos(time * 4 + 2) * 35;
+   393→   393→        ctx.beginPath();
+   394→   394→        ctx.moveTo(cx, cy);
+   395→   395→        ctx.quadraticCurveTo(cp2x, cp2y, generateFile.x, generateFile.y);
+   396→   396→        const grad2 = ctx.createLinearGradient(cx, cy, generateFile.x, generateFile.y);
+   397→   397→        grad2.addColorStop(0, 'rgba(224,64,160,0.3)');
+   398→   398→        grad2.addColorStop(1, generateFile.color + '50');
+   399→   399→        ctx.strokeStyle = grad2;
+   400→   400→        ctx.lineWidth = 1.5;
+   401→   401→        ctx.setLineDash([2, 6]);
+   402→   402→        ctx.lineDashOffset = time * 150;
+   403→   403→        ctx.stroke();
+   404→   404→        ctx.setLineDash([]);
+   405→   405→
+   406→   406→        // ---- Data flow particles with trails (8 particles) ----
+   407→   407→        // Ensure we have particles
+   408→   408→        while (particleTrails.length < 8) {
+   409→   409→          const pIdx = particleTrails.length;
+   410→   410→          const isRetrieve = pIdx < 4;
+   411→   411→          particleTrails.push({
+   412→   412→            trail: [],
+   413→   413→            size: 2 + Math.random() * 2,
+   414→   414→            color: isRetrieve ? '#06d6a0' : '#e040a0',
+   415→   415→            progress: pIdx * 0.125,
+   416→   416→            speed: 1.2 + Math.random() * 0.6,
+   417→   417→            isRetrieve,
+   418→   418→            fileIdx: isRetrieve ? fileIdx1 : fileIdx2,
+   419→   419→          });
+   420→   420→        }
+   421→   421→
+   422→   422→        // Update file indices
+   423→   423→        particleTrails.forEach((p, pi) => {
+   424→   424→          p.fileIdx = p.isRetrieve ? fileIdx1 : fileIdx2;
+   425→   425→        });
+   426→   426→
+   427→   427→        // Draw and update particle trails
+   428→   428→        particleTrails.forEach(p => {
+   429→   429→          const file = filesRef.current[p.fileIdx % filesRef.current.length];
+   430→   430→          if (!file) return;
+   431→   431→          const src = p.isRetrieve ? file : { x: cx, y: cy };
+   432→   432→          const tgt = p.isRetrieve ? { x: cx, y: cy } : file;
+   433→   433→          const cp = p.isRetrieve ? { x: cp1x, y: cp1y } : { x: cp2x, y: cp2y };
+   434→   434→
+   435→   435→          p.progress = (p.progress + 0.005 * p.speed) % 1;
+   436→   436→          const pp = p.progress;
+   437→   437→          const px = (1 - pp) * (1 - pp) * src.x + 2 * (1 - pp) * pp * cp.x + pp * pp * tgt.x;
+   438→   438→          const py = (1 - pp) * (1 - pp) * src.y + 2 * (1 - pp) * pp * cp.y + pp * pp * tgt.y;
+   439→   439→
+   440→   440→          // Store trail
+   441→   441→          p.trail.push({ x: px, y: py });
+   442→   442→          if (p.trail.length > 7) p.trail.shift();
+   443→   443→
+   444→   444→          // Draw trail
+   445→   445→          for (let t = 0; t < p.trail.length - 1; t++) {
+   446→   446→            const trailAlpha = ((t + 1) / p.trail.length) * 0.4;
+   447→   447→            const trailSize = p.size * ((t + 1) / p.trail.length) * 0.7;
+   448→   448→            ctx.beginPath();
+   449→   449→            ctx.arc(p.trail[t].x, p.trail[t].y, trailSize, 0, Math.PI * 2);
+   450→   450→            ctx.fillStyle = p.color + Math.floor(trailAlpha * 255).toString(16).padStart(2, '0');
+   451→   451→            ctx.fill();
+   452→   452→          }
+   453→   453→
+   454→   454→          // Draw main particle
+   455→   455→          ctx.beginPath();
+   456→   456→          ctx.arc(px, py, p.size, 0, Math.PI * 2);
+   457→   457→          ctx.fillStyle = p.color;
+   458→   458→          ctx.fill();
+   459→   459→          ctx.beginPath();
+   460→   460→          ctx.arc(px, py, p.size + 3, 0, Math.PI * 2);
+   461→   461→          ctx.fillStyle = p.color + '25';
+   462→   462→          ctx.fill();
+   463→   463→        });
+   464→   464→      } else {
+   465→   465→        // Clear trails when idle
+   466→   466→        particleTrails.forEach(p => { p.trail = []; });
+   467→   467→      }
+   468→   468→
+   469→   469→      // ---- Central RAG processor core ----
+   470→   470→      const coreSize = isActive ? 28 + Math.sin(time * 4) * 6 : 22 + Math.sin(time * 2) * 3;
+   471→   471→      const coreGlow = isActive ? 0.6 + Math.sin(time * 3) * 0.3 : 0.2;
+   472→   472→
+   473→   473→      // Outer glow rings
+   474→   474→      for (let r = 0; r < 3; r++) {
+   475→   475→        ctx.beginPath();
+   476→   476→        const ringR = coreSize + 15 + r * 18;
+   477→   477→        ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+   478→   478→        ctx.strokeStyle = `rgba(168, 85, 247, ${coreGlow * 0.15 / (r + 1)})`;
+   479→   479→        ctx.lineWidth = 1;
+   480→   480→        ctx.stroke();
+   481→   481→      }
+   482→   482→
+   483→   483→      // Core gradient
+   484→   484→      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreSize);
+   485→   485→      coreGrad.addColorStop(0, `rgba(168, 85, 247, ${coreGlow})`);
+   486→   486→      coreGrad.addColorStop(0.5, `rgba(224, 64, 160, ${coreGlow * 0.5})`);
+   487→   487→      coreGrad.addColorStop(1, 'rgba(168, 85, 247, 0)');
+   488→   488→      ctx.beginPath();
+   489→   489→      ctx.arc(cx, cy, coreSize, 0, Math.PI * 2);
+   490→   490→      ctx.fillStyle = coreGrad;
+   491→   491→      ctx.fill();
+   492→   492→
+   493→   493→      // Core text
+   494→   494→      ctx.fillStyle = '#ffffff';
+   495→   495→      ctx.font = 'bold 10px monospace';
+   496→   496→      ctx.textAlign = 'center';
+   497→   497→      ctx.textBaseline = 'middle';
+   498→   498→      ctx.fillText('RAG', cx, cy - 4);
+   499→   499→      ctx.font = '7px monospace';
+   500→   500→      ctx.fillStyle = '#8888aa';
+   501→   501→      ctx.fillText(ragPhase.toUpperCase(), cx, cy + 8);
+   502→   502→
+   503→   503→      // Rotating arc segments around core
+   504→   504→      if (isActive) {
+   505→   505→        for (let a = 0; a < 4; a++) {
+   506→   506→          const startAngle = time * 2 + (a * Math.PI) / 2;
+   507→   507→          ctx.beginPath();
+   508→   508→          ctx.arc(cx, cy, coreSize + 8, startAngle, startAngle + 0.8);
+   509→   509→          ctx.strokeStyle = `rgba(6, 214, 160, ${0.3 + Math.sin(time * 3 + a) * 0.2})`;
+   510→   510→          ctx.lineWidth = 2;
+   511→   511→          ctx.stroke();
+   512→   512→        }
+   513→   513→      }
+   514→   514→
+   515→   515→      // ---- Draw vault files with encryption orbit particles ----
+   516→   516→      hoveredFileRef.current = null;
+   517→   517→      filesRef.current.forEach((file, i) => {
+   518→   518→        file.pulsePhase += 0.02;
+   519→   519→
+   520→   520→        // Orbital drift
+   521→   521→        const targetAngle = (i / filesRef.current.length) * Math.PI * 2 + time * 0.3;
+   522→   522→        const rx = Math.min(cx, cy) * 0.55;
+   523→   523→        const ry = Math.min(cx, cy) * 0.35;
+   524→   524→        const targetX = cx + Math.cos(targetAngle) * rx;
+   525→   525→        const targetY = cy + Math.sin(targetAngle) * ry;
+   526→   526→        file.x += (targetX - file.x) * 0.01 + file.vx;
+   527→   527→        file.y += (targetY - file.y) * 0.01 + file.vy;
+   528→   528→
+   529→   529→        // Mouse interaction
+   530→   530→        const dx = file.x - mouseRef.current.x;
+   531→   531→        const dy = file.y - mouseRef.current.y;
+   532→   532→        const dist = Math.sqrt(dx * dx + dy * dy);
+   533→   533→        const isHovered = dist < 40;
+   534→   534→        if (isHovered) hoveredFileRef.current = i;
+   535→   535→
+   536→   536→        if (dist < 80 && dist > 0) {
+   537→   537→          file.vx += (dx / dist) * 0.05;
+   538→   538→          file.vy += (dy / dist) * 0.05;
+   539→   539→        }
+   540→   540→        file.vx *= 0.96;
+   541→   541→        file.vy *= 0.96;
+   542→   542→
+   543→   543→        const pulse = Math.sin(file.pulsePhase) * 0.3 + 0.7;
+   544→   544→        const nodeSize = isHovered ? 18 : 12;
+   545→   545→
+   546→   546→        // Glow
+   547→   547→        ctx.beginPath();
+   548→   548→        ctx.arc(file.x, file.y, nodeSize + 10, 0, Math.PI * 2);
+   549→   549→        ctx.fillStyle = file.color + (isHovered ? '25' : '10');
+   550→   550→        ctx.fill();
+   551→   551→
+   552→   552→        // Node
+   553→   553→        ctx.beginPath();
+   554→   554→        ctx.arc(file.x, file.y, nodeSize, 0, Math.PI * 2);
+   555→   555→        const nodeGrad = ctx.createRadialGradient(file.x, file.y, 0, file.x, file.y, nodeSize);
+   556→   556→        nodeGrad.addColorStop(0, file.color + (isHovered ? 'dd' : '88'));
+   557→   557→        nodeGrad.addColorStop(1, file.color + '22');
+   558→   558→        ctx.fillStyle = nodeGrad;
+   559→   559→        ctx.fill();
+   560→   560→        ctx.strokeStyle = file.color + (isHovered ? 'ff' : '66');
+   561→   561→        ctx.lineWidth = isHovered ? 2 : 1;
+   562→   562→        ctx.stroke();
+   563→   563→
+   564→   564→        // Icon (simple text glyphs, no emoji)
+   565→   565→        const iconMap: Record<string, string> = {
+   566→   566→          keyvault: '\u25C6', wallet: '\u25C8', key: '\u2666', config: '\u2699', pool: '\u25C9', legacy: '\u2606',
+   567→   567→        };
+   568→   568→        ctx.fillStyle = '#ffffff';
+   569→   569→        ctx.font = `${isHovered ? 12 : 9}px sans-serif`;
+   570→   570→        ctx.textAlign = 'center';
+   571→   571→        ctx.textBaseline = 'middle';
+   572→   572→        ctx.fillText(iconMap[file.type] || '\u25CF', file.x, file.y);
+   573→   573→
+   574→   574→        // ---- Encryption orbit particles ----
+   575→   575→        const isBeingIndexed = ragPhase === 'indexing';
+   576→   576→        encryptionOrbits.forEach(orbit => {
+   577→   577→          if (orbit.fileIdx !== i) return;
+   578→   578→          // Speed up when indexing
+   579→   579→          orbit.speed = isBeingIndexed ? orbit.baseSpeed * 3.5 : orbit.baseSpeed;
+   580→   580→          orbit.angle += orbit.speed;
+   581→   581→          const ox = file.x + Math.cos(orbit.angle) * (nodeSize + orbit.radius);
+   582→   582→          const oy = file.y + Math.sin(orbit.angle) * (nodeSize + orbit.radius);
+   583→   583→
+   584→   584→          // Color shifts when indexing
+   585→   585→          const orbitColor = isBeingIndexed
+   586→   586→            ? `rgba(251, 191, 36, ${0.6 + Math.sin(time * 8 + orbit.angle) * 0.3})`
+   587→   587→            : `rgba(6, 214, 160, 0.5)`;
+   588→   588→
+   589→   589→          ctx.beginPath();
+   590→   590→          ctx.arc(ox, oy, isBeingIndexed ? 1.8 : 1.2, 0, Math.PI * 2);
+   591→   591→          ctx.fillStyle = orbitColor;
+   592→   592→          ctx.fill();
+   593→   593→
+   594→   594→          // Glow when indexing
+   595→   595→          if (isBeingIndexed) {
+   596→   596→            ctx.beginPath();
+   597→   597→            ctx.arc(ox, oy, 4, 0, Math.PI * 2);
+   598→   598→            ctx.fillStyle = 'rgba(251, 191, 36, 0.1)';
+   599→   599→            ctx.fill();
+   600→   600→          }
+   601→   601→        });
+   602→   602→
+   603→   603→        // Label on hover
+   604→   604→        if (isHovered) {
+   605→   605→          const labelY = file.y - nodeSize - 14;
+   606→   606→          ctx.font = '10px monospace';
+   607→   607→          const textWidth = ctx.measureText(file.name).width;
+   608→   608→          const padding = 8;
+   609→   609→
+   610→   610→          ctx.fillStyle = 'rgba(5, 5, 16, 0.9)';
+   611→   611→          ctx.strokeStyle = file.color + '66';
+   612→   612→          ctx.lineWidth = 1;
+   613→   613→          ctx.beginPath();
+   614→   614→          const rr = textWidth / 2 + padding;
+   615→   615→          const ry2 = 12;
+   616→   616→          const bx = file.x - rr;
+   617→   617→          const by = labelY - ry2;
+   618→   618→          const bw = rr * 2;
+   619→   619→          const bh = ry2 * 2;
+   620→   620→          const br = 6;
+   621→   621→          ctx.moveTo(bx + br, by);
+   622→   622→          ctx.lineTo(bx + bw - br, by);
+   623→   623→          ctx.arcTo(bx + bw, by, bx + bw, by + br, br);
+   624→   624→          ctx.lineTo(bx + bw, by + bh - br);
+   625→   625→          ctx.arcTo(bx + bw, by + bh, bx + bw - br, by + bh, br);
+   626→   626→          ctx.lineTo(bx + br, by + bh);
+   627→   627→          ctx.arcTo(bx, by + bh, bx, by + bh - br, br);
+   628→   628→          ctx.lineTo(bx, by + br);
+   629→   629→          ctx.arcTo(bx, by, bx + br, by, br);
+   630→   630→          ctx.closePath();
+   631→   631→          ctx.fill();
+   632→   632→          ctx.stroke();
+   633→   633→
+   634→   634→          ctx.fillStyle = file.color;
+   635→   635→          ctx.textAlign = 'center';
+   636→   636→          ctx.textBaseline = 'middle';
+   637→   637→          ctx.fillText(file.name, file.x, labelY);
+   638→   638→
+   639→   639→          // Status badge
+   640→   640→          ctx.font = '7px monospace';
+   641→   641→          const statusText = `${file.status} / ${file.size}`;
+   642→   642→          ctx.fillStyle = '#8888aa';
+   643→   643→          ctx.fillText(statusText, file.x, file.y + nodeSize + 12);
+   644→   644→        }
+   645→   645→
+   646→   646→        // Connection line to center
+   647→   647→        ctx.beginPath();
+   648→   648→        ctx.moveTo(file.x, file.y);
+   649→   649→        ctx.lineTo(cx, cy);
+   650→   650→        ctx.strokeStyle = file.color + '12';
+   651→   651→        ctx.lineWidth = 0.5;
+   652→   652→        ctx.stroke();
+   653→   653→      });
+   654→   654→
+   655→   655→      // ---- RAG Pipeline Flow Visualization (bottom of canvas) ----
+   656→   656→      const pipelineY = h - 36;
+   657→   657→      const pipelineStageWidth = 80;
+   658→   658→      const pipelineGap = 30;
+   659→   659→      const totalPipelineWidth = RAG_PIPELINE_STAGES.length * pipelineStageWidth + (RAG_PIPELINE_STAGES.length - 1) * pipelineGap;
+   660→   660→      const pipelineStartX = (w - totalPipelineWidth) / 2;
+   661→   661→      const activeStage = PHASE_TO_STAGE[ragPhase] ?? -1;
+   662→   662→
+   663→   663→      // Background bar
+   664→   664→      ctx.fillStyle = 'rgba(5, 5, 16, 0.6)';
+   665→   665→      ctx.beginPath();
+   666→   666→      const pbx = pipelineStartX - 16;
+   667→   667→      const pby = pipelineY - 18;
+   668→   668→      const pbw = totalPipelineWidth + 32;
+   669→   669→      const pbh = 36;
+   670→   670→      const pbr = 8;
+   671→   671→      ctx.moveTo(pbx + pbr, pby);
+   672→   672→      ctx.lineTo(pbx + pbw - pbr, pby);
+   673→   673→      ctx.arcTo(pbx + pbw, pby, pbx + pbw, pby + pbr, pbr);
+   674→   674→      ctx.lineTo(pbx + pbw, pby + pbh - pbr);
+   675→   675→      ctx.arcTo(pbx + pbw, pby + pbh, pbx + pbw - pbr, pby + pbh, pbr);
+   676→   676→      ctx.lineTo(pbx + pbr, pby + pbh);
+   677→   677→      ctx.arcTo(pbx, pby + pbh, pbx, pby + pbh - pbr, pbr);
+   678→   678→      ctx.lineTo(pbx, pby + pbr);
+   679→   679→      ctx.arcTo(pbx, pby, pbx + pbr, pby, pbr);
+   680→   680→      ctx.closePath();
+   681→   681→      ctx.fill();
+   682→   682→      ctx.strokeStyle = 'rgba(136, 136, 170, 0.15)';
+   683→   683→      ctx.lineWidth = 1;
+   684→   684→      ctx.stroke();
+   685→   685→
+   686→   686→      // Draw stages
+   687→   687→      RAG_PIPELINE_STAGES.forEach((stage, si) => {
+   688→   688→        const sx = pipelineStartX + si * (pipelineStageWidth + pipelineGap);
+   689→   689→        const isActive2 = si === activeStage;
+   690→   690→        const isPast = si < activeStage && activeStage >= 0;
+   691→   691→        const pulseScale = isActive2 ? 1 + Math.sin(time * 6) * 0.08 : 1;
+   692→   692→        const boxW = pipelineStageWidth * pulseScale;
+   693→   693→        const boxH = 22;
+   694→   694→        const boxX = sx + (pipelineStageWidth - boxW) / 2;
+   695→   695→        const boxY = pipelineY - boxH / 2;
+   696→   696→
+   697→   697→        // Stage box
+   698→   698→        ctx.beginPath();
+   699→   699→        const sbr = 4;
+   700→   700→        ctx.moveTo(boxX + sbr, boxY);
+   701→   701→        ctx.lineTo(boxX + boxW - sbr, boxY);
+   702→   702→        ctx.arcTo(boxX + boxW, boxY, boxX + boxW, boxY + sbr, sbr);
+   703→   703→        ctx.lineTo(boxX + boxW, boxY + boxH - sbr);
+   704→   704→        ctx.arcTo(boxX + boxW, boxY + boxH, boxX + boxW - sbr, boxY + boxH, sbr);
+   705→   705→        ctx.lineTo(boxX + sbr, boxY + boxH);
+   706→   706→        ctx.arcTo(boxX, boxY + boxH, boxX, boxY + boxH - sbr, sbr);
+   707→   707→        ctx.lineTo(boxX, boxY + sbr);
+   708→   708→        ctx.arcTo(boxX, boxY, boxX + sbr, boxY, sbr);
+   709→   709→        ctx.closePath();
+   710→   710→
+   711→   711→        if (isActive2) {
+   712→   712→          // Active glow
+   713→   713→          ctx.fillStyle = 'rgba(168, 85, 247, 0.25)';
+   714→   714→          ctx.fill();
+   715→   715→          ctx.strokeStyle = 'rgba(168, 85, 247, 0.8)';
+   716→   716→          ctx.lineWidth = 1.5;
+   717→   717→          ctx.stroke();
+   718→   718→
+   719→   719→          // Outer pulse
+   720→   720→          const pulseR = 2 + Math.sin(time * 8) * 2;
+   721→   721→          ctx.shadowColor = '#a855f7';
+   722→   722→          ctx.shadowBlur = pulseR;
+   723→   723→          ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
+   724→   724→          ctx.stroke();
+   725→   725→          ctx.shadowBlur = 0;
+   726→   726→        } else if (isPast) {
+   727→   727→          ctx.fillStyle = 'rgba(6, 214, 160, 0.12)';
+   728→   728→          ctx.fill();
+   729→   729→          ctx.strokeStyle = 'rgba(6, 214, 160, 0.5)';
+   730→   730→          ctx.lineWidth = 1;
+   731→   731→          ctx.stroke();
+   732→   732→        } else {
+   733→   733→          ctx.fillStyle = 'rgba(20, 20, 40, 0.6)';
+   734→   734→          ctx.fill();
+   735→   735→          ctx.strokeStyle = 'rgba(136, 136, 170, 0.2)';
+   736→   736→          ctx.lineWidth = 0.5;
+   737→   737→          ctx.stroke();
+   738→   738→        }
+   739→   739→
+   740→   740→        // Stage label
+   741→   741→        ctx.fillStyle = isActive2 ? '#ffffff' : isPast ? '#06d6a0' : '#666688';
+   742→   742→        ctx.font = `${isActive2 ? 'bold ' : ''}8px monospace`;
+   743→   743→        ctx.textAlign = 'center';
+   744→   744→        ctx.textBaseline = 'middle';
+   745→   745→        ctx.fillText(stage, sx + pipelineStageWidth / 2, pipelineY);
+   746→   746→
+   747→   747→        // Arrow between stages
+   748→   748→        if (si < RAG_PIPELINE_STAGES.length - 1) {
+   749→   749→          const arrowX = sx + pipelineStageWidth + 4;
+   750→   750→          const arrowEndX = sx + pipelineStageWidth + pipelineGap - 4;
+   751→   751→          const arrowMidX = (arrowX + arrowEndX) / 2;
+   752→   752→          const arrowY = pipelineY;
+   753→   753→
+   754→   754→          ctx.beginPath();
+   755→   755→          ctx.moveTo(arrowX, arrowY);
+   756→   756→          ctx.lineTo(arrowEndX, arrowY);
+   757→   757→          const isArrowActive = activeStage >= si && activeStage > si;
+   758→   758→          ctx.strokeStyle = isArrowActive ? 'rgba(168, 85, 247, 0.6)' : 'rgba(136, 136, 170, 0.2)';
+   759→   759→          ctx.lineWidth = 1;
+   760→   760→          ctx.setLineDash([2, 3]);
+   761→   761→          ctx.lineDashOffset = -time * 60;
+   762→   762→          ctx.stroke();
+   763→   763→          ctx.setLineDash([]);
+   764→   764→
+   765→   765→          // Data packet on arrow
+   766→   766→          if (isArrowActive) {
+   767→   767→            const packetPos = (time * 2 + si * 0.3) % 1;
+   768→   768→            const packetX = arrowX + (arrowEndX - arrowX) * packetPos;
+   769→   769→            ctx.beginPath();
+   770→   770→            ctx.arc(packetX, arrowY, 1.5, 0, Math.PI * 2);
+   771→   771→            ctx.fillStyle = '#a855f7';
+   772→   772→            ctx.fill();
+   773→   773→            ctx.beginPath();
+   774→   774→            ctx.arc(packetX, arrowY, 3.5, 0, Math.PI * 2);
+   775→   775→            ctx.fillStyle = 'rgba(168, 85, 247, 0.2)';
+   776→   776→            ctx.fill();
+   777→   777→          }
+   778→   778→
+   779→   779→          // Arrowhead
+   780→   780→          ctx.beginPath();
+   781→   781→          ctx.moveTo(arrowEndX, arrowY);
+   782→   782→          ctx.lineTo(arrowEndX - 4, arrowY - 3);
+   783→   783→          ctx.lineTo(arrowEndX - 4, arrowY + 3);
+   784→   784→          ctx.closePath();
+   785→   785→          ctx.fillStyle = isArrowActive ? 'rgba(168, 85, 247, 0.6)' : 'rgba(136, 136, 170, 0.2)';
+   786→   786→          ctx.fill();
+   787→   787→        }
+   788→   788→      });
+   789→   789→
+   790→   790→      // Update hover state for React
+   791→   791→      if (hoveredFileRef.current !== null) {
+   792→   792→        setHoveredFile(filesRef.current[hoveredFileRef.current].name);
+   793→   793→      } else {
+   794→   794→        setHoveredFile(null);
+   795→   795→      }
+   796→   796→
+   797→   797→      animRef.current = requestAnimationFrame(animate);
+   798→   798→    };
+   799→   799→
+   800→   800→    animate();
+   801→   801→
+   802→   802→    return () => {
+   803→   803→      cancelAnimationFrame(animRef.current);
+   804→   804→      window.removeEventListener('resize', resize);
+   805→   805→      canvas.removeEventListener('mousemove', handleMouseMove);
+   806→   806→      canvas.removeEventListener('click', handleClick);
+   807→   807→    };
+   808→   808→  }, [isActive, ragPhase, onFileActivate]);
+   809→   809→
+   810→   810→  return (
+   811→   811→    <canvas
+   812→   812→      ref={canvasRef}
+   813→   813→      className="w-full h-full block"
+   814→   814→      style={{ cursor: hoveredFile ? 'pointer' : 'default' }}
+   815→   815→    />
+   816→   816→  );
+   817→   817→}

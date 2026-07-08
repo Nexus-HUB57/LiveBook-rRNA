@@ -8,6 +8,8 @@ import CTASection from '@/components/metaverse/cta-section';
 import WormholeBlackholeSection from '@/components/metaverse/wormhole-blackhole-section';
 import RecoverySection from '@/components/metaverse/recovery-section';
 import ZettaScaleDashboard from '@/components/metaverse/zettascale-dashboard';
+import { SymbioticCoreProvider } from '@/components/metaverse/symbiotic-core';
+import AgenticFusionSection from '@/components/metaverse/agentic-fusion-section';
 import AgenticRAGSection from '@/components/metaverse/agentic-rag-section';
 import SandboxTrinuclearSection from '@/components/metaverse/sandbox-trinuclear-section';
 import FooterSection from '@/components/metaverse/footer-section';
@@ -29,6 +31,9 @@ export default function Home() {
         <WormholeBlackholeSection />
         <RecoverySection />
         <ZettaScaleDashboard />
+        <SymbioticCoreProvider>
+          <AgenticFusionSection />
+        </SymbioticCoreProvider>
         <AgenticRAGSection />
         <SandboxTrinuclearSection />
       </main>

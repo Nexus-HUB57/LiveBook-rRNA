@@ -67,6 +67,29 @@ const PHASE_TO_STAGE: Record<string, number> = {
   streaming: 4,
 };
 
+// ---- Attention Beam Interface ----
+interface AttentionBeam {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  weight: number;
+  color: string;
+  phase: number;
+  fileIdx: number;
+}
+
+// ---- Embedding Point Interface ----
+interface EmbeddingPoint {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  cluster: number;
+  dim1: number;
+  dim2: number;
+}
+
 export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivate }: KnowledgeVaultCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const filesRef = useRef<VaultFile[]>([]);
@@ -200,6 +223,32 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
       }
     });
 
+    // ---- Embedding Space Projection (30 points, 4 clusters) ----
+    const EMBEDDING_CLUSTER_COLORS = ['6,214,160', '168,85,247', '251,191,36', '224,64,160'];
+    const embeddingPoints: EmbeddingPoint[] = [];
+    for (let i = 0; i < 30; i++) {
+      const cluster = Math.floor(i / 8) % 4;
+      const angle = (cluster / 4) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
+      const spread = 60 + Math.random() * 80;
+      embeddingPoints.push({
+        x: initW / 2 + Math.cos(angle) * spread + (Math.random() - 0.5) * 40,
+        y: initH / 2 + Math.sin(angle) * spread + (Math.random() - 0.5) * 40,
+        vx: (Math.random() - 0.5) * 0.08,
+        vy: (Math.random() - 0.5) * 0.08,
+        cluster,
+        dim1: (Math.random() - 0.5) * 2,
+        dim2: (Math.random() - 0.5) * 2,
+      });
+    }
+
+    // ---- Attention Beams ----
+    const attentionBeams: AttentionBeam[] = [];
+
+    // ---- Neural Layer Visualization ----
+    const NEURAL_LAYER_LABELS = ['Input', 'Hidden', 'Output'];
+    const NEURAL_LAYER_NODE_COUNTS = [10, 9, 8];
+    const neuralLayers: { y: number; nodes: { x: number; y: number }[] }[] = [];
+
     let time = 0;
     let waveIdCounter = 0;
 
@@ -225,6 +274,127 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
         }
       }
       prevRagPhaseRef.current = ragPhase;
+
+      // ---- Draw Embedding Space Projection (background, very low opacity) ----
+      if (isActive) {
+        // Float embedding points gently
+        embeddingPoints.forEach(ep => {
+          ep.x += ep.vx + Math.sin(time * 1.2 + ep.dim1 * 3) * 0.05;
+          ep.y += ep.vy + Math.cos(time * 0.9 + ep.dim2 * 3) * 0.05;
+          // Soft bounds
+          if (ep.x < 30 || ep.x > w - 30) ep.vx *= -1;
+          if (ep.y < 30 || ep.y > h - 60) ep.vy *= -1;
+          ep.vx *= 0.998;
+          ep.vy *= 0.998;
+        });
+
+        // Draw connections between nearby points (cosine similarity > 0.8 simulation)
+        for (let i = 0; i < embeddingPoints.length; i++) {
+          for (let j = i + 1; j < embeddingPoints.length; j++) {
+            const a = embeddingPoints[i];
+            const b = embeddingPoints[j];
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            // Simulate cosine similarity via distance threshold
+            if (dist < 70) {
+              const simAlpha = Math.max(0, (1 - dist / 70)) * 0.08;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(${EMBEDDING_CLUSTER_COLORS[a.cluster]}, ${simAlpha})`;
+              ctx.lineWidth = 0.4;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Draw embedding points
+        embeddingPoints.forEach(ep => {
+          const cc = EMBEDDING_CLUSTER_COLORS[ep.cluster];
+          ctx.beginPath();
+          ctx.arc(ep.x, ep.y, 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${cc}, 0.12)`;
+          ctx.fill();
+          // Subtle glow
+          ctx.beginPath();
+          ctx.arc(ep.x, ep.y, 5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${cc}, 0.03)`;
+          ctx.fill();
+        });
+      }
+
+      // ---- Draw Neural Layer Visualization (behind main elements) ----
+      {
+        const layerSpacing = Math.min(h * 0.12, 50);
+        const layerStartY = cy - layerSpacing;
+        const layerW = Math.min(w * 0.5, 300);
+
+        // Rebuild neural layers each frame based on current canvas size
+        neuralLayers.length = 0;
+        NEURAL_LAYER_LABELS.forEach((_, li) => {
+          const ly = layerStartY + li * layerSpacing;
+          const nodeCount = NEURAL_LAYER_NODE_COUNTS[li];
+          const nodeSpacing = layerW / (nodeCount + 1);
+          const nodes: { x: number; y: number }[] = [];
+          for (let ni = 0; ni < nodeCount; ni++) {
+            nodes.push({
+              x: cx - layerW / 2 + nodeSpacing * (ni + 1),
+              y: ly,
+            });
+          }
+          neuralLayers.push({ y: ly, nodes });
+        });
+
+        // Draw inter-layer connections with varying opacity (weights)
+        for (let li = 0; li < neuralLayers.length - 1; li++) {
+          const layerA = neuralLayers[li];
+          const layerB = neuralLayers[li + 1];
+          layerA.nodes.forEach((na, ai) => {
+            layerB.nodes.forEach((nb, bi) => {
+              // Pseudo-weight from deterministic hash
+              const weightVal = 0.05 + Math.abs(Math.sin(ai * 7.3 + bi * 11.7 + li * 3.1)) * 0.15;
+              const isActiveLayer = isActive && ragPhase !== 'idle';
+              const alpha = isActiveLayer ? weightVal * (0.5 + Math.sin(time * 2 + ai + bi) * 0.3) : weightVal * 0.4;
+              ctx.beginPath();
+              ctx.moveTo(na.x, na.y);
+              ctx.lineTo(nb.x, nb.y);
+              ctx.strokeStyle = `rgba(136, 136, 200, ${Math.min(alpha, 0.08)})`;
+              ctx.lineWidth = 0.3;
+              ctx.stroke();
+            });
+          });
+        }
+
+        // Draw layer lines and nodes
+        neuralLayers.forEach((layer, li) => {
+          // Horizontal line
+          ctx.beginPath();
+          ctx.moveTo(layer.nodes[0].x - 10, layer.y);
+          ctx.lineTo(layer.nodes[layer.nodes.length - 1].x + 10, layer.y);
+          ctx.strokeStyle = 'rgba(136, 136, 200, 0.06)';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+
+          // Nodes (small circles)
+          layer.nodes.forEach((node, ni) => {
+            const pulse = isActive && ragPhase !== 'idle'
+              ? 0.5 + Math.sin(time * 3 + ni * 0.8 + li * 2) * 0.3
+              : 0.2;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(136, 136, 200, ${pulse * 0.3})`;
+            ctx.fill();
+          });
+
+          // Label
+          ctx.font = '6px monospace';
+          ctx.fillStyle = 'rgba(136, 136, 200, 0.1)';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(NEURAL_LAYER_LABELS[li], layer.nodes[0].x - 16, layer.y);
+        });
+      }
 
       // ---- Draw neural activation waves ----
       const wavesToKeep: typeof activationWavesRef.current = [];
@@ -262,12 +432,10 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
           const nA = neurons[a];
           const nB = neurons[b];
           if (!nA || !nB) return;
-          // Hebbian rule: if both active, strengthen
           if (nA.activation > 0.5 && nB.activation > 0.5) {
             const newWeight = Math.min(2.0, weight + 0.002);
             connectionWeights.set(key, newWeight);
           } else {
-            // Slow decay
             const newWeight = Math.max(0.2, weight - 0.0003);
             connectionWeights.set(key, newWeight);
           }
@@ -322,7 +490,6 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
             ctx.moveTo(n.x, n.y);
             ctx.lineTo(target.x, target.y);
             ctx.strokeStyle = `rgba(${cc}, ${alpha})`;
-            // Thickness proportional to synaptic weight
             ctx.lineWidth = (0.4 + activationBoost * 0.6) * Math.min(synWeight, 1.5);
             ctx.stroke();
 
@@ -371,40 +538,46 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
         const retrieveFile = filesRef.current[fileIdx1];
         const generateFile = filesRef.current[fileIdx2];
 
-        // Retrieve stream (file -> core)
-        const cp1x = (retrieveFile.x + cx) / 2 + Math.sin(time * 5) * 35;
-        const cp1y = (retrieveFile.y + cy) / 2 + Math.cos(time * 5) * 35;
+        // During streaming: reverse direction (center -> edges)
+        const isStreaming = ragPhase === 'streaming';
+
+        // Retrieve stream (file -> core, or core -> file during streaming)
+        const stream1Src = isStreaming ? { x: cx, y: cy } : retrieveFile;
+        const stream1Tgt = isStreaming ? retrieveFile : { x: cx, y: cy };
+        const cp1x = (stream1Src.x + stream1Tgt.x) / 2 + Math.sin(time * 5) * 35;
+        const cp1y = (stream1Src.y + stream1Tgt.y) / 2 + Math.cos(time * 5) * 35;
         ctx.beginPath();
-        ctx.moveTo(retrieveFile.x, retrieveFile.y);
-        ctx.quadraticCurveTo(cp1x, cp1y, cx, cy);
-        const grad1 = ctx.createLinearGradient(retrieveFile.x, retrieveFile.y, cx, cy);
+        ctx.moveTo(stream1Src.x, stream1Src.y);
+        ctx.quadraticCurveTo(cp1x, cp1y, stream1Tgt.x, stream1Tgt.y);
+        const grad1 = ctx.createLinearGradient(stream1Src.x, stream1Src.y, stream1Tgt.x, stream1Tgt.y);
         grad1.addColorStop(0, retrieveFile.color + '50');
         grad1.addColorStop(1, 'rgba(6,214,160,0.3)');
         ctx.strokeStyle = grad1;
         ctx.lineWidth = 1.5;
         ctx.setLineDash([4, 8]);
-        ctx.lineDashOffset = -time * 200;
+        ctx.lineDashOffset = isStreaming ? time * 200 : -time * 200;
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Generate stream (core -> file)
-        const cp2x = (cx + generateFile.x) / 2 + Math.sin(time * 4 + 2) * 35;
-        const cp2y = (cy + generateFile.y) / 2 + Math.cos(time * 4 + 2) * 35;
+        // Generate stream (core -> file, or file -> core during streaming)
+        const stream2Src = isStreaming ? generateFile : { x: cx, y: cy };
+        const stream2Tgt = isStreaming ? { x: cx, y: cy } : generateFile;
+        const cp2x = (stream2Src.x + stream2Tgt.x) / 2 + Math.sin(time * 4 + 2) * 35;
+        const cp2y = (stream2Src.y + stream2Tgt.y) / 2 + Math.cos(time * 4 + 2) * 35;
         ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.quadraticCurveTo(cp2x, cp2y, generateFile.x, generateFile.y);
-        const grad2 = ctx.createLinearGradient(cx, cy, generateFile.x, generateFile.y);
+        ctx.moveTo(stream2Src.x, stream2Src.y);
+        ctx.quadraticCurveTo(cp2x, cp2y, stream2Tgt.x, stream2Tgt.y);
+        const grad2 = ctx.createLinearGradient(stream2Src.x, stream2Src.y, stream2Tgt.x, stream2Tgt.y);
         grad2.addColorStop(0, 'rgba(224,64,160,0.3)');
         grad2.addColorStop(1, generateFile.color + '50');
         ctx.strokeStyle = grad2;
         ctx.lineWidth = 1.5;
         ctx.setLineDash([2, 6]);
-        ctx.lineDashOffset = time * 150;
+        ctx.lineDashOffset = isStreaming ? -time * 150 : time * 150;
         ctx.stroke();
         ctx.setLineDash([]);
 
         // ---- Data flow particles with trails (8 particles) ----
-        // Ensure we have particles
         while (particleTrails.length < 8) {
           const pIdx = particleTrails.length;
           const isRetrieve = pIdx < 4;
@@ -420,7 +593,7 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
         }
 
         // Update file indices
-        particleTrails.forEach((p, pi) => {
+        particleTrails.forEach((p) => {
           p.fileIdx = p.isRetrieve ? fileIdx1 : fileIdx2;
         });
 
@@ -428,9 +601,21 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
         particleTrails.forEach(p => {
           const file = filesRef.current[p.fileIdx % filesRef.current.length];
           if (!file) return;
-          const src = p.isRetrieve ? file : { x: cx, y: cy };
-          const tgt = p.isRetrieve ? { x: cx, y: cy } : file;
-          const cp = p.isRetrieve ? { x: cp1x, y: cp1y } : { x: cp2x, y: cp2y };
+
+          // Reverse source/target during streaming
+          let src: { x: number; y: number };
+          let tgt: { x: number; y: number };
+          let cp: { x: number; y: number };
+
+          if (isStreaming) {
+            src = p.isRetrieve ? { x: cx, y: cy } : file;
+            tgt = p.isRetrieve ? file : { x: cx, y: cy };
+            cp = p.isRetrieve ? { x: cp1x, y: cp1y } : { x: cp2x, y: cp2y };
+          } else {
+            src = p.isRetrieve ? file : { x: cx, y: cy };
+            tgt = p.isRetrieve ? { x: cx, y: cy } : file;
+            cp = p.isRetrieve ? { x: cp1x, y: cp1y } : { x: cp2x, y: cp2y };
+          }
 
           p.progress = (p.progress + 0.005 * p.speed) % 1;
           const pp = p.progress;
@@ -464,6 +649,146 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
       } else {
         // Clear trails when idle
         particleTrails.forEach(p => { p.trail = []; });
+      }
+
+      // ---- Attention Beam Visualization ----
+      if ((ragPhase === 'retrieving' || ragPhase === 'generating') && isActive && filesRef.current.length > 0) {
+        const beamColor = ragPhase === 'retrieving' ? '#fbbf24' : '#e040a0';
+
+        // Maintain 5-8 attention beams
+        const targetBeamCount = 5 + Math.floor(Math.sin(time * 0.7) * 1.5 + 1.5);
+
+        // Refresh beam file targets periodically
+        while (attentionBeams.length < targetBeamCount) {
+          const fileIdx = Math.floor(Math.random() * filesRef.current.length);
+          const file = filesRef.current[fileIdx];
+          attentionBeams.push({
+            fromX: cx,
+            fromY: cy,
+            toX: file.x,
+            toY: file.y,
+            weight: Math.random(),
+            color: beamColor,
+            phase: Math.random() * Math.PI * 2,
+            fileIdx,
+          });
+        }
+        while (attentionBeams.length > targetBeamCount) {
+          attentionBeams.pop();
+        }
+
+        // Update beam positions to track files
+        attentionBeams.forEach(beam => {
+          const file = filesRef.current[beam.fileIdx % filesRef.current.length];
+          if (file) {
+            beam.toX = file.x;
+            beam.toY = file.y;
+            beam.fromX = cx;
+            beam.fromY = cy;
+          }
+          // Animate weight (0 to 1 and back)
+          beam.phase += 0.03;
+          beam.weight = (Math.sin(beam.phase) + 1) / 2;
+        });
+
+        // Draw attention beams
+        attentionBeams.forEach(beam => {
+          const thickness = 0.5 + beam.weight * 3;
+
+          // Control point for quadratic bezier curve
+          const midX = (beam.fromX + beam.toX) / 2;
+          const midY = (beam.fromY + beam.toY) / 2;
+          const perpDx = beam.toX - beam.fromX;
+          const perpDy = beam.toY - beam.fromY;
+          const perpLen = Math.max(1, Math.sqrt(perpDx * perpDx + perpDy * perpDy));
+          const curvature = Math.sin(time * 2 + beam.phase) * 40;
+          const cpX = midX + (-perpDy / perpLen) * curvature;
+          const cpY = midY + (perpDx / perpLen) * curvature;
+
+          // Glow layer
+          ctx.beginPath();
+          ctx.moveTo(beam.fromX, beam.fromY);
+          ctx.quadraticCurveTo(cpX, cpY, beam.toX, beam.toY);
+          const glowAlpha = beam.weight * 0.15;
+          ctx.strokeStyle = ragPhase === 'retrieving'
+            ? `rgba(251, 191, 36, ${glowAlpha})`
+            : `rgba(224, 64, 160, ${glowAlpha})`;
+          ctx.lineWidth = thickness + 4;
+          ctx.stroke();
+
+          // Main beam line
+          ctx.beginPath();
+          ctx.moveTo(beam.fromX, beam.fromY);
+          ctx.quadraticCurveTo(cpX, cpY, beam.toX, beam.toY);
+          const beamAlpha = 0.1 + beam.weight * 0.4;
+          ctx.strokeStyle = ragPhase === 'retrieving'
+            ? `rgba(251, 191, 36, ${beamAlpha})`
+            : `rgba(224, 64, 160, ${beamAlpha})`;
+          ctx.lineWidth = thickness;
+          ctx.stroke();
+
+          // Pulsing dot traveling along the beam
+          const dotProgress = ((time * 1.5 + beam.phase) % 1);
+          const t = dotProgress;
+          const dotX = (1 - t) * (1 - t) * beam.fromX + 2 * (1 - t) * t * cpX + t * t * beam.toX;
+          const dotY = (1 - t) * (1 - t) * beam.fromY + 2 * (1 - t) * t * cpY + t * t * beam.toY;
+
+          // Dot glow
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, 5 + beam.weight * 3, 0, Math.PI * 2);
+          ctx.fillStyle = ragPhase === 'retrieving'
+            ? `rgba(251, 191, 36, ${0.15 + beam.weight * 0.1})`
+            : `rgba(224, 64, 160, ${0.15 + beam.weight * 0.1})`;
+          ctx.fill();
+
+          // Dot core
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, 2 + beam.weight, 0, Math.PI * 2);
+          ctx.fillStyle = beamColor;
+          ctx.fill();
+        });
+      } else {
+        // Fade out and clear attention beams
+        attentionBeams.length = 0;
+      }
+
+      // ---- Indexing Scanning Line Effect ----
+      if (ragPhase === 'indexing' && isActive) {
+        const scanAngle = time * 3;
+        const scanRadius = Math.min(cx, cy) * 0.65;
+        const scanEndX = cx + Math.cos(scanAngle) * scanRadius;
+        const scanEndY = cy + Math.sin(scanAngle) * scanRadius;
+
+        // Scanning fan
+        const fanAngle = 0.4;
+        const fanGrad = ctx.createConicGradient(scanAngle - fanAngle, cx, cy);
+        fanGrad.addColorStop(0, 'rgba(251, 191, 36, 0)');
+        fanGrad.addColorStop(0.06, 'rgba(251, 191, 36, 0.08)');
+        fanGrad.addColorStop(0.12, 'rgba(251, 191, 36, 0)');
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, scanRadius, scanAngle - fanAngle, scanAngle + fanAngle);
+        ctx.closePath();
+        ctx.fillStyle = fanGrad;
+        ctx.fill();
+
+        // Scan line
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(scanEndX, scanEndY);
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Scan tip glow
+        ctx.beginPath();
+        ctx.arc(scanEndX, scanEndY, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.4)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(scanEndX, scanEndY, 8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.1)';
+        ctx.fill();
       }
 
       // ---- Central RAG processor core ----
@@ -575,13 +900,11 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
         const isBeingIndexed = ragPhase === 'indexing';
         encryptionOrbits.forEach(orbit => {
           if (orbit.fileIdx !== i) return;
-          // Speed up when indexing
           orbit.speed = isBeingIndexed ? orbit.baseSpeed * 3.5 : orbit.baseSpeed;
           orbit.angle += orbit.speed;
           const ox = file.x + Math.cos(orbit.angle) * (nodeSize + orbit.radius);
           const oy = file.y + Math.sin(orbit.angle) * (nodeSize + orbit.radius);
 
-          // Color shifts when indexing
           const orbitColor = isBeingIndexed
             ? `rgba(251, 191, 36, ${0.6 + Math.sin(time * 8 + orbit.angle) * 0.3})`
             : `rgba(6, 214, 160, 0.5)`;
@@ -591,7 +914,6 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
           ctx.fillStyle = orbitColor;
           ctx.fill();
 
-          // Glow when indexing
           if (isBeingIndexed) {
             ctx.beginPath();
             ctx.arc(ox, oy, 4, 0, Math.PI * 2);
@@ -675,7 +997,7 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
       ctx.arcTo(pbx + pbw, pby + pbh, pbx + pbw - pbr, pby + pbh, pbr);
       ctx.lineTo(pbx + pbr, pby + pbh);
       ctx.arcTo(pbx, pby + pbh, pbx, pby + pbh - pbr, pbr);
-      ctx.lineTo(pbx, pby + pbr);
+      ctx.lineTo(pbx, pby + br);
       ctx.arcTo(pbx, pby, pbx + pbr, pby, pbr);
       ctx.closePath();
       ctx.fill();
@@ -709,14 +1031,12 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
         ctx.closePath();
 
         if (isActive2) {
-          // Active glow
           ctx.fillStyle = 'rgba(168, 85, 247, 0.25)';
           ctx.fill();
           ctx.strokeStyle = 'rgba(168, 85, 247, 0.8)';
           ctx.lineWidth = 1.5;
           ctx.stroke();
 
-          // Outer pulse
           const pulseR = 2 + Math.sin(time * 8) * 2;
           ctx.shadowColor = '#a855f7';
           ctx.shadowBlur = pulseR;

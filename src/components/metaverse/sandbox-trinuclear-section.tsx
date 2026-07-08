@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cpu, Zap, RefreshCw, ArrowLeftRight, Shield, Thermometer, Activity, Layers, AlertTriangle, Link2 } from 'lucide-react';
+import { Cpu, Zap, RefreshCw, ArrowLeftRight, Shield, Thermometer, Activity, Layers, AlertTriangle, Link2, Wifi } from 'lucide-react';
 import TrinuclearSandboxCanvas from './trinuclear-sandbox-canvas';
 
 type SandboxPhase = 'offline' | 'booting' | 'synchronizing' | 'active' | 'stress-test';
@@ -85,6 +85,8 @@ const STRESS_PHASE_COLORS: Record<StressTestSubPhase, string> = {
   'peak-load': '#e040a0',
   'error-injection': '#ef4444',
 };
+
+const ERROR_TYPES = ['LATENCY_SPIKE', 'MEMORY_OVERFLOW', 'TOKEN_DROPOUT'];
 
 function LatencyChart({ cores }: { cores: CoreStatus[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -175,6 +177,153 @@ function LatencyChart({ cores }: { cores: CoreStatus[] }) {
   );
 }
 
+// Throughput comparison mini chart (C)
+function ThroughputMiniChart({ cores }: { cores: CoreStatus[] }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const historyRef = useRef<Record<CoreId, number[]>>({
+    ollama: [],
+    llama4: [],
+    openai: [],
+  });
+
+  useEffect(() => {
+    // Add current TPS to history
+    cores.forEach(c => {
+      if (c.status !== 'offline' && c.status !== 'loading') {
+        historyRef.current[c.id].push(c.tokensPerSec);
+        if (historyRef.current[c.id].length > 30) {
+          historyRef.current[c.id] = historyRef.current[c.id].slice(-30);
+        }
+      }
+    });
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 120 * dpr;
+    canvas.height = 40 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const w = 120;
+    const h = 40;
+    const padX = 2;
+    const padY = 2;
+    const chartW = w - padX * 2;
+    const chartH = h - padY * 2;
+
+    ctx.clearRect(0, 0, w, h);
+
+    let maxVal = 10;
+    Object.values(historyRef.current).forEach(hist => {
+      hist.forEach(v => { if (v > maxVal) maxVal = v; });
+    });
+    maxVal = Math.ceil(maxVal / 20) * 20 || 20;
+
+    const coreColors: Record<CoreId, string> = {
+      ollama: '#06d6a0',
+      llama4: '#fbbf24',
+      openai: '#e040a0',
+    };
+
+    (Object.keys(historyRef.current) as CoreId[]).forEach(coreId => {
+      const data = historyRef.current[coreId];
+      if (data.length < 2) return;
+
+      ctx.beginPath();
+      data.forEach((val, i) => {
+        const x = padX + (i / 29) * chartW;
+        const y = padY + chartH - (val / maxVal) * chartH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = coreColors[coreId];
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.7;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+
+    // Label
+    ctx.font = '6px monospace';
+    ctx.fillStyle = '#555577';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`${maxVal}`, 2, 2);
+  }, [cores]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="block"
+      style={{ width: '120px', height: '40px' }}
+    />
+  );
+}
+
+// Quantum Entanglement Status (D)
+function QuantumEntanglementStatus({ cores, phase, syncIntensity }: { cores: CoreStatus[]; phase: SandboxPhase; syncIntensity: number }) {
+  const allProcessing = cores.every(c => c.status === 'processing' || c.status === 'ready');
+  const isActive = phase === 'active' || phase === 'stress-test';
+  const meshLatency = isActive
+    ? (12 + Math.sin(Date.now() / 500) * 3 + syncIntensity * 5).toFixed(1)
+    : '--';
+
+  return (
+    <div className="glass rounded-xl p-3 border border-white/5">
+      <div className="flex items-center gap-2 mb-2">
+        <Wifi className="w-3.5 h-3.5 text-[#a855f7]" />
+        <span className="text-[9px] font-mono text-[#8888aa] uppercase tracking-wider">Quantum Entanglement</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {/* 3 dots connected by lines animation */}
+          <svg width="40" height="16" viewBox="0 0 40 16" className="shrink-0">
+            {/* Connection lines */}
+            <line x1="8" y1="8" x2="20" y2="8" stroke={isActive ? '#a855f7' : '#333355'} strokeWidth="1" opacity={isActive && allProcessing ? 0.6 : 0.2}>
+              {isActive && allProcessing && (
+                <animate attributeName="opacity" values="0.2;0.8;0.2" dur="1.5s" repeatCount="indefinite" />
+              )}
+            </line>
+            <line x1="20" y1="8" x2="32" y2="8" stroke={isActive ? '#a855f7' : '#333355'} strokeWidth="1" opacity={isActive && allProcessing ? 0.6 : 0.2}>
+              {isActive && allProcessing && (
+                <animate attributeName="opacity" values="0.2;0.8;0.2" dur="1.5s" repeatCount="indefinite" begin="0.3s" />
+              )}
+            </line>
+            <line x1="8" y1="8" x2="32" y2="8" stroke={isActive ? '#a855f7' : '#333355'} strokeWidth="0.5" opacity={isActive && allProcessing ? 0.3 : 0.1}>
+              {isActive && allProcessing && (
+                <animate attributeName="opacity" values="0.1;0.4;0.1" dur="2s" repeatCount="indefinite" />
+              )}
+            </line>
+            {/* Dots */}
+            <circle cx="8" cy="8" r="3" fill="#06d6a0" opacity={isActive ? (allProcessing ? 1 : 0.5) : 0.2}>
+              {isActive && allProcessing && <animate attributeName="r" values="2.5;3.5;2.5" dur="1.2s" repeatCount="indefinite" />}
+            </circle>
+            <circle cx="20" cy="8" r="3" fill="#fbbf24" opacity={isActive ? (allProcessing ? 1 : 0.5) : 0.2}>
+              {isActive && allProcessing && <animate attributeName="r" values="2.5;3.5;2.5" dur="1.2s" repeatCount="indefinite" begin="0.2s" />}
+            </circle>
+            <circle cx="32" cy="8" r="3" fill="#e040a0" opacity={isActive ? (allProcessing ? 1 : 0.5) : 0.2}>
+              {isActive && allProcessing && <animate attributeName="r" values="2.5;3.5;2.5" dur="1.2s" repeatCount="indefinite" begin="0.4s" />}
+            </circle>
+          </svg>
+          <div>
+            <div className="text-[8px] font-mono font-bold" style={{
+              color: isActive && allProcessing ? '#06d6a0' : '#555577',
+            }}>
+              QUANTUM MESH: {isActive && allProcessing ? 'ACTIVE' : isActive ? 'PARTIAL' : 'INACTIVE'}
+            </div>
+            <div className="text-[7px] font-mono text-[#555577] mt-0.5">
+              Core mesh latency: {meshLatency}ms
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SandboxTrinuclearSection() {
   const [phase, setPhase] = useState<SandboxPhase>('offline');
   const [cores, setCores] = useState<CoreStatus[]>(INITIAL_CORES);
@@ -186,6 +335,8 @@ export default function SandboxTrinuclearSection() {
   const [crossCoreActive, setCrossCoreActive] = useState<CoreId[]>([]);
   const [errorCount, setErrorCount] = useState(0);
   const [errorFlashCore, setErrorFlashCore] = useState<CoreId | null>(null);
+  const [errorTypeLabel, setErrorTypeLabel] = useState<string | null>(null);
+  const [errorRecoveryCountdown, setErrorRecoveryCountdown] = useState(0);
   const logIdRef = useRef(0);
   const intervalRefs = useRef<ReturnType<typeof setInterval>[]>([]);
 
@@ -215,6 +366,15 @@ export default function SandboxTrinuclearSection() {
     intervalRefs.current.push(interval);
     return () => clearInterval(interval);
   }, [phase]);
+
+  // Error recovery countdown timer
+  useEffect(() => {
+    if (errorRecoveryCountdown <= 0) return;
+    const timeout = setTimeout(() => {
+      setErrorRecoveryCountdown(prev => prev - 1);
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [errorRecoveryCountdown]);
 
   const clearIntervals = useCallback(() => {
     intervalRefs.current.forEach(clearInterval);
@@ -248,6 +408,8 @@ export default function SandboxTrinuclearSection() {
     setCrossCoreActive([]);
     setErrorCount(0);
     setErrorFlashCore(null);
+    setErrorTypeLabel(null);
+    setErrorRecoveryCountdown(0);
 
     const bootTargets = [
       { idx: 0, delay: 800 },
@@ -349,6 +511,8 @@ export default function SandboxTrinuclearSection() {
     setCores(INITIAL_CORES);
     setStressSubPhase('none');
     setCrossCoreActive([]);
+    setErrorTypeLabel(null);
+    setErrorRecoveryCountdown(0);
   }, [clearIntervals]);
 
   const runStressTest = useCallback(() => {
@@ -387,14 +551,19 @@ export default function SandboxTrinuclearSection() {
         // Occasionally inject an error
         if (stressTime === 11 || stressTime === 13) {
           const errorCore = INITIAL_CORES[Math.floor(Math.random() * 3)];
+          const errorType = ERROR_TYPES[Math.floor(Math.random() * ERROR_TYPES.length)];
           setErrorCount(prev => prev + 1);
           setErrorFlashCore(errorCore.id);
+          setErrorTypeLabel(errorType);
+          setErrorRecoveryCountdown(4); // ~800ms in 200ms ticks
           setCores(prev => prev.map(c =>
             c.id === errorCore.id ? { ...c, status: 'error' as const, latency: c.latency * 3 } : c
           ));
           // Recover after 800ms
           setTimeout(() => {
             setErrorFlashCore(null);
+            setErrorTypeLabel(null);
+            setErrorRecoveryCountdown(0);
             setCores(prev => prev.map(c =>
               c.id === errorCore.id ? { ...c, status: 'ready' as const, latency: 20 + Math.random() * 15 } : c
             ));
@@ -413,6 +582,8 @@ export default function SandboxTrinuclearSection() {
         setPhase('active');
         setStressSubPhase('none');
         setCrossCoreActive([]);
+        setErrorTypeLabel(null);
+        setErrorRecoveryCountdown(0);
         setCores(prev => prev.map(c => ({
           ...c,
           status: 'ready' as const,
@@ -453,6 +624,18 @@ export default function SandboxTrinuclearSection() {
   const totalReqs = cores.reduce((s, c) => s + c.requests, 0);
   const avgAccuracy = cores.reduce((s, c) => s + c.accuracy, 0) / 3;
   const avgLatency = cores.reduce((s, c) => s + c.latency, 0) / 3;
+
+  // Cross-core consistency calculation (A)
+  const getConsistency = (idA: CoreId, idB: CoreId) => {
+    const coreA = cores.find(c => c.id === idA);
+    const coreB = cores.find(c => c.id === idB);
+    if (!coreA || !coreB) return 0;
+    if (coreA.accuracy === 0 && coreB.accuracy === 0) return 0;
+    const maxAcc = Math.max(coreA.accuracy, coreB.accuracy);
+    const minAcc = Math.min(coreA.accuracy, coreB.accuracy);
+    if (maxAcc === 0) return 0;
+    return Math.round((minAcc / maxAcc) * 100);
+  };
 
   return (
     <section className="relative py-20 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -592,25 +775,43 @@ export default function SandboxTrinuclearSection() {
           )}
         </AnimatePresence>
 
-        {/* Error Recovery Visualization */}
+        {/* Error Recovery Visualization - Enhanced with type label and countdown (B) */}
         <AnimatePresence>
           {errorFlashCore && (
             <motion.div
-              className="mb-4 flex items-center justify-center gap-2"
+              className="mb-4 flex items-center justify-center"
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.3 }}
             >
               <div
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border bg-[#ef4444]/10 animate-pulse"
+                className="flex items-center gap-3 px-4 py-2 rounded-xl border bg-[#ef4444]/10 animate-pulse"
                 style={{ borderColor: '#ef444440' }}
               >
                 <AlertTriangle className="w-3.5 h-3.5 text-[#ef4444]" />
                 <span className="text-[10px] font-mono font-bold text-[#ef4444]">
                   ERROR: {cores.find(c => c.id === errorFlashCore)?.name}
                 </span>
-                <span className="text-[8px] font-mono text-[#ef4444]/70">Recovering...</span>
+                {errorTypeLabel && (
+                  <span className="text-[8px] font-mono font-bold text-[#fbbf24] bg-[#fbbf24]/10 border border-[#fbbf24]/30 px-1.5 py-0.5 rounded">
+                    {errorTypeLabel}
+                  </span>
+                )}
+                {/* Spark effect indicator */}
+                <span className="flex items-center gap-0.5">
+                  {[0, 1, 2].map(i => (
+                    <motion.span
+                      key={i}
+                      className="inline-block w-0.5 h-2 rounded-full bg-[#ef4444]"
+                      animate={{ scaleY: [0.3, 1.2, 0.3], opacity: [0.4, 1, 0.4] }}
+                      transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.1 }}
+                    />
+                  ))}
+                </span>
+                <span className="text-[8px] font-mono text-[#ef4444]/70">
+                  Recovering: {errorRecoveryCountdown > 0 ? `${errorRecoveryCountdown * 200}ms` : '...'}
+                </span>
               </div>
             </motion.div>
           )}
@@ -668,10 +869,16 @@ export default function SandboxTrinuclearSection() {
             {cores.map((core, i) => (
               <motion.div
                 key={core.id}
-                className="glass rounded-xl p-4 border border-white/5 hover:border-white/10 transition-colors relative overflow-hidden"
+                className={`glass rounded-xl p-4 border hover:border-white/10 transition-colors relative overflow-hidden ${
+                  errorFlashCore === core.id ? 'border-[#ef4444]/60 animate-pulse' : 'border-white/5'
+                }`}
                 style={{
-                  borderColor: core.status !== 'offline' ? core.color + '22' : undefined,
-                  boxShadow: errorFlashCore === core.id ? '0 0 20px rgba(239,68,68,0.3), inset 0 0 30px rgba(239,68,68,0.1)' : undefined,
+                  borderColor: errorFlashCore === core.id
+                    ? undefined
+                    : core.status !== 'offline' ? core.color + '22' : undefined,
+                  boxShadow: errorFlashCore === core.id
+                    ? '0 0 20px rgba(239,68,68,0.3), inset 0 0 30px rgba(239,68,68,0.1)'
+                    : undefined,
                 }}
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -688,6 +895,35 @@ export default function SandboxTrinuclearSection() {
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.8 }}
                     />
+                  )}
+                </AnimatePresence>
+
+                {/* Error type spark overlay during injection (B) */}
+                <AnimatePresence>
+                  {errorFlashCore === core.id && errorTypeLabel && (
+                    <motion.div
+                      className="absolute top-2 right-2 flex items-center gap-1"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                    >
+                      {/* Spark particles */}
+                      {[0, 1, 2, 3, 4].map(s => (
+                        <motion.span
+                          key={s}
+                          className="absolute w-1 h-1 rounded-full bg-[#ef4444]"
+                          style={{
+                            top: `${Math.sin(s * 1.3) * 8}px`,
+                            left: `${Math.cos(s * 1.3) * 8}px`,
+                          }}
+                          animate={{
+                            scale: [0, 1.5, 0],
+                            opacity: [0, 1, 0],
+                          }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: s * 0.1 }}
+                        />
+                      ))}
+                    </motion.div>
                   )}
                 </AnimatePresence>
 
@@ -759,6 +995,55 @@ export default function SandboxTrinuclearSection() {
               </motion.div>
             ))}
 
+            {/* Cross-Core Consistency Metrics (A) */}
+            {(phase === 'active' || phase === 'stress-test') && (
+              <motion.div
+                className="glass rounded-xl p-3 border border-white/5"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <ArrowLeftRight className="w-3.5 h-3.5 text-[#a855f7]" />
+                  <span className="text-[9px] font-mono text-[#8888aa] uppercase tracking-wider">Cross-Core Consistency</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { pair: 'Ollama ↔ Llama4', idA: 'ollama' as CoreId, idB: 'llama4' as CoreId, color: '#06d6a0' },
+                    { pair: 'Llama4 ↔ OpenAI', idA: 'llama4' as CoreId, idB: 'openai' as CoreId, color: '#fbbf24' },
+                    { pair: 'OpenAI ↔ Ollama', idA: 'openai' as CoreId, idB: 'ollama' as CoreId, color: '#e040a0' },
+                  ].map(({ pair, idA, idB, color }) => (
+                    <div key={pair} className="p-2 rounded-lg bg-[#0a0a1a]/40 border border-white/5 text-center">
+                      <div className="text-[8px] text-[#8888aa] font-mono">{pair}</div>
+                      <div className="text-sm font-bold font-mono mt-1" style={{ color }}>
+                        {getConsistency(idA, idB)}%
+                      </div>
+                      <div className="text-[7px] text-[#555577] mt-0.5">consistency</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Throughput comparison mini chart (C) */}
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-3 h-3 text-[#a855f7]" />
+                    <span className="text-[8px] font-mono text-[#8888aa] uppercase">Throughput (30pts)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {cores.map(c => (
+                      <span key={c.id} className="flex items-center gap-0.5">
+                        <span className="w-1.5 h-0.5 rounded-full" style={{ backgroundColor: c.color }} />
+                        <span className="text-[6px] font-mono" style={{ color: c.color }}>{c.id.slice(0, 3)}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-1 rounded bg-[#0a0a1a]/60 p-1">
+                  <ThroughputMiniChart cores={cores} />
+                </div>
+              </motion.div>
+            )}
+
             {/* Error count metric during stress test */}
             {phase === 'stress-test' && (
               <motion.div
@@ -776,6 +1061,18 @@ export default function SandboxTrinuclearSection() {
             )}
           </div>
         </div>
+
+        {/* Quantum Entanglement Status (D) */}
+        {(phase === 'active' || phase === 'stress-test') && (
+          <motion.div
+            className="mb-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <QuantumEntanglementStatus cores={cores} phase={phase} syncIntensity={syncIntensity} />
+          </motion.div>
+        )}
 
         {/* Inference Log */}
         <motion.div

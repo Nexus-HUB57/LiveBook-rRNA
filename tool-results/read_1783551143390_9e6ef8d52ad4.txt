@@ -1,0 +1,1010 @@
+     1→'use client';
+     2→
+     3→import { useEffect, useRef } from 'react';
+     4→
+     5→interface CoreDef {
+     6→  id: 'ollama' | 'llama4' | 'openai';
+     7→  label: string;
+     8→  sublabel: string;
+     9→  color: string;
+    10→  glowColor: string;
+    11→  angle: number;
+    12→}
+    13→
+    14→const CORES: CoreDef[] = [
+    15→  { id: 'ollama', label: 'Ollama', sublabel: 'Local Runtime', color: '#06d6a0', glowColor: 'rgba(6,214,160,', angle: -Math.PI / 2 },
+    16→  { id: 'llama4', label: 'Llama 4', sublabel: 'Maverick', color: '#fbbf24', glowColor: 'rgba(251,191,36,', angle: Math.PI / 6 },
+    17→  { id: 'openai', label: 'OpenAI', sublabel: 'Native API', color: '#e040a0', glowColor: 'rgba(224,64,160,', angle: (5 * Math.PI) / 6 },
+    18→];
+    19→
+    20→interface TrinuclearSandboxCanvasProps {
+    21→  isActive: boolean;
+    22→  corePower: Record<string, number>;
+    23→  syncIntensity: number;
+    24→}
+    25→
+    26→interface EnergyParticle {
+    27→  x: number;
+    28→  y: number;
+    29→  targetCore: number;
+    30→  sourceCore: number;
+    31→  progress: number;
+    32→  speed: number;
+    33→  color: string;
+    34→  size: number;
+    35→  trail: { x: number; y: number }[];
+    36→}
+    37→
+    38→interface PulseWave {
+    39→  x: number;
+    40→  y: number;
+    41→  radius: number;
+    42→  maxRadius: number;
+    43→  color: string;
+    44→  alpha: number;
+    45→}
+    46→
+    47→interface AmbientParticle {
+    48→  x: number;
+    49→  y: number;
+    50→  vx: number;
+    51→  vy: number;
+    52→  size: number;
+    53→  alpha: number;
+    54→}
+    55→
+    56→interface CoreThroughput {
+    57→  values: number[];
+    58→}
+    59→
+    60→interface NeuralMeshNode {
+    61→  x: number;
+    62→  y: number;
+    63→  connections: number[];
+    64→  activation: number;
+    65→}
+    66→
+    67→interface CoherenceArc {
+    68→  startAngle: number;
+    69→  endAngle: number;
+    70→  radius: number;
+    71→  coherence: number;
+    72→  color: string;
+    73→}
+    74→
+    75→export default function TrinuclearSandboxCanvas({ isActive, corePower, syncIntensity }: TrinuclearSandboxCanvasProps) {
+    76→  const canvasRef = useRef<HTMLCanvasElement>(null);
+    77→  const particlesRef = useRef<EnergyParticle[]>([]);
+    78→  const mouseRef = useRef({ x: -1000, y: -1000 });
+    79→  const animRef = useRef<number>(0);
+    80→  const pulseWavesRef = useRef<PulseWave[]>([]);
+    81→  const ambientParticlesRef = useRef<AmbientParticle[]>([]);
+    82→  const coreThroughputRef = useRef<CoreThroughput[]>(
+    83→    CORES.map(() => ({ values: [0, 0, 0, 0, 0] }))
+    84→  );
+    85→  const prevPowerRef = useRef<Record<string, number>>({});
+    86→  const coreSatellitesRef = useRef<{ angle: number; speed: number; distance: number }[][]>(
+    87→    CORES.map(() => {
+    88→      const sats: { angle: number; speed: number; distance: number }[] = [];
+    89→      for (let i = 0; i < 3; i++) {
+    90→        sats.push({
+    91→          angle: (Math.PI * 2 / 3) * i,
+    92→          speed: 0.8 + Math.random() * 0.6,
+    93→          distance: 42 + Math.random() * 8,
+    94→        });
+    95→      }
+    96→      return sats;
+    97→    })
+    98→  );
+    99→  const neuralMeshRef = useRef<NeuralMeshNode[]>([]);
+   100→  const coherenceArcsRef = useRef<CoherenceArc[]>([]);
+   101→
+   102→  useEffect(() => {
+   103→    const canvas = canvasRef.current;
+   104→    if (!canvas) return;
+   105→    const ctx = canvas.getContext('2d');
+   106→    if (!ctx) return;
+   107→
+   108→    const resize = () => {
+   109→      const rect = canvas.getBoundingClientRect();
+   110→      const dpr = window.devicePixelRatio || 1;
+   111→      canvas.width = rect.width * dpr;
+   112→      canvas.height = rect.height * dpr;
+   113→      ctx.scale(dpr, dpr);
+   114→    };
+   115→    resize();
+   116→    window.addEventListener('resize', resize);
+   117→
+   118→    const handleMouseMove = (e: MouseEvent) => {
+   119→      const rect = canvas.getBoundingClientRect();
+   120→      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+   121→    };
+   122→    canvas.addEventListener('mousemove', handleMouseMove);
+   123→
+   124→    let time = 0;
+   125→    let lastSpawn = 0;
+   126→    let lastThroughputUpdate = 0;
+   127→
+   128→    // Initialize ambient particles
+   129→    if (ambientParticlesRef.current.length === 0) {
+   130→      for (let i = 0; i < 40; i++) {
+   131→        ambientParticlesRef.current.push({
+   132→          x: Math.random() * 2000,
+   133→          y: Math.random() * 2000,
+   134→          vx: (Math.random() - 0.5) * 0.15,
+   135→          vy: (Math.random() - 0.5) * 0.15,
+   136→          size: 0.5 + Math.random() * 1,
+   137→          alpha: 0.05 + Math.random() * 0.1,
+   138→        });
+   139→      }
+   140→    }
+   141→
+   142→    // Initialize neural mesh nodes (12 nodes distributed inside triangle)
+   143→    const initNeuralMesh = (corePositions: { x: number; y: number }[]) => {
+   144→      const nodes: NeuralMeshNode[] = [];
+   145→      // Distribute 12 nodes inside the triangle using barycentric coordinates
+   146→      for (let i = 0; i < 12; i++) {
+   147→        const t1 = 0.15 + Math.random() * 0.7;
+   148→        const t2 = 0.15 + Math.random() * (1 - t1 - 0.15);
+   149→        const t3 = Math.max(0.15, 1 - t1 - t2);
+   150→        const total = t1 + t2 + t3;
+   151→        const nx = (corePositions[0].x * t1 + corePositions[1].x * t2 + corePositions[2].x * t3) / total;
+   152→        const ny = (corePositions[0].y * t1 + corePositions[1].y * t2 + corePositions[2].y * t3) / total;
+   153→        nodes.push({ x: nx, y: ny, connections: [], activation: 0 });
+   154→      }
+   155→      // Connect each node to 3-4 nearest neighbors
+   156→      nodes.forEach((node, i) => {
+   157→        const distances = nodes.map((n, j) => ({
+   158→          idx: j,
+   159→          dist: Math.hypot(n.x - node.x, n.y - node.y),
+   160→        })).filter(d => d.idx !== i).sort((a, b) => a.dist - b.dist);
+   161→        const numConnections = 3 + (i % 2); // 3 or 4
+   162→        node.connections = distances.slice(0, numConnections).map(d => d.idx);
+   163→      });
+   164→      return nodes;
+   165→    };
+   166→
+   167→    // Initialize coherence arcs for each core
+   168→    const initCoherenceArcs = (): CoherenceArc[] => {
+   169→      return CORES.map((core, i) => ({
+   170→        startAngle: (Math.PI * 2 / 3) * i,
+   171→        endAngle: (Math.PI * 2 / 3) * i + Math.PI * 0.4,
+   172→        radius: 48 + i * 6,
+   173→        coherence: 0,
+   174→        color: core.color,
+   175→      }));
+   176→    };
+   177→
+   178→    let meshInitialized = false;
+   179→
+   180→    const getCorePos = (coreIdx: number, w: number, h: number) => {
+   181→      const cx = w / 2;
+   182→      const cy = h / 2;
+   183→      const radius = Math.min(w, h) * 0.28;
+   184→      const angle = CORES[coreIdx].angle + time * 0.08;
+   185→      return {
+   186→        x: cx + Math.cos(angle) * radius,
+   187→        y: cy + Math.sin(angle) * radius,
+   188→      };
+   189→    };
+   190→
+   191→    const spawnParticle = (w: number, h: number) => {
+   192→      const source = Math.floor(Math.random() * 3);
+   193→      let target = Math.floor(Math.random() * 3);
+   194→      while (target === source) target = Math.floor(Math.random() * 3);
+   195→      const sp = getCorePos(source, w, h);
+   196→      const colors = ['#06d6a0', '#fbbf24', '#e040a0'];
+   197→      particlesRef.current.push({
+   198→        x: sp.x,
+   199→        y: sp.y,
+   200→        sourceCore: source,
+   201→        targetCore: target,
+   202→        progress: 0,
+   203→        speed: 0.008 + Math.random() * 0.012,
+   204→        color: colors[source],
+   205→        size: 2 + Math.random() * 2.5,
+   206→        trail: [],
+   207→      });
+   208→    };
+   209→
+   210→    // Draw hexagonal grid
+   211→    const drawHexGrid = (w: number, h: number) => {
+   212→      const hexSize = 30;
+   213→      const hexH = hexSize * Math.sqrt(3);
+   214→      const hexW = hexSize * 2;
+   215→
+   216→      ctx.strokeStyle = 'rgba(168, 85, 247, 0.025)';
+   217→      ctx.lineWidth = 0.5;
+   218→
+   219→      for (let row = -1; row < h / hexH + 1; row++) {
+   220→        for (let col = -1; col < w / hexW + 1; col++) {
+   221→          const offsetX = row % 2 !== 0 ? hexW * 0.75 : 0;
+   222→          const cx = col * hexW * 1.5 + offsetX;
+   223→          const cy = row * hexH;
+   224→
+   225→          ctx.beginPath();
+   226→          for (let i = 0; i < 6; i++) {
+   227→            const angle = (Math.PI / 3) * i - Math.PI / 6;
+   228→            const hx = cx + hexSize * Math.cos(angle);
+   229→            const hy = cy + hexSize * Math.sin(angle);
+   230→            if (i === 0) ctx.moveTo(hx, hy);
+   231→            else ctx.lineTo(hx, hy);
+   232→          }
+   233→          ctx.closePath();
+   234→          ctx.stroke();
+   235→        }
+   236→      }
+   237→    };
+   238→
+   239→    // Draw ambient particles
+   240→    const drawAmbientParticles = (w: number, h: number) => {
+   241→      ambientParticlesRef.current.forEach(p => {
+   242→        p.x += p.vx;
+   243→        p.y += p.vy;
+   244→        if (p.x < -20) p.x = w + 20;
+   245→        if (p.x > w + 20) p.x = -20;
+   246→        if (p.y < -20) p.y = h + 20;
+   247→        if (p.y > h + 20) p.y = -20;
+   248→
+   249→        ctx.beginPath();
+   250→        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+   251→        ctx.fillStyle = `rgba(168, 85, 247, ${p.alpha})`;
+   252→        ctx.fill();
+   253→      });
+   254→    };
+   255→
+   256→    // Draw orbital data streams
+   257→    const drawOrbitalStreams = (cx: number, cy: number, w: number, h: number) => {
+   258→      if (!isActive) return;
+   259→      const baseRadius = Math.min(w, h) * 0.18;
+   260→      const streamColors = ['#06d6a0', '#fbbf24', '#e040a0'];
+   261→      const streamAlphas = [0.12, 0.1, 0.12];
+   262→
+   263→      for (let s = 0; s < 3; s++) {
+   264→        const rx = baseRadius + s * 25;
+   265→        const ry = baseRadius * 0.45 + s * 12;
+   266→        const rotation = s * 0.4 + time * 0.3 * (s % 2 === 0 ? 1 : -1);
+   267→
+   268→        ctx.save();
+   269→        ctx.translate(cx, cy);
+   270→        ctx.rotate(rotation);
+   271→
+   272→        // Draw elliptical path
+   273→        ctx.beginPath();
+   274→        ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+   275→        ctx.strokeStyle = streamColors[s];
+   276→        ctx.globalAlpha = streamAlphas[s] * syncIntensity;
+   277→        ctx.lineWidth = 0.8;
+   278→        ctx.setLineDash([4, 8]);
+   279→        ctx.lineDashOffset = -time * 60 * (s % 2 === 0 ? 1 : -1);
+   280→        ctx.stroke();
+   281→        ctx.setLineDash([]);
+   282→        ctx.globalAlpha = 1;
+   283→
+   284→        // Flowing dots along the path
+   285→        const numDots = 3 + s;
+   286→        for (let d = 0; d < numDots; d++) {
+   287→          const dotAngle = (Math.PI * 2 / numDots) * d + time * (1.2 + s * 0.3) * (s % 2 === 0 ? 1 : -1);
+   288→          const dx = Math.cos(dotAngle) * rx;
+   289→          const dy = Math.sin(dotAngle) * ry;
+   290→
+   291→          ctx.beginPath();
+   292→          ctx.arc(dx, dy, 1.5 + Math.sin(time * 3 + d) * 0.5, 0, Math.PI * 2);
+   293→          ctx.fillStyle = streamColors[s];
+   294→          ctx.globalAlpha = 0.6 * syncIntensity;
+   295→          ctx.fill();
+   296→
+   297→          // Glow
+   298→          ctx.beginPath();
+   299→          ctx.arc(dx, dy, 5, 0, Math.PI * 2);
+   300→          ctx.fillStyle = streamColors[s];
+   301→          ctx.globalAlpha = 0.1 * syncIntensity;
+   302→          ctx.fill();
+   303→          ctx.globalAlpha = 1;
+   304→        }
+   305→
+   306→        ctx.restore();
+   307→      }
+   308→    };
+   309→
+   310→    // Draw pulse waves
+   311→    const updateAndDrawPulseWaves = () => {
+   312→      pulseWavesRef.current = pulseWavesRef.current.filter(pw => pw.alpha > 0.01);
+   313→      pulseWavesRef.current.forEach(pw => {
+   314→        pw.radius += 2.5;
+   315→        pw.alpha *= 0.96;
+   316→
+   317→        ctx.beginPath();
+   318→        ctx.arc(pw.x, pw.y, pw.radius, 0, Math.PI * 2);
+   319→        ctx.strokeStyle = pw.color;
+   320→        ctx.globalAlpha = pw.alpha;
+   321→        ctx.lineWidth = 2;
+   322→        ctx.stroke();
+   323→        ctx.globalAlpha = 1;
+   324→      });
+   325→    };
+   326→
+   327→    // Check for power changes and emit pulse waves
+   328→    const checkPowerChanges = (corePositions: { x: number; y: number }[]) => {
+   329→      CORES.forEach((core, i) => {
+   330→        const currentPower = corePower[core.id] || 0;
+   331→        const prevPower = prevPowerRef.current[core.id] || 0;
+   332→        if (Math.abs(currentPower - prevPower) > 0.15 && currentPower > 0.1) {
+   333→          pulseWavesRef.current.push({
+   334→            x: corePositions[i].x,
+   335→            y: corePositions[i].y,
+   336→            radius: 30,
+   337→            maxRadius: 120,
+   338→            color: core.color,
+   339→            alpha: 0.6,
+   340→          });
+   341→        }
+   342→        prevPowerRef.current[core.id] = currentPower;
+   343→      });
+   344→    };
+   345→
+   346→    // Draw core satellites
+   347→    const drawCoreSatellites = (pos: { x: number; y: number }, coreIdx: number, core: CoreDef) => {
+   348→      const sats = coreSatellitesRef.current[coreIdx];
+   349→      sats.forEach((sat, si) => {
+   350→        sat.angle += sat.speed * 0.01;
+   351→        const sx = pos.x + Math.cos(sat.angle) * sat.distance;
+   352→        const sy = pos.y + Math.sin(sat.angle) * sat.distance;
+   353→
+   354→        ctx.beginPath();
+   355→        ctx.arc(sx, sy, 1.5 + si * 0.3, 0, Math.PI * 2);
+   356→        ctx.fillStyle = core.color;
+   357→        ctx.globalAlpha = 0.7;
+   358→        ctx.fill();
+   359→
+   360→        // Satellite orbit line
+   361→        ctx.beginPath();
+   362→        ctx.arc(pos.x, pos.y, sat.distance, sat.angle, sat.angle + 0.8);
+   363→        ctx.strokeStyle = core.color;
+   364→        ctx.globalAlpha = 0.1;
+   365→        ctx.lineWidth = 0.5;
+   366→        ctx.stroke();
+   367→        ctx.globalAlpha = 1;
+   368→      });
+   369→    };
+   370→
+   371→    // Draw tiny bar chart inside core
+   372→    const drawCoreBarChart = (pos: { x: number; y: number }, coreIdx: number, core: CoreDef) => {
+   373→      const throughput = coreThroughputRef.current[coreIdx];
+   374→      const barW = 3;
+   375→      const barGap = 1;
+   376→      const totalW = throughput.values.length * (barW + barGap);
+   377→      const startX = pos.x - totalW / 2;
+   378→      const baseY = pos.y + 8;
+   379→      const maxBarH = 10;
+   380→
+   381→      throughput.values.forEach((val, i) => {
+   382→        const barH = Math.max(1, (val / 80) * maxBarH);
+   383→        const x = startX + i * (barW + barGap);
+   384→
+   385→        ctx.fillStyle = core.color;
+   386→        ctx.globalAlpha = 0.3;
+   387→        ctx.fillRect(x, baseY - barH, barW, barH);
+   388→        ctx.globalAlpha = 1;
+   389→      });
+   390→    };
+   391→
+   392→    // Draw neural network mesh between cores
+   393→    const drawNeuralMesh = (corePositions: { x: number; y: number }[]) => {
+   394→      if (!isActive) return;
+   395→
+   396→      // Initialize mesh nodes once based on current core positions (re-init periodically)
+   397→      if (!meshInitialized || neuralMeshRef.current.length === 0) {
+   398→        neuralMeshRef.current = initNeuralMesh(corePositions);
+   399→        meshInitialized = true;
+   400→      }
+   401→
+   402→      // Update node positions to follow the triangle (barycentric interpolation)
+   403→      const positions = neuralMeshRef.current.map((node, idx) => {
+   404→        // Keep nodes roughly distributed inside the moving triangle
+   405→        const ratio1 = 0.15 + (idx % 4) * 0.2;
+   406→        const ratio2 = 0.15 + (idx % 3) * 0.2;
+   407→        const ratio3 = Math.max(0.15, 1 - ratio1 - ratio2);
+   408→        const total = ratio1 + ratio2 + ratio3;
+   409→        const nx = (corePositions[0].x * ratio1 + corePositions[1].x * ratio2 + corePositions[2].x * ratio3) / total;
+   410→        const ny = (corePositions[0].y * ratio1 + corePositions[1].y * ratio2 + corePositions[2].y * ratio3) / total;
+   411→        return { x: nx, y: ny };
+   412→      });
+   413→
+   414→      // Update positions and calculate activations
+   415→      const avgPower = (corePower['ollama'] || 0 + corePower['llama4'] || 0 + corePower['openai'] || 0) / 3;
+   416→      neuralMeshRef.current.forEach((node, i) => {
+   417→        node.x = positions[i].x;
+   418→        node.y = positions[i].y;
+   419→        // Activation pulses based on core power + time-based oscillation
+   420→        const coreInfluence = (corePower[CORES[0].id] || 0) * 0.3 + (corePower[CORES[1].id] || 0) * 0.3 + (corePower[CORES[2].id] || 0) * 0.4;
+   421→        node.activation = coreInfluence * (0.5 + 0.5 * Math.sin(time * 3 + i * 0.8));
+   422→      });
+   423→
+   424→      // Draw connections (faint lines)
+   425→      const drawnPairs = new Set<string>();
+   426→      neuralMeshRef.current.forEach((node, i) => {
+   427→        node.connections.forEach(j => {
+   428→          const pairKey = `${Math.min(i, j)}-${Math.max(i, j)}`;
+   429→          if (drawnPairs.has(pairKey)) return;
+   430→          drawnPairs.add(pairKey);
+   431→          const target = neuralMeshRef.current[j];
+   432→          if (!target) return;
+   433→
+   434→          const avgActivation = (node.activation + target.activation) / 2;
+   435→          ctx.beginPath();
+   436→          ctx.moveTo(node.x, node.y);
+   437→          ctx.lineTo(target.x, target.y);
+   438→          ctx.strokeStyle = `rgba(168, 85, 247, ${0.04 + avgActivation * 0.12})`;
+   439→          ctx.lineWidth = 0.5 + avgActivation * 0.5;
+   440→          ctx.stroke();
+   441→        });
+   442→      });
+   443→
+   444→      // Draw mesh nodes (small circles with brightness = activation)
+   445→      neuralMeshRef.current.forEach((node) => {
+   446→        const nodeRadius = 2 + node.activation * 2;
+   447→        const nodeAlpha = 0.15 + node.activation * 0.5;
+   448→
+   449→        // Glow
+   450→        ctx.beginPath();
+   451→        ctx.arc(node.x, node.y, nodeRadius + 4, 0, Math.PI * 2);
+   452→        ctx.fillStyle = `rgba(168, 85, 247, ${nodeAlpha * 0.2})`;
+   453→        ctx.fill();
+   454→
+   455→        // Core dot
+   456→        ctx.beginPath();
+   457→        ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+   458→        const nodeGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, nodeRadius);
+   459→        nodeGrad.addColorStop(0, `rgba(200, 170, 255, ${nodeAlpha})`);
+   460→        nodeGrad.addColorStop(1, `rgba(168, 85, 247, ${nodeAlpha * 0.3})`);
+   461→        ctx.fillStyle = nodeGrad;
+   462→        ctx.fill();
+   463→      });
+   464→    };
+   465→
+   466→    // Draw interference patterns between cores
+   467→    const drawInterferencePatterns = (corePositions: { x: number; y: number }[]) => {
+   468→      if (!isActive || syncIntensity < 0.5) return;
+   469→
+   470→      const interferenceAlpha = (syncIntensity - 0.5) * 2; // 0 to 1 as sync goes 0.5 to 1
+   471→      const ringSpacing = 18;
+   472→      const maxRings = 8;
+   473→
+   474→      for (let c = 0; c < 3; c++) {
+   475→        const pos = corePositions[c];
+   476→        for (let r = 1; r <= maxRings; r++) {
+   477→          const radius = r * ringSpacing + Math.sin(time * 2 + r) * 3;
+   478→          const ringAlpha = (0.02 + interferenceAlpha * 0.02) * (1 - r / (maxRings + 1));
+   479→          ctx.beginPath();
+   480→          ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+   481→          ctx.strokeStyle = CORES[c].color;
+   482→          ctx.globalAlpha = ringAlpha;
+   483→          ctx.lineWidth = 1.5;
+   484→          ctx.stroke();
+   485→          ctx.globalAlpha = 1;
+   486→        }
+   487→      }
+   488→    };
+   489→
+   490→    // Draw quantum coherence arcs around nexus
+   491→    const drawCoherenceArcs = (cx: number, cy: number) => {
+   492→      if (!isActive) return;
+   493→
+   494→      if (coherenceArcsRef.current.length === 0) {
+   495→        coherenceArcsRef.current = initCoherenceArcs();
+   496→      }
+   497→
+   498→      coherenceArcsRef.current.forEach((arc, i) => {
+   499→        const power = corePower[CORES[i].id] || 0;
+   500→        arc.coherence = power;
+   501→
+   502→        // Arc length proportional to core's power/coherence
+   503→        const arcLength = Math.PI * 0.4 * arc.coherence;
+   504→        const startAngle = (Math.PI * 2 / 3) * i + time * 0.2;
+   505→        const endAngle = startAngle + arcLength;
+   506→        const radius = 48 + i * 6;
+   507→
+   508→        if (arcLength < 0.05) return;
+   509→
+   510→        // Draw arc
+   511→        ctx.beginPath();
+   512→        ctx.arc(cx, cy, radius, startAngle, endAngle);
+   513→        ctx.strokeStyle = arc.color;
+   514→        ctx.globalAlpha = 0.35 * arc.coherence;
+   515→        ctx.lineWidth = 2.5;
+   516→        ctx.lineCap = 'round';
+   517→        ctx.stroke();
+   518→        ctx.lineCap = 'butt';
+   519→        ctx.globalAlpha = 1;
+   520→
+   521→        // Pulsing glow at arc start endpoint
+   522→        const glowPulse = 0.5 + 0.5 * Math.sin(time * 4 + i * 2);
+   523→        const startPx = cx + Math.cos(startAngle) * radius;
+   524→        const startPy = cy + Math.sin(startAngle) * radius;
+   525→        ctx.beginPath();
+   526→        ctx.arc(startPx, startPy, 4 + glowPulse * 2, 0, Math.PI * 2);
+   527→        ctx.fillStyle = arc.color;
+   528→        ctx.globalAlpha = 0.15 * arc.coherence * glowPulse;
+   529→        ctx.fill();
+   530→        ctx.globalAlpha = 1;
+   531→
+   532→        // Pulsing glow at arc end endpoint
+   533→        const endPx = cx + Math.cos(endAngle) * radius;
+   534→        const endPy = cy + Math.sin(endAngle) * radius;
+   535→        ctx.beginPath();
+   536→        ctx.arc(endPx, endPy, 4 + glowPulse * 2, 0, Math.PI * 2);
+   537→        ctx.fillStyle = arc.color;
+   538→        ctx.globalAlpha = 0.15 * arc.coherence * glowPulse;
+   539→        ctx.fill();
+   540→        ctx.globalAlpha = 1;
+   541→      });
+   542→    };
+   543→
+   544→    // Draw enhanced mouse interaction
+   545→    const drawMouseInteraction = (corePositions: { x: number; y: number }[]) => {
+   546→      const mx = mouseRef.current.x;
+   547→      const my = mouseRef.current.y;
+   548→      if (mx < 0 || my < 0) return;
+   549→
+   550→      // Check proximity to each core
+   551→      let nearestCore: CoreDef | null = null;
+   552→      let nearestPos: { x: number; y: number } | null = null;
+   553→      let nearestDist = Infinity;
+   554→
+   555→      corePositions.forEach((pos, i) => {
+   556→        const dist = Math.hypot(mx - pos.x, my - pos.y);
+   557→        if (dist < 60 && dist < nearestDist) {
+   558→          nearestDist = dist;
+   559→          nearestCore = CORES[i];
+   560→          nearestPos = pos;
+   561→        }
+   562→      });
+   563→
+   564→      // Draw connection probe line from mouse to nearest core
+   565→      if (nearestCore && nearestPos) {
+   566→        // Dashed probe line
+   567→        ctx.beginPath();
+   568→        ctx.moveTo(mx, my);
+   569→        ctx.lineTo(nearestPos.x, nearestPos.y);
+   570→        ctx.strokeStyle = nearestCore.color;
+   571→        ctx.globalAlpha = 0.3;
+   572→        ctx.lineWidth = 1;
+   573→        ctx.setLineDash([3, 4]);
+   574→        ctx.lineDashOffset = -time * 80;
+   575→        ctx.stroke();
+   576→        ctx.setLineDash([]);
+   577→        ctx.globalAlpha = 1;
+   578→
+   579→        // Floating label near mouse showing core stats
+   580→        const power = corePower[nearestCore.id] || 0;
+   581→        const labelX = mx + 15;
+   582→        const labelY = my - 15;
+   583→
+   584→        // Label background
+   585→        ctx.fillStyle = 'rgba(10, 10, 26, 0.85)';
+   586→        const labelText1 = nearestCore.label;
+   587→        const labelText2 = `Power: ${(power * 100).toFixed(0)}%`;
+   588→        ctx.font = 'bold 9px monospace';
+   589→        const tw1 = ctx.measureText(labelText1).width;
+   590→        ctx.font = '8px monospace';
+   591→        const tw2 = ctx.measureText(labelText2).width;
+   592→        const boxW = Math.max(tw1, tw2) + 16;
+   593→        const boxH = 32;
+   594→
+   595→        ctx.beginPath();
+   596→        ctx.roundRect(labelX - 4, labelY - 10, boxW, boxH, 4);
+   597→        ctx.fill();
+   598→        ctx.strokeStyle = nearestCore.color + '44';
+   599→        ctx.lineWidth = 0.5;
+   600→        ctx.stroke();
+   601→
+   602→        // Label text
+   603→        ctx.fillStyle = nearestCore.color;
+   604→        ctx.font = 'bold 9px monospace';
+   605→        ctx.textAlign = 'left';
+   606→        ctx.textBaseline = 'top';
+   607→        ctx.fillText(labelText1, labelX + 4, labelY - 6);
+   608→        ctx.fillStyle = '#8888aa';
+   609→        ctx.font = '8px monospace';
+   610→        ctx.fillText(labelText2, labelX + 4, labelY + 6);
+   611→      }
+   612→
+   613→      // Subtle gravitational pull on nearby particles
+   614→      particlesRef.current.forEach(p => {
+   615→        const dist = Math.hypot(mx - p.x, my - p.y);
+   616→        if (dist < 80 && dist > 1) {
+   617→          const force = 0.3 / dist;
+   618→          p.x += (mx - p.x) * force * 0.15;
+   619→          p.y += (my - p.y) * force * 0.15;
+   620→        }
+   621→      });
+   622→    };
+   623→
+   624→    const animate = () => {
+   625→      const w = canvas.getBoundingClientRect().width;
+   626→      const h = canvas.getBoundingClientRect().height;
+   627→      const cx = w / 2;
+   628→      const cy = h / 2;
+   629→
+   630→      ctx.clearRect(0, 0, w, h);
+   631→      time += 0.004;
+   632→
+   633→      // Hexagonal grid background
+   634→      drawHexGrid(w, h);
+   635→
+   636→      // Ambient particles
+   637→      drawAmbientParticles(w, h);
+   638→
+   639→      // Triangle connections between cores
+   640→      const corePositions = CORES.map((_, i) => getCorePos(i, w, h));
+   641→
+   642→      // Mesh fill with animated gradient
+   643→      ctx.beginPath();
+   644→      ctx.moveTo(corePositions[0].x, corePositions[0].y);
+   645→      ctx.lineTo(corePositions[1].x, corePositions[1].y);
+   646→      ctx.lineTo(corePositions[2].x, corePositions[2].y);
+   647→      ctx.closePath();
+   648→      const triAlpha = isActive ? 0.02 + syncIntensity * 0.05 : 0.01;
+   649→      const triGrad = ctx.createLinearGradient(
+   650→        corePositions[0].x, corePositions[0].y,
+   651→        corePositions[2].x, corePositions[2].y
+   652→      );
+   653→      triGrad.addColorStop(0, `rgba(6, 214, 160, ${triAlpha})`);
+   654→      triGrad.addColorStop(0.5, `rgba(168, 85, 247, ${triAlpha * 1.5})`);
+   655→      triGrad.addColorStop(1, `rgba(224, 64, 160, ${triAlpha})`);
+   656→      ctx.fillStyle = triGrad;
+   657→      ctx.fill();
+   658→
+   659→      // Neural Network Mesh (AFTER triangle fill, BEFORE cores)
+   660→      drawNeuralMesh(corePositions);
+   661→
+   662→      // Interference patterns (subtle concentric rings from each core)
+   663→      drawInterferencePatterns(corePositions);
+   664→
+   665→      // Cross-core inference mesh
+   666→      if (isActive && syncIntensity > 0.2) {
+   667→        const meshPoints = 12;
+   668→        for (let m = 0; m < meshPoints; m++) {
+   669→          const t1 = Math.random();
+   670→          const t2 = Math.random() * (1 - t1);
+   671→          const t3 = 1 - t1 - t2;
+   672→          const mx = corePositions[0].x * t1 + corePositions[1].x * t2 + corePositions[2].x * t3;
+   673→          const my = corePositions[0].y * t1 + corePositions[1].y * t2 + corePositions[2].y * t3;
+   674→          ctx.beginPath();
+   675→          ctx.arc(mx, my, 1, 0, Math.PI * 2);
+   676→          ctx.fillStyle = `rgba(168, 85, 247, ${syncIntensity * 0.15})`;
+   677→          ctx.fill();
+   678→        }
+   679→
+   680→        if (syncIntensity > 0.5) {
+   681→          for (let c = 0; c < 3; c++) {
+   682→            const target = (c + 1) % 3;
+   683→            const src = corePositions[c];
+   684→            const tgt = corePositions[target];
+   685→            const beamProgress = ((time * 3 + c) % 1);
+   686→            const bpx = src.x + (tgt.x - src.x) * beamProgress;
+   687→            const bpy = src.y + (tgt.y - src.y) * beamProgress;
+   688→            ctx.save();
+   689→            ctx.globalAlpha = syncIntensity * 0.6;
+   690→            ctx.fillStyle = CORES[c].color;
+   691→            ctx.beginPath();
+   692→            ctx.arc(bpx, bpy, 3, 0, Math.PI * 2);
+   693→            ctx.fill();
+   694→            ctx.globalAlpha = syncIntensity * 0.15;
+   695→            ctx.beginPath();
+   696→            ctx.arc(bpx, bpy, 8, 0, Math.PI * 2);
+   697→            ctx.fill();
+   698→            ctx.restore();
+   699→          }
+   700→        }
+   701→      }
+   702→
+   703→      // Triangle edges
+   704→      for (let i = 0; i < 3; i++) {
+   705→        const j = (i + 1) % 3;
+   706→        ctx.beginPath();
+   707→        ctx.moveTo(corePositions[i].x, corePositions[i].y);
+   708→        ctx.lineTo(corePositions[j].x, corePositions[j].y);
+   709→        const edgeAlpha = isActive ? 0.15 + syncIntensity * 0.2 : 0.06;
+   710→        ctx.strokeStyle = `rgba(168, 85, 247, ${edgeAlpha})`;
+   711→        ctx.lineWidth = 1;
+   712→        ctx.stroke();
+   713→      }
+   714→
+   715→      // Orbital data streams around nexus
+   716→      drawOrbitalStreams(cx, cy, w, h);
+   717→
+   718→      // Central OpenClaw nexus - enhanced
+   719→      const nexusSize = isActive ? 20 + syncIntensity * 15 + Math.sin(time * 4) * 4 : 16;
+   720→
+   721→      // Outer glow
+   722→      const nexusGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, nexusSize + 25);
+   723→      nexusGrad.addColorStop(0, `rgba(168, 85, 247, ${isActive ? 0.5 : 0.15})`);
+   724→      nexusGrad.addColorStop(0.5, `rgba(224, 64, 160, ${isActive ? 0.2 : 0.05})`);
+   725→      nexusGrad.addColorStop(1, 'rgba(168, 85, 247, 0)');
+   726→      ctx.beginPath();
+   727→      ctx.arc(cx, cy, nexusSize + 25, 0, Math.PI * 2);
+   728→      ctx.fillStyle = nexusGrad;
+   729→      ctx.fill();
+   730→
+   731→      // Core body
+   732→      ctx.beginPath();
+   733→      ctx.arc(cx, cy, nexusSize, 0, Math.PI * 2);
+   734→      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, nexusSize);
+   735→      coreGrad.addColorStop(0, 'rgba(168, 85, 247, 0.8)');
+   736→      coreGrad.addColorStop(0.7, 'rgba(224, 64, 160, 0.3)');
+   737→      coreGrad.addColorStop(1, 'rgba(168, 85, 247, 0.05)');
+   738→      ctx.fillStyle = coreGrad;
+   739→      ctx.fill();
+   740→
+   741→      // Rotating hexagonal wireframe
+   742→      const hexRadius = nexusSize + 8;
+   743→      const hexRotation = time * 1.5;
+   744→      ctx.save();
+   745→      ctx.translate(cx, cy);
+   746→      ctx.rotate(hexRotation);
+   747→      ctx.beginPath();
+   748→      for (let i = 0; i < 6; i++) {
+   749→        const a = (Math.PI / 3) * i;
+   750→        const hx = Math.cos(a) * hexRadius;
+   751→        const hy = Math.sin(a) * hexRadius;
+   752→        if (i === 0) ctx.moveTo(hx, hy);
+   753→        else ctx.lineTo(hx, hy);
+   754→      }
+   755→      ctx.closePath();
+   756→      ctx.strokeStyle = `rgba(168, 85, 247, ${isActive ? 0.35 : 0.1})`;
+   757→      ctx.lineWidth = 1.2;
+   758→      ctx.stroke();
+   759→      ctx.restore();
+   760→
+   761→      // Inner rotating triangle (counter-rotating)
+   762→      const triRadius = nexusSize * 0.55;
+   763→      const triRotation = -time * 2;
+   764→      ctx.save();
+   765→      ctx.translate(cx, cy);
+   766→      ctx.rotate(triRotation);
+   767→      ctx.beginPath();
+   768→      for (let i = 0; i < 3; i++) {
+   769→        const a = (Math.PI * 2 / 3) * i - Math.PI / 2;
+   770→        const tx = Math.cos(a) * triRadius;
+   771→        const ty = Math.sin(a) * triRadius;
+   772→        if (i === 0) ctx.moveTo(tx, ty);
+   773→        else ctx.lineTo(tx, ty);
+   774→      }
+   775→      ctx.closePath();
+   776→      ctx.strokeStyle = `rgba(6, 214, 160, ${isActive ? 0.4 : 0.1})`;
+   777→      ctx.lineWidth = 1;
+   778→      ctx.stroke();
+   779→      ctx.restore();
+   780→
+   781→      // Nexus rotating segments (existing)
+   782→      for (let i = 0; i < 6; i++) {
+   783→        const segAngle = time * 3 + (i * Math.PI) / 3;
+   784→        ctx.beginPath();
+   785→        ctx.arc(cx, cy, nexusSize + 5, segAngle, segAngle + 0.5);
+   786→        ctx.strokeStyle = i % 2 === 0 ? 'rgba(6, 214, 160, 0.4)' : 'rgba(251, 191, 36, 0.4)';
+   787→        ctx.lineWidth = 2;
+   788→        ctx.stroke();
+   789→      }
+   790→
+   791→      // Quantum coherence arcs around nexus
+   792→      drawCoherenceArcs(cx, cy);
+   793→
+   794→      // Nexus label
+   795→      ctx.fillStyle = '#ffffff';
+   796→      ctx.font = 'bold 9px monospace';
+   797→      ctx.textAlign = 'center';
+   798→      ctx.textBaseline = 'middle';
+   799→      ctx.fillText('OPENCLAW', cx, cy - 3);
+   800→      ctx.font = '7px monospace';
+   801→      ctx.fillStyle = '#8888aa';
+   802→      ctx.fillText('SANDBOX', cx, cy + 8);
+   803→
+   804→      // Data throughput text near nexus
+   805→      if (isActive) {
+   806→        const throughput = Object.values(corePower).reduce((s, v) => s + v, 0);
+   807→        const tpsValue = (throughput * 120 + Math.sin(time * 5) * 10).toFixed(0);
+   808→        ctx.font = '7px monospace';
+   809→        ctx.fillStyle = 'rgba(168, 85, 247, 0.6)';
+   810→        ctx.textAlign = 'center';
+   811→        ctx.fillText(`${tpsValue} tok/s`, cx, cy + nexusSize + 22);
+   812→      }
+   813→
+   814→      // Enhanced energy beams from nexus to each core (thicker, more visible)
+   815→      corePositions.forEach((pos, i) => {
+   816→        // Thick gradient beam
+   817→        const beamGrad = ctx.createLinearGradient(cx, cy, pos.x, pos.y);
+   818→        beamGrad.addColorStop(0, CORES[i].glowColor + (isActive ? '30' : '08'));
+   819→        beamGrad.addColorStop(0.5, CORES[i].glowColor + (isActive ? '18' : '04'));
+   820→        beamGrad.addColorStop(1, CORES[i].glowColor + (isActive ? '30' : '08'));
+   821→
+   822→        ctx.beginPath();
+   823→        ctx.moveTo(cx, cy);
+   824→        ctx.lineTo(pos.x, pos.y);
+   825→        ctx.strokeStyle = beamGrad;
+   826→        ctx.lineWidth = isActive ? 3 : 1;
+   827→        ctx.stroke();
+   828→
+   829→        // Dashed overlay
+   830→        ctx.beginPath();
+   831→        ctx.moveTo(cx, cy);
+   832→        ctx.lineTo(pos.x, pos.y);
+   833→        ctx.strokeStyle = CORES[i].glowColor + (isActive ? '25' : '0a');
+   834→        ctx.lineWidth = 1;
+   835→        ctx.setLineDash([3, 6]);
+   836→        ctx.lineDashOffset = -time * 100;
+   837→        ctx.stroke();
+   838→        ctx.setLineDash([]);
+   839→      });
+   840→
+   841→      // Spawn energy particles (faster spawn when active)
+   842→      const spawnRate = isActive ? 0.08 : 0.15;
+   843→      if (isActive && time - lastSpawn > spawnRate) {
+   844→        spawnParticle(w, h);
+   845→        lastSpawn = time;
+   846→      }
+   847→
+   848→      // Update and draw particles with trails
+   849→      particlesRef.current = particlesRef.current.filter(p => p.progress <= 1);
+   850→      particlesRef.current.forEach(p => {
+   851→        // Store trail position
+   852→        p.trail.push({ x: p.x, y: p.y });
+   853→        if (p.trail.length > 4) p.trail.shift();
+   854→
+   855→        p.progress += p.speed;
+   856→        const sp = corePositions[p.sourceCore];
+   857→        const tp = corePositions[p.targetCore];
+   858→        const cpx = (sp.x + tp.x) / 2 + Math.sin(time * 5 + p.sourceCore) * 25;
+   859→        const cpy = (sp.y + tp.y) / 2 + Math.cos(time * 5 + p.targetCore) * 25;
+   860→        const t = Math.min(p.progress, 1);
+   861→        const it = 1 - t;
+   862→        p.x = it * it * sp.x + 2 * it * t * cpx + t * t * tp.x;
+   863→        p.y = it * it * sp.y + 2 * it * t * cpy + t * t * tp.y;
+   864→
+   865→        // Draw fading trail
+   866→        if (p.trail.length > 1) {
+   867→          for (let ti = 0; ti < p.trail.length - 1; ti++) {
+   868→            const trailAlpha = ((ti + 1) / p.trail.length) * 0.2;
+   869→            const trailSize = p.size * ((ti + 1) / p.trail.length) * 0.7;
+   870→            ctx.beginPath();
+   871→            ctx.arc(p.trail[ti].x, p.trail[ti].y, trailSize, 0, Math.PI * 2);
+   872→            ctx.fillStyle = p.color + Math.floor(trailAlpha * 255).toString(16).padStart(2, '0');
+   873→            ctx.fill();
+   874→          }
+   875→        }
+   876→
+   877→        // Outer glow
+   878→        ctx.beginPath();
+   879→        ctx.arc(p.x, p.y, p.size + 3, 0, Math.PI * 2);
+   880→        ctx.fillStyle = p.color + '18';
+   881→        ctx.fill();
+   882→
+   883→        // Particle
+   884→        ctx.beginPath();
+   885→        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+   886→        ctx.fillStyle = p.color;
+   887→        ctx.fill();
+   888→      });
+   889→
+   890→      // Limit particles to 150
+   891→      if (particlesRef.current.length > 150) {
+   892→        particlesRef.current = particlesRef.current.slice(-150);
+   893→      }
+   894→
+   895→      // Check for power changes and emit pulse waves
+   896→      checkPowerChanges(corePositions);
+   897→
+   898→      // Draw pulse waves
+   899→      updateAndDrawPulseWaves();
+   900→
+   901→      // Update core throughput data every ~1 second
+   902→      if (time - lastThroughputUpdate > 1) {
+   903→        lastThroughputUpdate = time;
+   904→        CORES.forEach((core, i) => {
+   905→          const power = corePower[core.id] || 0;
+   906→          const throughput = coreThroughputRef.current[i];
+   907→          throughput.values.shift();
+   908→          throughput.values.push(power * 80 + Math.sin(time * 2 + i) * 10);
+   909→        });
+   910→      }
+   911→
+   912→      // Draw each core with enhancements
+   913→      CORES.forEach((core, i) => {
+   914→        const pos = corePositions[i];
+   915→        const power = corePower[core.id] || 0.5;
+   916→        const coreSize = 28 + power * 18;
+   917→        const pulse = Math.sin(time * 3 + i * 2) * 0.15 + 0.85;
+   918→
+   919→        // Outer ring
+   920→        ctx.beginPath();
+   921→        ctx.arc(pos.x, pos.y, coreSize + 12, 0, Math.PI * 2);
+   922→        ctx.strokeStyle = core.glowColor + (isActive ? '30' : '12');
+   923→        ctx.lineWidth = 1;
+   924→        ctx.stroke();
+   925→
+   926→        // Power ring with smooth easing
+   927→        const easedPower = power < 0.5
+   928→          ? 2 * power * power
+   929→          : 1 - Math.pow(-2 * power + 2, 2) / 2;
+   930→        ctx.beginPath();
+   931→        ctx.arc(pos.x, pos.y, coreSize + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * easedPower);
+   932→        ctx.strokeStyle = core.color;
+   933→        ctx.lineWidth = 3;
+   934→        ctx.lineCap = 'round';
+   935→        ctx.stroke();
+   936→        ctx.lineCap = 'butt';
+   937→
+   938→        // Core glow
+   939→        const glowGrad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, coreSize);
+   940→        glowGrad.addColorStop(0, core.glowColor + `${0.5 * pulse * (0.5 + power * 0.5)})`);
+   941→        glowGrad.addColorStop(0.6, core.glowColor + `${0.15 * pulse})`);
+   942→        glowGrad.addColorStop(1, core.glowColor + '00)');
+   943→        ctx.beginPath();
+   944→        ctx.arc(pos.x, pos.y, coreSize, 0, Math.PI * 2);
+   945→        ctx.fillStyle = glowGrad;
+   946→        ctx.fill();
+   947→
+   948→        // Core inner circle
+   949→        ctx.beginPath();
+   950→        ctx.arc(pos.x, pos.y, coreSize * 0.6, 0, Math.PI * 2);
+   951→        const innerGrad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, coreSize * 0.6);
+   952→        innerGrad.addColorStop(0, core.glowColor + 'aa');
+   953→        innerGrad.addColorStop(1, core.glowColor + '22');
+   954→        ctx.fillStyle = innerGrad;
+   955→        ctx.fill();
+   956→
+   957→        // Inner icon (simplified, no emoji)
+   958→        ctx.fillStyle = '#ffffff';
+   959→        ctx.font = 'bold 11px monospace';
+   960→        ctx.textAlign = 'center';
+   961→        ctx.textBaseline = 'middle';
+   962→        const icons = ['>', 'v', '*'];
+   963→        ctx.fillText(icons[i], pos.x, pos.y);
+   964→
+   965→        // Core satellites
+   966→        if (isActive) {
+   967→          drawCoreSatellites(pos, i, core);
+   968→        }
+   969→
+   970→        // Tiny bar chart inside core
+   971→        if (isActive) {
+   972→          drawCoreBarChart(pos, i, core);
+   973→        }
+   974→
+   975→        // Labels
+   976→        ctx.font = 'bold 10px monospace';
+   977→        ctx.fillStyle = core.color;
+   978→        ctx.fillText(core.label, pos.x, pos.y + coreSize + 18);
+   979→        ctx.font = '7px monospace';
+   980→        ctx.fillStyle = '#8888aa';
+   981→        ctx.fillText(core.sublabel, pos.x, pos.y + coreSize + 29);
+   982→
+   983→        // Power percentage
+   984→        ctx.font = 'bold 8px monospace';
+   985→        ctx.fillStyle = core.color;
+   986→        ctx.fillText(`${(power * 100).toFixed(0)}%`, pos.x, pos.y + coreSize + 40);
+   987→      });
+   988→
+   989→      // Enhanced mouse interaction
+   990→      drawMouseInteraction(corePositions);
+   991→
+   992→      animRef.current = requestAnimationFrame(animate);
+   993→    };
+   994→
+   995→    animate();
+   996→
+   997→    return () => {
+   998→      cancelAnimationFrame(animRef.current);
+   999→      window.removeEventListener('resize', resize);
+  1000→      canvas.removeEventListener('mousemove', handleMouseMove);
+  1001→    };
+  1002→  }, [isActive, corePower, syncIntensity]);
+  1003→
+  1004→  return (
+  1005→    <canvas
+  1006→      ref={canvasRef}
+  1007→      className="w-full h-full block"
+  1008→    />
+  1009→  );
+  1010→}

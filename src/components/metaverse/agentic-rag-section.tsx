@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Brain, Cpu, GitBranch, Database, Eye, Terminal, BookOpen, Activity, Link2, Clock } from 'lucide-react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Brain, Cpu, GitBranch, Database, Eye, Terminal, BookOpen, Activity, Link2, Clock, AlertTriangle, Gauge, Zap, ArrowRight } from 'lucide-react';
 import KnowledgeVaultCanvas from './knowledge-vault-canvas';
 import ObsidianKnowledgeGraph from './obsidian-knowledge-graph';
 import AIAgentTerminal from './ai-agent-terminal';
@@ -45,6 +45,14 @@ const PHASE_DURATION_MS: Record<RAGPhase, number> = {
   streaming: 14000,
 };
 
+const PHASE_THROUGHPUT: Record<RAGPhase, string> = {
+  idle: '--',
+  indexing: '2.4K/s',
+  retrieving: '847/s',
+  generating: '128 t/s',
+  streaming: '256 t/s',
+};
+
 interface CollaborationLink {
   from: string;
   to: string;
@@ -59,6 +67,7 @@ const COLLABORATION_LINKS: CollaborationLink[] = [
   { from: 'System', to: 'All', label: 'orchestration', color: '#06d6a0' },
 ];
 
+/* ===== RAG Sparkline ===== */
 function RAGSparkline({ cycleCount }: { cycleCount: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -77,7 +86,6 @@ function RAGSparkline({ cycleCount }: { cycleCount: number }) {
     const w = rect.width;
     const h = rect.height;
 
-    // Generate 20 synthetic performance values based on cycle count
     const data: number[] = [];
     for (let i = 0; i < 20; i++) {
       const base = 75 + cycleCount * 2;
@@ -93,7 +101,6 @@ function RAGSparkline({ cycleCount }: { cycleCount: number }) {
     const maxVal = 100;
     const range = maxVal - minVal;
 
-    // Gradient fill
     const grad = ctx.createLinearGradient(0, padY, 0, h);
     grad.addColorStop(0, 'rgba(168, 85, 247, 0.3)');
     grad.addColorStop(1, 'rgba(168, 85, 247, 0.0)');
@@ -105,15 +112,12 @@ function RAGSparkline({ cycleCount }: { cycleCount: number }) {
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
-
-    // Close path for fill
     ctx.lineTo(padX + chartW, padY + chartH);
     ctx.lineTo(padX, padY + chartH);
     ctx.closePath();
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // Line
     ctx.beginPath();
     data.forEach((val, i) => {
       const x = padX + (i / (data.length - 1)) * chartW;
@@ -125,7 +129,6 @@ function RAGSparkline({ cycleCount }: { cycleCount: number }) {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Last point dot
     const lastX = padX + chartW;
     const lastY = padY + chartH - ((data[data.length - 1] - minVal) / range) * chartH;
     ctx.beginPath();
@@ -150,8 +153,23 @@ function RAGSparkline({ cycleCount }: { cycleCount: number }) {
   );
 }
 
+/* ===== Enhanced Collaboration Mesh ===== */
 function CollaborationMesh({ isActive }: { isActive: boolean }) {
-  const dotRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [latencies, setLatencies] = useState<number[]>([0, 0, 0, 0]);
+  const [activeLinks, setActiveLinks] = useState<boolean[]>([false, false, false, false]);
+
+  useEffect(() => {
+    if (!isActive) {
+      const t = setTimeout(() => setActiveLinks([false, false, false, false]), 0);
+      return () => clearTimeout(t);
+    }
+    // Rotate active links and simulate latency
+    const interval = setInterval(() => {
+      setActiveLinks(prev => prev.map(() => Math.random() > 0.3));
+      setLatencies(prev => prev.map(() => 2 + Math.floor(Math.random() * 18)));
+    }, 1200);
+    return () => clearInterval(interval);
+  }, [isActive]);
 
   return (
     <motion.div
@@ -165,73 +183,426 @@ function CollaborationMesh({ isActive }: { isActive: boolean }) {
         Collaboration Mesh
       </div>
       <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-        {COLLABORATION_LINKS.map((link, i) => (
-          <div
-            key={`${link.from}-${link.to}`}
-            className="relative flex items-center gap-2 px-3 py-2 rounded-lg border border-white/5 bg-[#0a0a1a]/40"
-            ref={(el) => { dotRefs.current[i] = el; }}
-          >
-            {/* Animated connection line */}
-            <div className="relative w-10 h-[2px] flex-shrink-0">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{ backgroundColor: link.color + (isActive ? '40' : '15') }}
-              />
-              {isActive && (
-                <motion.div
-                  className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
-                  style={{ backgroundColor: link.color }}
-                  animate={{
-                    left: ['0%', '100%'],
-                    opacity: [0, 1, 1, 0],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    repeatDelay: 0.5,
-                    ease: 'easeInOut',
-                    delay: i * 0.3,
-                  }}
-                />
-              )}
-              {isActive && (
-                <motion.div
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: link.color }}
-                  animate={{
-                    opacity: [0.3, 1, 0.3],
-                    scale: [0.8, 1.2, 0.8],
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                    delay: i * 0.4,
-                  }}
-                />
-              )}
-            </div>
-            {/* Agent names */}
-            <span className="text-[9px] font-mono text-white/70">{link.from}</span>
-            <span className="text-[9px] text-[#555577]">&harr;</span>
-            <span className="text-[9px] font-mono text-white/70">{link.to}</span>
-            {/* Label */}
-            <span
-              className="text-[7px] font-mono px-1.5 py-0.5 rounded-full"
+        {COLLABORATION_LINKS.map((link, i) => {
+          const isLinkActive = activeLinks[i];
+          return (
+            <motion.div
+              key={`${link.from}-${link.to}`}
+              className="relative flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all"
               style={{
-                color: link.color,
-                backgroundColor: link.color + '15',
-                border: `1px solid ${link.color}25`,
+                borderColor: isLinkActive ? link.color + '55' : 'rgba(255,255,255,0.05)',
+                backgroundColor: isLinkActive ? link.color + '0a' : 'rgba(10,10,26,0.4)',
+                boxShadow: isLinkActive ? `0 0 12px ${link.color}20` : 'none',
               }}
+              whileHover={{ scale: 1.03 }}
             >
-              {link.label}
-            </span>
-          </div>
-        ))}
+              {/* Animated connection line */}
+              <div className="relative w-10 h-[2px] flex-shrink-0">
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{ backgroundColor: link.color + (isActive ? '40' : '15') }}
+                />
+                {/* Primary traveling dot */}
+                {isActive && (
+                  <motion.div
+                    className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
+                    style={{ backgroundColor: link.color, boxShadow: isLinkActive ? `0 0 6px ${link.color}` : 'none' }}
+                    animate={{
+                      left: ['0%', '100%'],
+                      opacity: [0, 1, 1, 0],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatDelay: 0.5,
+                      ease: 'easeInOut',
+                      delay: i * 0.3,
+                    }}
+                  />
+                )}
+                {/* Secondary traveling dot (reverse direction) when active */}
+                {isLinkActive && (
+                  <motion.div
+                    className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: link.color, opacity: 0.6 }}
+                    animate={{
+                      left: ['100%', '0%'],
+                      opacity: [0, 0.6, 0.6, 0],
+                    }}
+                    transition={{
+                      duration: 1.8,
+                      repeat: Infinity,
+                      repeatDelay: 0.3,
+                      ease: 'linear',
+                      delay: i * 0.2,
+                    }}
+                  />
+                )}
+                {/* Center pulse when active */}
+                {isLinkActive && (
+                  <motion.div
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: link.color }}
+                    animate={{
+                      opacity: [0.3, 1, 0.3],
+                      scale: [0.8, 1.2, 0.8],
+                    }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      delay: i * 0.4,
+                    }}
+                  />
+                )}
+              </div>
+              <span className="text-[9px] font-mono text-white/70">{link.from}</span>
+              <span className="text-[9px] text-[#555577]">&harr;</span>
+              <span className="text-[9px] font-mono text-white/70">{link.to}</span>
+              <span
+                className="text-[7px] font-mono px-1.5 py-0.5 rounded-full"
+                style={{
+                  color: link.color,
+                  backgroundColor: link.color + '15',
+                  border: `1px solid ${link.color}25`,
+                }}
+              >
+                {link.label}
+              </span>
+              {/* Latency measurement */}
+              <span className="text-[7px] font-mono text-[#555577] tabular-nums">
+                {isActive ? `${latencies[i]}ms` : '--'}
+              </span>
+            </motion.div>
+          );
+        })}
       </div>
     </motion.div>
   );
 }
 
+/* ===== Orgasm State Visual Enhancement ===== */
+function OrgasmStateVisual({ state, isProcessing }: { state: OrgasmState; isProcessing: boolean }) {
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; color: string }[]>([]);
+  const prevRef = useRef<OrgasmState>(state);
+
+  useEffect(() => {
+    if (prevRef.current === state) return;
+    prevRef.current = state;
+    // Particle burst on transition
+    const colors: Record<OrgasmState, string> = {
+      dormant: '#8888aa',
+      awakening: '#fbbf24',
+      active: '#e040a0',
+      transcendent: '#06d6a0',
+    };
+    const burst: { id: number; x: number; y: number; color: string }[] = [];
+    for (let i = 0; i < 12; i++) {
+      burst.push({
+        id: Date.now() + i,
+        x: 50 + (Math.random() - 0.5) * 80,
+        y: 50 + (Math.random() - 0.5) * 40,
+        color: colors[state],
+      });
+    }
+    setParticles(burst);
+    const timer = setTimeout(() => setParticles([]), 1200);
+    return () => clearTimeout(timer);
+  }, [state]);
+
+  const consciousnessLevel = state === 'dormant' ? 0.1 : state === 'awakening' ? 0.4 : state === 'active' ? 0.75 : 1.0;
+  const stateColor = state === 'dormant' ? '#8888aa' : state === 'awakening' ? '#fbbf24' : state === 'active' ? '#e040a0' : '#06d6a0';
+  const stateLabel = state === 'dormant' ? 'DORMENTE' : state === 'awakening' ? 'DESPERTANDO' : state === 'active' ? 'ATIVO' : 'TRANSCENDENTE';
+
+  return (
+    <div className="relative">
+      {/* Full-width glowing border animation for transcendent */}
+      <AnimatePresence>
+        {state === 'transcendent' && (
+          <motion.div
+            className="absolute -inset-[1px] rounded-2xl pointer-events-none"
+            style={{
+              background: `linear-gradient(90deg, transparent, #06d6a0, #fbbf24, #a855f7, #e040a0, transparent)`,
+              backgroundSize: '200% 100%',
+            }}
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: [0.3, 0.7, 0.3],
+              backgroundPosition: ['0% 0%', '200% 0%'],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 2, repeat: Infinity },
+              backgroundPosition: { duration: 3, repeat: Infinity, ease: 'linear' },
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="relative flex flex-col sm:flex-row items-center gap-4 px-5 py-3 rounded-xl border border-white/5 bg-[#0a0a1a]/60">
+        {/* Particle burst */}
+        <AnimatePresence>
+          {particles.map(p => (
+            <motion.div
+              key={p.id}
+              className="absolute w-1.5 h-1.5 rounded-full pointer-events-none"
+              style={{ backgroundColor: p.color, left: `calc(50% + ${p.x}px)`, top: `calc(50% + ${p.y}px)` }}
+              initial={{ opacity: 1, scale: 1 }}
+              animate={{ opacity: 0, scale: 0, x: (Math.random() - 0.5) * 40, y: (Math.random() - 0.5) * 30 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1, ease: 'easeOut' }}
+            />
+          ))}
+        </AnimatePresence>
+
+        {/* State indicator with distinct visual treatments */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4" style={{ color: stateColor }} />
+            <span className="text-sm font-semibold text-white">Estado do Organismo</span>
+          </div>
+          {/* Dormant: dim, Awakening: pulsing border, Active: solid glow, Transcendent: rainbow shift */}
+          <motion.span
+            className="text-[10px] font-mono uppercase tracking-wider px-3 py-1 rounded-full border"
+            style={{
+              color: stateColor,
+              borderColor: stateColor + '33',
+              backgroundColor: stateColor + '11',
+            }}
+            animate={
+              state === 'dormant' ? {} :
+              state === 'awakening' ? { borderColor: [stateColor + '33', stateColor + '66', stateColor + '33'] } :
+              state === 'active' ? { boxShadow: [`0 0 8px ${stateColor}30`, `0 0 20px ${stateColor}50`, `0 0 8px ${stateColor}30`] } :
+              { borderColor: ['#06d6a044', '#fbbf2444', '#a855f744', '#e040a044', '#06d6a044'] }
+            }
+            transition={state === 'transcendent' ? { duration: 4, repeat: Infinity, ease: 'linear' } : { duration: 1.5, repeat: Infinity }}
+          >
+            {stateLabel}
+          </motion.span>
+        </div>
+
+        {/* Consciousness Level Bar */}
+        <div className="flex items-center gap-2">
+          <span className="text-[8px] font-mono text-[#8888aa] uppercase tracking-wider">Consciousness</span>
+          <div className="w-24 sm:w-32 h-2 rounded-full bg-white/5 relative overflow-hidden">
+            <motion.div
+              className="h-full rounded-full"
+              style={{ backgroundColor: stateColor }}
+              animate={{ width: `${consciousnessLevel * 100}%` }}
+              transition={{ duration: 1.5, ease: 'easeOut' }}
+            />
+            {state !== 'dormant' && (
+              <motion.div
+                className="absolute top-0 left-0 h-full w-6 rounded-full pointer-events-none"
+                style={{ background: `linear-gradient(90deg, transparent, ${stateColor}40, transparent)` }}
+                animate={{ left: ['-20%', '120%'] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+            )}
+          </div>
+          <span className="text-[9px] font-mono tabular-nums" style={{ color: stateColor }}>
+            {(consciousnessLevel * 100).toFixed(0)}%
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== RAG Pipeline Metrics Dashboard ===== */
+function RAGPipelineMetrics({ cycleCount, isProcessing, ragPhase }: {
+  cycleCount: number;
+  isProcessing: boolean;
+  ragPhase: RAGPhase;
+}) {
+  const [metrics, setMetrics] = useState({
+    indexSize: 0,
+    retrievalLatency: 0,
+    genThroughput: 0,
+    cacheHitRate: 0,
+    totalArtifacts: 0,
+  });
+
+  useEffect(() => {
+    if (!isProcessing) return;
+    const interval = setInterval(() => {
+      setMetrics(prev => ({
+        indexSize: Math.min(84720 + cycleCount * 3200 + Math.floor(Math.random() * 100), prev.indexSize + Math.floor(Math.random() * 50)),
+        retrievalLatency: Math.max(3, 23 - cycleCount * 1.2 + Math.floor(Math.random() * 6 - 3)),
+        genThroughput: Math.floor(120 + cycleCount * 8 + Math.random() * 30),
+        cacheHitRate: Math.min(99.7, 87.3 + cycleCount * 1.2 + Math.random() * 2),
+        totalArtifacts: Math.min(7 + cycleCount * 3, prev.totalArtifacts + (Math.random() > 0.7 ? 1 : 0)),
+      }));
+    }, 800);
+    return () => clearInterval(interval);
+  }, [isProcessing, cycleCount]);
+
+  const displayMetrics = isProcessing ? metrics : {
+    indexSize: 84720 + cycleCount * 3200,
+    retrievalLatency: Math.max(3, 23 - cycleCount * 1.2),
+    genThroughput: 0,
+    cacheHitRate: 87.3 + cycleCount * 1.2,
+    totalArtifacts: 7 + cycleCount * 3,
+  };
+
+  const items = [
+    { label: 'Index Size', value: `${displayMetrics.indexSize.toLocaleString()} vec`, icon: <Database className="w-3 h-3" />, color: '#a855f7' },
+    { label: 'Retrieval Latency', value: `${displayMetrics.retrievalLatency.toFixed(0)} ms`, icon: <Clock className="w-3 h-3" />, color: '#fbbf24' },
+    { label: 'Gen Throughput', value: `${displayMetrics.genThroughput} t/s`, icon: <Gauge className="w-3 h-3" />, color: '#e040a0' },
+    { label: 'Cache Hit Rate', value: `${displayMetrics.cacheHitRate.toFixed(1)}%`, icon: <Zap className="w-3 h-3" />, color: '#06d6a0' },
+    { label: 'Artifacts', value: String(displayMetrics.totalArtifacts), icon: <Eye className="w-3 h-3" />, color: '#06b6d4' },
+  ];
+
+  return (
+    <motion.div
+      className="grid grid-cols-5 gap-2 sm:gap-3"
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.45 }}
+    >
+      {items.map(m => (
+        <div key={m.label} className="text-center p-2.5 rounded-xl bg-[#0a0a1a]/40 border border-white/5 hover:border-white/10 transition-colors">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <div style={{ color: m.color }}>{m.icon}</div>
+            <span className="text-[7px] sm:text-[8px] text-[#8888aa] uppercase tracking-wider">{m.label}</span>
+          </div>
+          <div className="text-[10px] sm:text-xs font-bold font-mono" style={{ color: m.color }}>
+            {m.value}
+          </div>
+        </div>
+      ))}
+    </motion.div>
+  );
+}
+
+/* ===== Enhanced Phase Flow ===== */
+function EnhancedPhaseFlow({ ragPhase, phaseElapsed }: { ragPhase: RAGPhase; phaseElapsed: number }) {
+  const currentPhaseIndex = PHASE_FLOW.indexOf(ragPhase);
+  const [flowProgress, setFlowProgress] = useState(0);
+  const prevPhaseRef = useRef<RAGPhase>(ragPhase);
+
+  const flowProgressRef = useRef(0);
+
+  useEffect(() => {
+    if (ragPhase !== prevPhaseRef.current) {
+      prevPhaseRef.current = ragPhase;
+      flowProgressRef.current = 0;
+    }
+    if (ragPhase === 'idle') return;
+    const duration = PHASE_DURATION_MS[ragPhase];
+    if (!duration) return;
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      flowProgressRef.current = progress;
+      setFlowProgress(progress);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [ragPhase]);
+
+  const formatPhaseElapsed = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  return (
+    <motion.div
+      className="mb-4"
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.4 }}
+    >
+      <div className="flex items-center justify-center gap-1 sm:gap-1.5 flex-wrap">
+        {PHASE_FLOW.map((phase, i) => {
+          const isActive = i === currentPhaseIndex;
+          const isPast = i < currentPhaseIndex;
+          const isFuture = i > currentPhaseIndex;
+
+          return (
+            <div key={phase} className="flex items-center gap-1 sm:gap-1.5">
+              <motion.div
+                className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-mono uppercase tracking-wider border transition-all"
+                style={isActive ? {
+                  color: PHASE_COLORS[phase],
+                  borderColor: PHASE_COLORS[phase] + '55',
+                  backgroundColor: PHASE_COLORS[phase] + '11',
+                  boxShadow: `0 0 16px ${PHASE_COLORS[phase]}25`,
+                } : {
+                  borderColor: isPast ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+                  backgroundColor: isPast ? 'rgba(255,255,255,0.03)' : 'transparent',
+                }}
+                animate={isActive ? { boxShadow: [`0 0 12px ${PHASE_COLORS[phase]}20`, `0 0 24px ${PHASE_COLORS[phase]}40`, `0 0 12px ${PHASE_COLORS[phase]}20`] } : {}}
+                transition={isActive ? { duration: 1.5, repeat: Infinity } : {}}
+              >
+                {/* Status dot */}
+                <div className="relative">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{
+                    backgroundColor: isActive ? PHASE_COLORS[phase] : isPast ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
+                  }} />
+                  {isActive && (
+                    <motion.div
+                      className="absolute inset-0 w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: PHASE_COLORS[phase] }}
+                      animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                  )}
+                </div>
+                <span className={isFuture ? 'text-[#555577]' : isPast ? 'text-[#8888aa]' : ''}>{PHASE_LABELS[phase]}</span>
+                {/* Phase duration timer */}
+                {isActive && ragPhase !== 'idle' && (
+                  <span className="ml-1 flex items-center gap-0.5" style={{ color: PHASE_COLORS[phase] }}>
+                    <Clock className="w-2.5 h-2.5" />
+                    {formatPhaseElapsed(phaseElapsed)}
+                  </span>
+                )}
+                {/* Throughput counter */}
+                {isActive && ragPhase !== 'idle' && (
+                  <span className="text-[7px] ml-1 opacity-60" style={{ color: PHASE_COLORS[phase] }}>
+                    {PHASE_THROUGHPUT[ragPhase]}
+                  </span>
+                )}
+                {/* Active phase progress bar */}
+                {isActive && (
+                  <div className="absolute bottom-0 left-1 h-0.5 rounded-full" style={{ backgroundColor: PHASE_COLORS[phase], width: `${flowProgress * 100}%` }} />
+                )}
+              </motion.div>
+
+              {/* Animated data flow connector between phases */}
+              {i < PHASE_FLOW.length - 1 && (
+                <div className="relative w-6 sm:w-8 h-[2px] flex-shrink-0">
+                  <div className="absolute inset-0 bg-white/[0.06] rounded-full" />
+                  {/* Data flow line traveling between phases */}
+                  {(isPast || (isActive && flowProgress > 0.3)) && (
+                    <motion.div
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-0.5 rounded-full"
+                      style={{ backgroundColor: isPast ? '#06d6a0' : PHASE_COLORS[phase] }}
+                      animate={{ left: ['0%', '100%'], opacity: [0, 1, 1, 0] }}
+                      transition={{
+                        duration: 0.8,
+                        repeat: Infinity,
+                        repeatDelay: 0.6,
+                        ease: 'easeInOut',
+                        delay: i * 0.15,
+                      }}
+                    />
+                  )}
+                  {/* Arrow indicator */}
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 text-[#555577] text-[8px]">&rarr;</div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ===== Main Component ===== */
 export default function AgenticRAGSection() {
   const [ragPhase, setRagPhase] = useState<RAGPhase>('idle');
   const [orgasmState, setOrgasmState] = useState<OrgasmState>('dormant');
@@ -281,7 +652,6 @@ export default function AgenticRAGSection() {
       setPhaseElapsed(0);
       setCycleCount(prev => prev + 1);
 
-      // Reset to dormant after showing transcendent
       setTimeout(() => setOrgasmState('dormant'), 3000);
     }, 14000));
 
@@ -303,8 +673,6 @@ export default function AgenticRAGSection() {
     }
   }, [ragPhase, isProcessing, startRAGCycle]);
 
-  const currentPhaseIndex = PHASE_FLOW.indexOf(ragPhase);
-
   const organismStats = [
     { label: 'Claude', value: 'v3.7', sub: 'Anthropic', icon: <Brain className="w-3.5 h-3.5" />, color: '#fbbf24' },
     { label: 'Fable 5', value: 'beta.3', sub: 'Narrative', icon: <BookOpen className="w-3.5 h-3.5" />, color: '#e040a0' },
@@ -313,12 +681,6 @@ export default function AgenticRAGSection() {
     { label: 'RAG Pipeline', value: '5-stage', sub: 'Index->Stream', icon: <GitBranch className="w-3.5 h-3.5" />, color: '#a855f7' },
     { label: 'Memory', value: `${(2.4 + cycleCount * 0.3).toFixed(1)} ZB`, sub: 'context buffer', icon: <Database className="w-3.5 h-3.5" />, color: '#06b6d4' },
   ];
-
-  const formatPhaseElapsed = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
 
   return (
     <section className="relative py-20 sm:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -394,43 +756,8 @@ export default function AgenticRAGSection() {
           ))}
         </motion.div>
 
-        {/* RAG Phase Flow with Duration */}
-        <motion.div
-          className="flex items-center justify-center gap-1 sm:gap-2 mb-4"
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          {PHASE_FLOW.map((phase, i) => (
-            <div key={phase} className="flex items-center gap-1 sm:gap-2">
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-mono uppercase tracking-wider transition-all ${
-                i === currentPhaseIndex
-                  ? 'bg-white/10 border border-white/20'
-                  : i < currentPhaseIndex
-                  ? 'bg-white/[0.03] border border-white/5'
-                  : 'bg-transparent border border-white/[0.03]'
-              }`}
-                style={i === currentPhaseIndex ? { color: PHASE_COLORS[phase], borderColor: PHASE_COLORS[phase] + '44' } : {}}
-              >
-                {i <= currentPhaseIndex && (
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: PHASE_COLORS[phase] }} />
-                )}
-                <span className={i > currentPhaseIndex ? 'text-[#555577]' : ''}>{PHASE_LABELS[phase]}</span>
-                {/* Phase duration indicator next to active phase */}
-                {i === currentPhaseIndex && ragPhase !== 'idle' && (
-                  <span className="ml-1 flex items-center gap-0.5" style={{ color: PHASE_COLORS[phase] }}>
-                    <Clock className="w-2.5 h-2.5" />
-                    {formatPhaseElapsed(phaseElapsed)}
-                  </span>
-                )}
-              </div>
-              {i < PHASE_FLOW.length - 1 && (
-                <div className="text-[#555577] text-[8px]">&rarr;</div>
-              )}
-            </div>
-          ))}
-        </motion.div>
+        {/* Enhanced Phase Flow */}
+        <EnhancedPhaseFlow ragPhase={ragPhase} phaseElapsed={phaseElapsed} />
 
         {/* Collaboration Mesh */}
         <CollaborationMesh isActive={ragPhase !== 'idle'} />
@@ -451,6 +778,11 @@ export default function AgenticRAGSection() {
             <div className="text-[8px] font-mono text-[#06d6a0]">INDEXED</div>
           </motion.div>
         )}
+
+        {/* RAG Pipeline Metrics Dashboard */}
+        <div className="mb-6">
+          <RAGPipelineMetrics cycleCount={cycleCount} isProcessing={isProcessing} ragPhase={ragPhase} />
+        </div>
 
         {/* Main Grid: Vault + Graph (top) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
@@ -542,7 +874,7 @@ export default function AgenticRAGSection() {
           </motion.div>
         </div>
 
-        {/* Control Bar with Sparkline */}
+        {/* Control Bar with Sparkline and Orgasm State */}
         <motion.div
           className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
           initial={{ opacity: 0, y: 20 }}
@@ -551,31 +883,9 @@ export default function AgenticRAGSection() {
           transition={{ duration: 0.6, delay: 0.5 }}
         >
           <div className="flex items-center gap-4 flex-wrap justify-center">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-[#e040a0]" />
-              <span className="text-sm font-semibold text-white">Estado do Organismo</span>
-            </div>
-            <span className="text-[10px] font-mono uppercase tracking-wider px-3 py-1 rounded-full border"
-              style={{
-                color: orgasmState === 'dormant' ? '#8888aa' :
-                       orgasmState === 'awakening' ? '#fbbf24' :
-                       orgasmState === 'active' ? '#e040a0' : '#06d6a0',
-                borderColor: (orgasmState === 'dormant' ? '#8888aa' :
-                       orgasmState === 'awakening' ? '#fbbf24' :
-                       orgasmState === 'active' ? '#e040a0' : '#06d6a0') + '33',
-                backgroundColor: (orgasmState === 'dormant' ? '#8888aa' :
-                       orgasmState === 'awakening' ? '#fbbf24' :
-                       orgasmState === 'active' ? '#e040a0' : '#06d6a0') + '11',
-              }}
-            >
-              {orgasmState === 'dormant' ? 'DORMENTE' :
-               orgasmState === 'awakening' ? 'DESPERTANDO' :
-               orgasmState === 'active' ? 'ATIVO' : 'TRANSCENDENTE'}
-            </span>
             {cycleCount > 0 && (
               <span className="text-[9px] text-[#8888aa] font-mono">{cycleCount} ciclo(s) completo(s)</span>
             )}
-            {/* RAG Performance Sparkline */}
             <RAGSparkline cycleCount={cycleCount} />
           </div>
 
@@ -599,6 +909,11 @@ export default function AgenticRAGSection() {
             )}
           </div>
         </motion.div>
+
+        {/* Orgasm State Visual */}
+        <div className="mt-4">
+          <OrgasmStateVisual state={orgasmState} isProcessing={isProcessing} />
+        </div>
 
         {/* Footer Metrics (10 total) */}
         <motion.div

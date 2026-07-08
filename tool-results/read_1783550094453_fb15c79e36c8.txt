@@ -1,0 +1,679 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useEffect, useRef, useState } from 'react';
+     4→     4→
+     5→     5→interface GraphNode {
+     6→     6→  id: string;
+     7→     7→  label: string;
+     8→     8→  category: 'core' | 'rag' | 'quantum' | 'narrative' | 'vault' | 'agent' | 'infra' | 'pipeline';
+     9→     9→  x: number;
+    10→    10→  y: number;
+    11→    11→  vx: number;
+    12→    12→  vy: number;
+    13→    13→  size: number;
+    14→    14→  color: string;
+    15→    15→  connections: string[];
+    16→    16→  pulsePhase: number;
+    17→    17→  active: boolean;
+    18→    18→  activityHistory: number[];
+    19→    19→  edgeWeights: Record<string, number>;
+    20→    20→}
+    21→    21→
+    22→    22→const CATEGORY_COLORS: Record<string, string> = {
+    23→    23→  core: '#fbbf24',
+    24→    24→  rag: '#a855f7',
+    25→    25→  quantum: '#06d6a0',
+    26→    26→  narrative: '#e040a0',
+    27→    27→  vault: '#8b5cf6',
+    28→    28→  agent: '#fbbf24',
+    29→    29→  infra: '#06b6d4',
+    30→    30→  pipeline: '#f97316',
+    31→    31→};
+    32→    32→
+    33→    33→const CLUSTER_ZONE_COLORS: Record<string, string> = {
+    34→    34→  core: 'rgba(251, 191, 36, 0.04)',
+    35→    35→  rag: 'rgba(168, 85, 247, 0.04)',
+    36→    36→  quantum: 'rgba(6, 214, 160, 0.04)',
+    37→    37→  narrative: 'rgba(224, 64, 160, 0.04)',
+    38→    38→  vault: 'rgba(139, 92, 246, 0.04)',
+    39→    39→  agent: 'rgba(251, 191, 36, 0.04)',
+    40→    40→  infra: 'rgba(6, 182, 212, 0.04)',
+    41→    41→  pipeline: 'rgba(249, 115, 22, 0.04)',
+    42→    42→};
+    43→    43→
+    44→    44→const CLUSTER_BORDER_COLORS: Record<string, string> = {
+    45→    45→  core: 'rgba(251, 191, 36, 0.12)',
+    46→    46→  rag: 'rgba(168, 85, 247, 0.12)',
+    47→    47→  quantum: 'rgba(6, 214, 160, 0.12)',
+    48→    48→  narrative: 'rgba(224, 64, 160, 0.12)',
+    49→    49→  vault: 'rgba(139, 92, 246, 0.12)',
+    50→    50→  agent: 'rgba(251, 191, 36, 0.12)',
+    51→    51→  infra: 'rgba(6, 182, 212, 0.12)',
+    52→    52→  pipeline: 'rgba(249, 115, 22, 0.12)',
+    53→    53→};
+    54→    54→
+    55→    55→const INITIAL_NODES: Omit<GraphNode, 'x' | 'y' | 'vx' | 'vy' | 'pulsePhase' | 'active' | 'activityHistory' | 'edgeWeights'>[] = [
+    56→    56→  // Original 15
+    57→    57→  { id: 'meta', label: 'MetaTempo', category: 'core', size: 22, connections: ['rag-core', 'claude', 'fable', 'vault-hub', 'quantum-bridge'], color: '#fbbf24' },
+    58→    58→  { id: 'rag-core', label: 'RAG Engine', category: 'rag', size: 18, connections: ['meta', 'vector-db', 'embeddings', 'retriever', 'claude'], color: '#a855f7' },
+    59→    59→  { id: 'vector-db', label: 'Vector DB', category: 'rag', size: 14, connections: ['rag-core', 'embeddings', 'vault-hub'], color: '#a855f7' },
+    60→    60→  { id: 'embeddings', label: 'Embeddings', category: 'rag', size: 13, connections: ['rag-core', 'vector-db', 'quantum-bridge'], color: '#a855f7' },
+    61→    61→  { id: 'retriever', label: 'Retriever', category: 'rag', size: 14, connections: ['rag-core', 'claude', 'fable', 'reranker'], color: '#a855f7' },
+    62→    62→  { id: 'claude', label: 'Claude', category: 'agent', size: 17, connections: ['meta', 'rag-core', 'retriever', 'fable', 'prompt-lib'], color: '#fbbf24' },
+    63→    63→  { id: 'fable', label: 'Fable 5', category: 'narrative', size: 16, connections: ['meta', 'claude', 'retriever', 'narr-core'], color: '#e040a0' },
+    64→    64→  { id: 'narr-core', label: 'Narrative Core', category: 'narrative', size: 14, connections: ['fable', 'story-graph', 'vault-hub'], color: '#e040a0' },
+    65→    65→  { id: 'story-graph', label: 'Story Graph', category: 'narrative', size: 12, connections: ['narr-core', 'quantum-bridge'], color: '#e040a0' },
+    66→    66→  { id: 'quantum-bridge', label: 'Quantum Bridge', category: 'quantum', size: 15, connections: ['meta', 'embeddings', 'story-graph', 'symbiosis'], color: '#06d6a0' },
+    67→    67→  { id: 'symbiosis', label: 'Simbiose Q', category: 'quantum', size: 13, connections: ['quantum-bridge', 'vault-hub'], color: '#06d6a0' },
+    68→    68→  { id: 'vault-hub', label: 'Vault Hub', category: 'vault', size: 16, connections: ['meta', 'vector-db', 'narr-core', 'symbiosis', 'obsidian'], color: '#8b5cf6' },
+    69→    69→  { id: 'obsidian', label: 'Obsidian', category: 'vault', size: 14, connections: ['vault-hub', 'git-clone', 'prompt-lib'], color: '#8b5cf6' },
+    70→    70→  { id: 'git-clone', label: 'Git Clone', category: 'vault', size: 12, connections: ['obsidian', 'vault-hub'], color: '#8b5cf6' },
+    71→    71→  { id: 'prompt-lib', label: 'Prompt Lib', category: 'agent', size: 13, connections: ['claude', 'obsidian', 'fable'], color: '#fbbf24' },
+    72→    72→  // 13 new nodes
+    73→    73→  { id: 'chunker', label: 'Chunker', category: 'pipeline', size: 11, connections: ['rag-core', 'vector-db', 'batch-processor'], color: '#f97316' },
+    74→    74→  { id: 'reranker', label: 'Reranker', category: 'pipeline', size: 12, connections: ['retriever', 'rag-core', 'claude'], color: '#f97316' },
+    75→    75→  { id: 'memory-buffer', label: 'Memory Buf', category: 'infra', size: 12, connections: ['claude', 'llm-router', 'cache-layer'], color: '#06b6d4' },
+    76→    76→  { id: 'context-window', label: 'Context Win', category: 'infra', size: 11, connections: ['claude', 'memory-buffer', 'token-counter'], color: '#06b6d4' },
+    77→    77→  { id: 'token-counter', label: 'Token Cnt', category: 'infra', size: 10, connections: ['context-window', 'claude', 'metrics-collector'], color: '#06b6d4' },
+    78→    78→  { id: 'llm-router', label: 'LLM Router', category: 'agent', size: 14, connections: ['claude', 'memory-buffer', 'config-manager'], color: '#fbbf24' },
+    79→    79→  { id: 'cache-layer', label: 'Cache Layer', category: 'infra', size: 11, connections: ['memory-buffer', 'embed-cache', 'vector-db'], color: '#06b6d4' },
+    80→    80→  { id: 'embed-cache', label: 'Embed Cache', category: 'infra', size: 10, connections: ['cache-layer', 'embeddings', 'vector-db'], color: '#06b6d4' },
+    81→    81→  { id: 'batch-processor', label: 'Batch Proc', category: 'pipeline', size: 11, connections: ['chunker', 'vector-db', 'logger'], color: '#f97316' },
+    82→    82→  { id: 'error-handler', label: 'Error Hndlr', category: 'infra', size: 10, connections: ['rag-core', 'claude', 'logger', 'metrics-collector'], color: '#06b6d4' },
+    83→    83→  { id: 'logger', label: 'Logger', category: 'infra', size: 9, connections: ['batch-processor', 'error-handler', 'metrics-collector'], color: '#06b6d4' },
+    84→    84→  { id: 'metrics-collector', label: 'Metrics', category: 'infra', size: 10, connections: ['token-counter', 'error-handler', 'logger', 'config-manager'], color: '#06b6d4' },
+    85→    85→  { id: 'config-manager', label: 'Config Mgr', category: 'infra', size: 11, connections: ['llm-router', 'metrics-collector', 'rag-core'], color: '#06b6d4' },
+    86→    86→];
+    87→    87→
+    88→    88→// Edge weight defaults
+    89→    89→const DEFAULT_EDGE_WEIGHTS: Record<string, Record<string, number>> = {};
+    90→    90→INITIAL_NODES.forEach(n => {
+    91→    91→  DEFAULT_EDGE_WEIGHTS[n.id] = {};
+    92→    92→  n.connections.forEach(c => {
+    93→    93→    DEFAULT_EDGE_WEIGHTS[n.id][c] = 0.3 + Math.random() * 0.7;
+    94→    94→  });
+    95→    95→});
+    96→    96→
+    97→    97→interface ObsidianKnowledgeGraphProps {
+    98→    98→  isActive: boolean;
+    99→    99→  activeNode?: string;
+   100→   100→  onNodeClick?: (nodeId: string) => void;
+   101→   101→}
+   102→   102→
+   103→   103→// Draw a rounded rect using arcTo (no roundRect)
+   104→   104→function drawRoundedRect(
+   105→   105→  ctx: CanvasRenderingContext2D,
+   106→   106→  x: number, y: number, w: number, h: number, r: number
+   107→   107→) {
+   108→   108→  ctx.moveTo(x + r, y);
+   109→   109→  ctx.lineTo(x + w - r, y);
+   110→   110→  ctx.arcTo(x + w, y, x + w, y + r, r);
+   111→   111→  ctx.lineTo(x + w, y + h - r);
+   112→   112→  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+   113→   113→  ctx.lineTo(x + r, y + h);
+   114→   114→  ctx.arcTo(x, y + h, x, y + h - r, r);
+   115→   115→  ctx.lineTo(x, y + r);
+   116→   116→  ctx.arcTo(x, y, x + r, y, r);
+   117→   117→  ctx.closePath();
+   118→   118→}
+   119→   119→
+   120→   120→export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeClick }: ObsidianKnowledgeGraphProps) {
+   121→   121→  const canvasRef = useRef<HTMLCanvasElement>(null);
+   122→   122→  const nodesRef = useRef<GraphNode[]>([]);
+   123→   123→  const mouseRef = useRef({ x: -1000, y: -1000 });
+   124→   124→  const draggedNodeRef = useRef<string | null>(null);
+   125→   125→  const animRef = useRef<number>(0);
+   126→   126→  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+   127→   127→
+   128→   128→  useEffect(() => {
+   129→   129→    const canvas = canvasRef.current;
+   130→   130→    if (!canvas) return;
+   131→   131→    const ctx = canvas.getContext('2d');
+   132→   132→    if (!ctx) return;
+   133→   133→
+   134→   134→    const resize = () => {
+   135→   135→      const rect = canvas.getBoundingClientRect();
+   136→   136→      const dpr = window.devicePixelRatio || 1;
+   137→   137→      canvas.width = rect.width * dpr;
+   138→   138→      canvas.height = rect.height * dpr;
+   139→   139→      ctx.scale(dpr, dpr);
+   140→   140→    };
+   141→   141→    resize();
+   142→   142→    window.addEventListener('resize', resize);
+   143→   143→
+   144→   144→    const w = canvas.getBoundingClientRect().width;
+   145→   145→    const h = canvas.getBoundingClientRect().height;
+   146→   146→
+   147→   147→    if (nodesRef.current.length === 0) {
+   148→   148→      nodesRef.current = INITIAL_NODES.map((n) => ({
+   149→   149→        ...n,
+   150→   150→        x: w / 2 + (Math.random() - 0.5) * w * 0.5,
+   151→   151→        y: h / 2 + (Math.random() - 0.5) * h * 0.5,
+   152→   152→        vx: 0,
+   153→   153→        vy: 0,
+   154→   154→        pulsePhase: Math.random() * Math.PI * 2,
+   155→   155→        active: n.id === activeNode,
+   156→   156→        activityHistory: Array.from({ length: 10 }, () => 0.1 + Math.random() * 0.2),
+   157→   157→        edgeWeights: DEFAULT_EDGE_WEIGHTS[n.id] ? { ...DEFAULT_EDGE_WEIGHTS[n.id] } : {},
+   158→   158→      }));
+   159→   159→    }
+   160→   160→
+   161→   161→    const handleMouseMove = (e: MouseEvent) => {
+   162→   162→      const rect = canvas.getBoundingClientRect();
+   163→   163→      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+   164→   164→      if (draggedNodeRef.current) {
+   165→   165→        const node = nodesRef.current.find(n => n.id === draggedNodeRef.current);
+   166→   166→        if (node) {
+   167→   167→          node.vx = 0;
+   168→   168→          node.vy = 0;
+   169→   169→        }
+   170→   170→      }
+   171→   171→    };
+   172→   172→
+   173→   173→    const handleMouseDown = (e: MouseEvent) => {
+   174→   174→      const rect = canvas.getBoundingClientRect();
+   175→   175→      const mx = e.clientX - rect.left;
+   176→   176→      const my = e.clientY - rect.top;
+   177→   177→      for (const node of nodesRef.current) {
+   178→   178→        const dx = node.x - mx;
+   179→   179→        const dy = node.y - my;
+   180→   180→        if (Math.sqrt(dx * dx + dy * dy) < node.size + 5) {
+   181→   181→          draggedNodeRef.current = node.id;
+   182→   182→          onNodeClick?.(node.id);
+   183→   183→          break;
+   184→   184→        }
+   185→   185→      }
+   186→   186→    };
+   187→   187→
+   188→   188→    const handleMouseUp = () => {
+   189→   189→      draggedNodeRef.current = null;
+   190→   190→    };
+   191→   191→
+   192→   192→    canvas.addEventListener('mousemove', handleMouseMove);
+   193→   193→    canvas.addEventListener('mousedown', handleMouseDown);
+   194→   194→    canvas.addEventListener('mouseup', handleMouseUp);
+   195→   195→    canvas.addEventListener('mouseleave', handleMouseUp);
+   196→   196→
+   197→   197→    let time = 0;
+   198→   198→    let hoveredRef: string | null = null;
+   199→   199→
+   200→   200→    // Get unique categories in order
+   201→   201→    const allCategories = Array.from(new Set(INITIAL_NODES.map(n => n.category)));
+   202→   202→
+   203→   203→    // For curved edges: deterministically decide if an edge is curved
+   204→   204→    const edgeIsCurved = new Map<string, boolean>();
+   205→   205→    INITIAL_NODES.forEach(n => {
+   206→   206→      n.connections.forEach(c => {
+   207→   207→        const key = [n.id, c].sort().join('::');
+   208→   208→        if (!edgeIsCurved.has(key)) {
+   209→   209→          edgeIsCurved.set(key, Math.random() > 0.5);
+   210→   210→        }
+   211→   211→      });
+   212→   212→    });
+   213→   213→
+   214→   214→    const simulate = () => {
+   215→   215→      const nodes = nodesRef.current;
+   216→   216→      const w2 = canvas.getBoundingClientRect().width;
+   217→   217→      const h2 = canvas.getBoundingClientRect().height;
+   218→   218→      const cx = w2 / 2;
+   219→   219→      const cy = h2 / 2;
+   220→   220→
+   221→   221→      // Center gravity
+   222→   222→      nodes.forEach(n => {
+   223→   223→        n.vx += (cx - n.x) * 0.0003;
+   224→   224→        n.vy += (cy - n.y) * 0.0003;
+   225→   225→      });
+   226→   226→
+   227→   227→      // Repulsion between nodes (reduced for same-cluster)
+   228→   228→      for (let i = 0; i < nodes.length; i++) {
+   229→   229→        for (let j = i + 1; j < nodes.length; j++) {
+   230→   230→          const dx = nodes[j].x - nodes[i].x;
+   231→   231→          const dy = nodes[j].y - nodes[i].y;
+   232→   232→          const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+   233→   233→          const sameCluster = nodes[i].category === nodes[j].category;
+   234→   234→          const repulsionRadius = sameCluster ? 100 : 150;
+   235→   235→          const repulsionForce = sameCluster ? 0.00015 : 0.0003;
+   236→   236→          if (dist < repulsionRadius) {
+   237→   237→            const force = (repulsionRadius - dist) * repulsionForce;
+   238→   238→            const fx = (dx / dist) * force;
+   239→   239→            const fy = (dy / dist) * force;
+   240→   240→            nodes[i].vx -= fx;
+   241→   241→            nodes[i].vy -= fy;
+   242→   242→            nodes[j].vx += fx;
+   243→   243→            nodes[j].vy += fy;
+   244→   244→          }
+   245→   245→        }
+   246→   246→      }
+   247→   247→
+   248→   248→      // Category-based attraction (same category nodes attract more strongly)
+   249→   249→      for (let i = 0; i < nodes.length; i++) {
+   250→   250→        for (let j = i + 1; j < nodes.length; j++) {
+   251→   251→          if (nodes[i].category !== nodes[j].category) continue;
+   252→   252→          const dx = nodes[j].x - nodes[i].x;
+   253→   253→          const dy = nodes[j].y - nodes[i].y;
+   254→   254→          const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+   255→   255→          if (dist > 60 && dist < 250) {
+   256→   256→            const force = 0.0004;
+   257→   257→            nodes[i].vx += (dx / dist) * force;
+   258→   258→            nodes[i].vy += (dy / dist) * force;
+   259→   259→            nodes[j].vx -= (dx / dist) * force;
+   260→   260→            nodes[j].vy -= (dy / dist) * force;
+   261→   261→          }
+   262→   262→        }
+   263→   263→      }
+   264→   264→
+   265→   265→      // Circular layout bias: nodes tend to arrange by category around a circle
+   266→   266→      const categoryAngleMap: Record<string, number> = {};
+   267→   267→      allCategories.forEach((cat, idx) => {
+   268→   268→        categoryAngleMap[cat] = (idx / allCategories.length) * Math.PI * 2;
+   269→   269→      });
+   270→   270→      const layoutRadius = Math.min(w2, h2) * 0.3;
+   271→   271→      nodes.forEach(n => {
+   272→   272→        const targetAngle = categoryAngleMap[n.category] || 0;
+   273→   273→        const targetX = cx + Math.cos(targetAngle + time * 0.02) * layoutRadius * 0.4;
+   274→   274→        const targetY = cy + Math.sin(targetAngle + time * 0.02) * layoutRadius * 0.4;
+   275→   275→        n.vx += (targetX - n.x) * 0.00005;
+   276→   276→        n.vy += (targetY - n.y) * 0.00005;
+   277→   277→      });
+   278→   278→
+   279→   279→      // Subtle orbital motion
+   280→   280→      nodes.forEach(n => {
+   281→   281→        const dx = n.x - cx;
+   282→   282→        const dy = n.y - cy;
+   283→   283→        const dist = Math.sqrt(dx * dx + dy * dy);
+   284→   284→        if (dist > 10) {
+   285→   285→          // Tangential force for orbital motion
+   286→   286→          const orbitalSpeed = 0.00003;
+   287→   287→          n.vx += (-dy / dist) * orbitalSpeed * dist;
+   288→   288→          n.vy += (dx / dist) * orbitalSpeed * dist;
+   289→   289→        }
+   290→   290→      });
+   291→   291→
+   292→   292→      // Spring connections
+   293→   293→      nodes.forEach(n => {
+   294→   294→        n.connections.forEach(connId => {
+   295→   295→          const target = nodes.find(t => t.id === connId);
+   296→   296→          if (!target) return;
+   297→   297→          const dx = target.x - n.x;
+   298→   298→          const dy = target.y - n.y;
+   299→   299→          const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+   300→   300→          const idealDist = 100;
+   301→   301→          const force = (dist - idealDist) * 0.0008;
+   302→   302→          n.vx += (dx / dist) * force;
+   303→   303→          n.vy += (dy / dist) * force;
+   304→   304→        });
+   305→   305→      });
+   306→   306→
+   307→   307→      // Mouse attraction/repulsion for hovered node
+   308→   308→      if (hoveredRef) {
+   309→   309→        const node = nodes.find(n => n.id === hoveredRef);
+   310→   310→        if (node) {
+   311→   311→          const dx = mouseRef.current.x - node.x;
+   312→   312→          const dy = mouseRef.current.y - node.y;
+   313→   313→          const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+   314→   314→          if (dist > 50) {
+   315→   315→            node.vx += (dx / dist) * 0.15;
+   316→   316→            node.vy += (dy / dist) * 0.15;
+   317→   317→          }
+   318→   318→        }
+   319→   319→      }
+   320→   320→
+   321→   321→      // Dragging
+   322→   322→      if (draggedNodeRef.current) {
+   323→   323→        const node = nodes.find(n => n.id === draggedNodeRef.current);
+   324→   324→        if (node) {
+   325→   325→          node.x = mouseRef.current.x;
+   326→   326→          node.y = mouseRef.current.y;
+   327→   327→        }
+   328→   328→      }
+   329→   329→
+   330→   330→      // Apply velocity with damping
+   331→   331→      nodes.forEach(n => {
+   332→   332→        if (n.id !== draggedNodeRef.current) {
+   333→   333→          n.vx *= 0.92;
+   334→   334→          n.vy *= 0.92;
+   335→   335→          n.x += n.vx;
+   336→   336→          n.y += n.vy;
+   337→   337→          // Bounds
+   338→   338→          n.x = Math.max(n.size + 10, Math.min(w2 - n.size - 10, n.x));
+   339→   339→          n.y = Math.max(n.size + 10, Math.min(h2 - n.size - 10, n.y));
+   340→   340→        }
+   341→   341→      });
+   342→   342→    };
+   343→   343→
+   344→   344→    const draw = () => {
+   345→   345→      const w2 = canvas.getBoundingClientRect().width;
+   346→   346→      const h2 = canvas.getBoundingClientRect().height;
+   347→   347→      ctx.clearRect(0, 0, w2, h2);
+   348→   348→      time += 0.008;
+   349→   349→
+   350→   350→      simulate();
+   351→   351→
+   352→   352→      const nodes = nodesRef.current;
+   353→   353→
+   354→   354→      // Update active state and activity history
+   355→   355→      nodes.forEach(n => {
+   356→   356→        n.active = n.id === activeNode;
+   357→   357→        n.pulsePhase += 0.03;
+   358→   358→
+   359→   359→        // Update activity history (shift and push new value)
+   360→   360→        const newActivity = n.active
+   361→   361→          ? 0.7 + Math.sin(time * 5) * 0.3
+   362→   362→          : 0.1 + Math.sin(n.pulsePhase) * 0.1;
+   363→   363→        n.activityHistory.push(newActivity);
+   364→   364→        if (n.activityHistory.length > 10) {
+   365→   365→          n.activityHistory.shift();
+   366→   366→        }
+   367→   367→      });
+   368→   368→
+   369→   369→      // ---- Draw cluster zones ----
+   370→   370→      const categoryNodes: Record<string, GraphNode[]> = {};
+   371→   371→      nodes.forEach(n => {
+   372→   372→        if (!categoryNodes[n.category]) categoryNodes[n.category] = [];
+   373→   373→        categoryNodes[n.category].push(n);
+   374→   374→      });
+   375→   375→
+   376→   376→      Object.entries(categoryNodes).forEach(([category, catNodes]) => {
+   377→   377→        if (catNodes.length < 2) return;
+   378→   378→
+   379→   379→        // Compute bounding box with padding
+   380→   380→        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+   381→   381→        catNodes.forEach(n => {
+   382→   382→          minX = Math.min(minX, n.x - n.size - 12);
+   383→   383→          minY = Math.min(minY, n.y - n.size - 18);
+   384→   384→          maxX = Math.max(maxX, n.x + n.size + 12);
+   385→   385→          maxY = Math.max(maxY, n.y + n.size + 22);
+   386→   386→        });
+   387→   387→
+   388→   388→        const padX = 20;
+   389→   389→        const padY = 16;
+   390→   390→        const zx = minX - padX;
+   391→   391→        const zy = minY - padY;
+   392→   392→        const zw = maxX - minX + padX * 2;
+   393→   393→        const zh = maxY - minY + padY * 2;
+   394→   394→        const zr = 14;
+   395→   395→
+   396→   396→        ctx.beginPath();
+   397→   397→        drawRoundedRect(ctx, zx, zy, zw, zh, zr);
+   398→   398→        ctx.fillStyle = CLUSTER_ZONE_COLORS[category] || 'rgba(136, 136, 170, 0.03)';
+   399→   399→        ctx.fill();
+   400→   400→        ctx.strokeStyle = CLUSTER_BORDER_COLORS[category] || 'rgba(136, 136, 170, 0.08)';
+   401→   401→        ctx.lineWidth = 1;
+   402→   402→        ctx.setLineDash([4, 6]);
+   403→   403→        ctx.stroke();
+   404→   404→        ctx.setLineDash([]);
+   405→   405→
+   406→   406→        // Category label
+   407→   407→        ctx.font = '7px monospace';
+   408→   408→        ctx.fillStyle = (CATEGORY_COLORS[category] || '#666688') + '66';
+   409→   409→        ctx.textAlign = 'left';
+   410→   410→        ctx.textBaseline = 'top';
+   411→   411→        ctx.fillText(category.toUpperCase(), zx + 8, zy + 5);
+   412→   412→      });
+   413→   413→
+   414→   414→      // ---- Quantum pulse wave from active node ----
+   415→   415→      if (activeNode) {
+   416→   416→        const activeNodeObj = nodes.find(n => n.id === activeNode);
+   417→   417→        if (activeNodeObj) {
+   418→   418→          const pulseRadius = ((time * 80) % 200);
+   419→   419→          const pulseAlpha = Math.max(0, 1 - pulseRadius / 200) * 0.15;
+   420→   420→          if (pulseAlpha > 0.01) {
+   421→   421→            ctx.beginPath();
+   422→   422→            ctx.arc(activeNodeObj.x, activeNodeObj.y, pulseRadius, 0, Math.PI * 2);
+   423→   423→            ctx.strokeStyle = `rgba(168, 85, 247, ${pulseAlpha})`;
+   424→   424→            ctx.lineWidth = 2;
+   425→   425→            ctx.stroke();
+   426→   426→            const pulse2 = ((time * 80 + 100) % 200);
+   427→   427→            const pulse2Alpha = Math.max(0, 1 - pulse2 / 200) * 0.08;
+   428→   428→            if (pulse2Alpha > 0.01) {
+   429→   429→              ctx.beginPath();
+   430→   430→              ctx.arc(activeNodeObj.x, activeNodeObj.y, pulse2, 0, Math.PI * 2);
+   431→   431→              ctx.strokeStyle = `rgba(6, 214, 160, ${pulse2Alpha})`;
+   432→   432→              ctx.lineWidth = 1;
+   433→   433→              ctx.stroke();
+   434→   434→            }
+   435→   435→          }
+   436→   436→        }
+   437→   437→      }
+   438→   438→
+   439→   439→      // ---- Draw connections with edge weights and curves ----
+   440→   440→      const drawnEdges = new Set<string>();
+   441→   441→      nodes.forEach(n => {
+   442→   442→        n.connections.forEach(connId => {
+   443→   443→          const target = nodes.find(t => t.id === connId);
+   444→   444→          if (!target) return;
+   445→   445→
+   446→   446→          const edgeKey = [n.id, connId].sort().join('::');
+   447→   447→          if (drawnEdges.has(edgeKey)) return;
+   448→   448→          drawnEdges.add(edgeKey);
+   449→   449→
+   450→   450→          const isActiveConn = (n.id === activeNode || target.id === activeNode);
+   451→   451→          const isHoveredConn = hoveredRef && (n.id === hoveredRef || target.id === hoveredRef);
+   452→   452→          const weight = n.edgeWeights[connId] || target.edgeWeights[n.id] || 0.5;
+   453→   453→          const isCurved = edgeIsCurved.get(edgeKey) || false;
+   454→   454→
+   455→   455→          const dx = target.x - n.x;
+   456→   456→          const dy = target.y - n.y;
+   457→   457→          const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+   458→   458→
+   459→   459→          if (isActiveConn) {
+   460→   460→            // ---- Quantum entanglement visualization ----
+   461→   461→            // Dashed animated line
+   462→   462→            ctx.beginPath();
+   463→   463→            if (isCurved) {
+   464→   464→              const midX = (n.x + target.x) / 2;
+   465→   465→              const midY = (n.y + target.y) / 2;
+   466→   466→              const perpX = -(target.y - n.y) / dist * 30;
+   467→   467→              const perpY = (target.x - n.x) / dist * 30;
+   468→   468→              ctx.moveTo(n.x, n.y);
+   469→   469→              ctx.quadraticCurveTo(midX + perpX, midY + perpY, target.x, target.y);
+   470→   470→            } else {
+   471→   471→              ctx.moveTo(n.x, n.y);
+   472→   472→              ctx.lineTo(target.x, target.y);
+   473→   473→            }
+   474→   474→            ctx.strokeStyle = `${n.color}33`;
+   475→   475→            ctx.lineWidth = 0.5;
+   476→   476→            ctx.setLineDash([3, 5]);
+   477→   477→            ctx.lineDashOffset = -time * 80;
+   478→   478→            ctx.stroke();
+   479→   479→            ctx.setLineDash([]);
+   480→   480→
+   481→   481→            // Glow line
+   482→   482→            ctx.beginPath();
+   483→   483→            if (isCurved) {
+   484→   484→              const midX = (n.x + target.x) / 2;
+   485→   485→              const midY = (n.y + target.y) / 2;
+   486→   486→              const perpX = -(target.y - n.y) / dist * 30;
+   487→   487→              const perpY = (target.x - n.x) / dist * 30;
+   488→   488→              ctx.moveTo(n.x, n.y);
+   489→   489→              ctx.quadraticCurveTo(midX + perpX, midY + perpY, target.x, target.y);
+   490→   490→            } else {
+   491→   491→              ctx.moveTo(n.x, n.y);
+   492→   492→              ctx.lineTo(target.x, target.y);
+   493→   493→            }
+   494→   494→            ctx.strokeStyle = `${n.color}44`;
+   495→   495→            ctx.lineWidth = 0.8 + weight * 0.8;
+   496→   496→            ctx.stroke();
+   497→   497→
+   498→   498→            // Bidirectional flowing particles (entanglement particles)
+   499→   499→            const particleCount = 3;
+   500→   500→            for (let pi = 0; pi < particleCount; pi++) {
+   501→   501→              // Forward particle
+   502→   502→              const fwdPos = ((time * 1.5 + pi / particleCount) % 1);
+   503→   503→              let fwdX: number, fwdY: number;
+   504→   504→              if (isCurved) {
+   505→   505→                const midX = (n.x + target.x) / 2;
+   506→   506→                const midY = (n.y + target.y) / 2;
+   507→   507→                const perpX = -(target.y - n.y) / dist * 30;
+   508→   508→                const perpY = (target.x - n.x) / dist * 30;
+   509→   509→                const t = fwdPos;
+   510→   510→                fwdX = (1 - t) * (1 - t) * n.x + 2 * (1 - t) * t * (midX + perpX) + t * t * target.x;
+   511→   511→                fwdY = (1 - t) * (1 - t) * n.y + 2 * (1 - t) * t * (midY + perpY) + t * t * target.y;
+   512→   512→              } else {
+   513→   513→                fwdX = n.x + dx * fwdPos;
+   514→   514→                fwdY = n.y + dy * fwdPos;
+   515→   515→              }
+   516→   516→              ctx.beginPath();
+   517→   517→              ctx.arc(fwdX, fwdY, 1.8, 0, Math.PI * 2);
+   518→   518→              ctx.fillStyle = n.color;
+   519→   519→              ctx.fill();
+   520→   520→              ctx.beginPath();
+   521→   521→              ctx.arc(fwdX, fwdY, 4, 0, Math.PI * 2);
+   522→   522→              ctx.fillStyle = n.color + '22';
+   523→   523→              ctx.fill();
+   524→   524→
+   525→   525→              // Reverse particle
+   526→   526→              const revPos = ((time * 1.2 + pi / particleCount + 0.5) % 1);
+   527→   527→              let revX: number, revY: number;
+   528→   528→              if (isCurved) {
+   529→   529→                const midX = (n.x + target.x) / 2;
+   530→   530→                const midY = (n.y + target.y) / 2;
+   531→   531→                const perpX = -(target.y - n.y) / dist * 30;
+   532→   532→                const perpY = (target.x - n.x) / dist * 30;
+   533→   533→                const t = revPos;
+   534→   534→                revX = (1 - t) * (1 - t) * n.x + 2 * (1 - t) * t * (midX + perpX) + t * t * target.x;
+   535→   535→                revY = (1 - t) * (1 - t) * n.y + 2 * (1 - t) * t * (midY + perpY) + t * t * target.y;
+   536→   536→              } else {
+   537→   537→                revX = target.x - dx * revPos;
+   538→   538→                revY = target.y - dy * revPos;
+   539→   539→              }
+   540→   540→              ctx.beginPath();
+   541→   541→              ctx.arc(revX, revY, 1.3, 0, Math.PI * 2);
+   542→   542→              ctx.fillStyle = target.color + 'cc';
+   543→   543→              ctx.fill();
+   544→   544→              ctx.beginPath();
+   545→   545→              ctx.arc(revX, revY, 3, 0, Math.PI * 2);
+   546→   546→              ctx.fillStyle = target.color + '18';
+   547→   547→              ctx.fill();
+   548→   548→            }
+   549→   549→          } else if (isHoveredConn) {
+   550→   550→            ctx.beginPath();
+   551→   551→            if (isCurved) {
+   552→   552→              const midX = (n.x + target.x) / 2;
+   553→   553→              const midY = (n.y + target.y) / 2;
+   554→   554→              const perpX = -(target.y - n.y) / dist * 25;
+   555→   555→              const perpY = (target.x - n.x) / dist * 25;
+   556→   556→              ctx.moveTo(n.x, n.y);
+   557→   557→              ctx.quadraticCurveTo(midX + perpX, midY + perpY, target.x, target.y);
+   558→   558→            } else {
+   559→   559→              ctx.moveTo(n.x, n.y);
+   560→   560→              ctx.lineTo(target.x, target.y);
+   561→   561→            }
+   562→   562→            ctx.strokeStyle = `${n.color}55`;
+   563→   563→            ctx.lineWidth = 0.8 + weight * 0.8;
+   564→   564→            ctx.stroke();
+   565→   565→          } else {
+   566→   566→            // Normal edge with weight-based thickness
+   567→   567→            ctx.beginPath();
+   568→   568→            if (isCurved) {
+   569→   569→              const midX = (n.x + target.x) / 2;
+   570→   570→              const midY = (n.y + target.y) / 2;
+   571→   571→              const perpX = -(target.y - n.y) / dist * 20;
+   572→   572→              const perpY = (target.x - n.x) / dist * 20;
+   573→   573→              ctx.moveTo(n.x, n.y);
+   574→   574→              ctx.quadraticCurveTo(midX + perpX, midY + perpY, target.x, target.y);
+   575→   575→            } else {
+   576→   576→              ctx.moveTo(n.x, n.y);
+   577→   577→              ctx.lineTo(target.x, target.y);
+   578→   578→            }
+   579→   579→            const alpha = isActive ? 0.12 : 0.06;
+   580→   580→            ctx.strokeStyle = `rgba(136, 136, 170, ${alpha + weight * 0.06})`;
+   581→   581→            ctx.lineWidth = 0.3 + weight * 0.6;
+   582→   582→            ctx.stroke();
+   583→   583→          }
+   584→   584→        });
+   585→   585→      });
+   586→   586→
+   587→   587→      // ---- Draw nodes with sparklines ----
+   588→   588→      hoveredRef = null;
+   589→   589→      nodes.forEach(n => {
+   590→   590→        const dx = n.x - mouseRef.current.x;
+   591→   591→        const dy = n.y - mouseRef.current.y;
+   592→   592→        const isHovered = Math.sqrt(dx * dx + dy * dy) < n.size + 5;
+   593→   593→        if (isHovered) hoveredRef = n.id;
+   594→   594→
+   595→   595→        const pulse = Math.sin(n.pulsePhase) * 0.2 + 0.8;
+   596→   596→        const drawSize = n.active ? n.size * 1.3 : isHovered ? n.size * 1.15 : n.size * pulse;
+   597→   597→
+   598→   598→        // Active glow
+   599→   599→        if (n.active || isHovered) {
+   600→   600→          ctx.beginPath();
+   601→   601→          ctx.arc(n.x, n.y, drawSize + 15, 0, Math.PI * 2);
+   602→   602→          const glowGrad = ctx.createRadialGradient(n.x, n.y, drawSize, n.x, n.y, drawSize + 15);
+   603→   603→          glowGrad.addColorStop(0, n.color + '30');
+   604→   604→          glowGrad.addColorStop(1, n.color + '00');
+   605→   605→          ctx.fillStyle = glowGrad;
+   606→   606→          ctx.fill();
+   607→   607→        }
+   608→   608→
+   609→   609→        // Node circle
+   610→   610→        ctx.beginPath();
+   611→   611→        ctx.arc(n.x, n.y, drawSize, 0, Math.PI * 2);
+   612→   612→        const nodeGrad = ctx.createRadialGradient(n.x - drawSize * 0.3, n.y - drawSize * 0.3, 0, n.x, n.y, drawSize);
+   613→   613→        nodeGrad.addColorStop(0, n.color + (n.active ? 'ee' : isHovered ? 'cc' : '88'));
+   614→   614→        nodeGrad.addColorStop(1, n.color + (n.active ? '44' : '22'));
+   615→   615→        ctx.fillStyle = nodeGrad;
+   616→   616→        ctx.fill();
+   617→   617→        ctx.strokeStyle = n.color + (n.active ? 'ff' : isHovered ? 'aa' : '55');
+   618→   618→        ctx.lineWidth = n.active ? 2 : 1;
+   619→   619→        ctx.stroke();
+   620→   620→
+   621→   621→        // Label
+   622→   622→        ctx.fillStyle = n.active || isHovered ? '#ffffff' : '#c0b8d0';
+   623→   623→        ctx.font = `${n.active ? 'bold ' : ''}${Math.max(8, n.size * 0.55)}px monospace`;
+   624→   624→        ctx.textAlign = 'center';
+   625→   625→        ctx.textBaseline = 'top';
+   626→   626→        ctx.fillText(n.label, n.x, n.y + drawSize + 5);
+   627→   627→
+   628→   628→        // ---- Sparkline (activity history) below label ----
+   629→   629→        const sparklineY = n.y + drawSize + 5 + Math.max(8, n.size * 0.55) + 4;
+   630→   630→        const sparklineW = n.size * 2.2;
+   631→   631→        const sparklineH = 6;
+   632→   632→        const sparklineX = n.x - sparklineW / 2;
+   633→   633→        const history = n.activityHistory;
+   634→   634→        if (history.length >= 2) {
+   635→   635→          ctx.beginPath();
+   636→   636→          for (let hi = 0; hi < history.length; hi++) {
+   637→   637→            const hx = sparklineX + (hi / (history.length - 1)) * sparklineW;
+   638→   638→            const hy = sparklineY + sparklineH - history[hi] * sparklineH;
+   639→   639→            if (hi === 0) ctx.moveTo(hx, hy);
+   640→   640→            else ctx.lineTo(hx, hy);
+   641→   641→          }
+   642→   642→          const sparkAlpha = n.active ? 0.7 : isHovered ? 0.5 : 0.25;
+   643→   643→          ctx.strokeStyle = n.color + (n.active ? 'bb' : isHovered ? '88' : '44');
+   644→   644→          ctx.lineWidth = 1;
+   645→   645→          ctx.stroke();
+   646→   646→
+   647→   647→          // Sparkline fill
+   648→   648→          ctx.lineTo(sparklineX + sparklineW, sparklineY + sparklineH);
+   649→   649→          ctx.lineTo(sparklineX, sparklineY + sparklineH);
+   650→   650→          ctx.closePath();
+   651→   651→          ctx.fillStyle = n.color + Math.floor(sparkAlpha * 0.3 * 255).toString(16).padStart(2, '0');
+   652→   652→          ctx.fill();
+   653→   653→        }
+   654→   654→      });
+   655→   655→
+   656→   656→      setHoveredNode(hoveredRef);
+   657→   657→      animRef.current = requestAnimationFrame(draw);
+   658→   658→    };
+   659→   659→
+   660→   660→    draw();
+   661→   661→
+   662→   662→    return () => {
+   663→   663→      cancelAnimationFrame(animRef.current);
+   664→   664→      window.removeEventListener('resize', resize);
+   665→   665→      canvas.removeEventListener('mousemove', handleMouseMove);
+   666→   666→      canvas.removeEventListener('mousedown', handleMouseDown);
+   667→   667→      canvas.removeEventListener('mouseup', handleMouseUp);
+   668→   668→      canvas.removeEventListener('mouseleave', handleMouseUp);
+   669→   669→    };
+   670→   670→  }, [isActive, activeNode, onNodeClick]);
+   671→   671→
+   672→   672→  return (
+   673→   673→    <canvas
+   674→   674→      ref={canvasRef}
+   675→   675→      className="w-full h-full block"
+   676→   676→      style={{ cursor: hoveredNode ? 'grab' : 'default' }}
+   677→   677→    />
+   678→   678→  );
+   679→   679→}
