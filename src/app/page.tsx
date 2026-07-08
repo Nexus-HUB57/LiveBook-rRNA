@@ -1,31 +1,30 @@
-'use client'
+import ParticlesCanvas from '@/components/metaverse/particles-canvas';
+import HeroSection from '@/components/metaverse/hero-section';
+import RealmsSection from '@/components/metaverse/realms-section';
+import ExperienceSection from '@/components/metaverse/experience-section';
+import TimelineSection from '@/components/metaverse/timeline-section';
+import QuoteSection from '@/components/metaverse/quote-section';
+import CTASection from '@/components/metaverse/cta-section';
+import FooterSection from '@/components/metaverse/footer-section';
 
 export default function Home() {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      gap: '2rem',
-      padding: '1rem'
-    }}>
-      <div style={{
-        position: 'relative',
-        width: '6rem',
-        height: '6rem'
-      }}>
-        <img
-          src="/logo.svg"
-          alt="Z.ai Logo"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain'
-          }}
-        />
-      </div>
+    <div className="min-h-screen flex flex-col relative">
+      {/* Animated particle background */}
+      <ParticlesCanvas />
+
+      {/* Main content */}
+      <main className="relative z-10 flex-1">
+        <HeroSection />
+        <RealmsSection />
+        <ExperienceSection />
+        <TimelineSection />
+        <QuoteSection />
+        <CTASection />
+      </main>
+
+      {/* Footer */}
+      <FooterSection />
     </div>
-  )
+  );
 }
