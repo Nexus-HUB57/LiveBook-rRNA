@@ -46,6 +46,39 @@ interface HawkingParticle {
   vy: number;
 }
 
+interface ISCOOrbiter {
+  angle: number;
+  speed: number;
+  size: number;
+  brightness: number;
+  trail: { x: number; y: number }[];
+}
+
+interface PenroseEvent {
+  phase: 'entering' | 'splitting' | 'escaping';
+  timer: number;
+  enterAngle: number;
+  enterDist: number;
+  escapeAngle: number;
+  escapeSpeed: number;
+  escapeX: number;
+  escapeY: number;
+  escapeVx: number;
+  escapeVy: number;
+  escapeSize: number;
+  escapeOpacity: number;
+  inwardsOpacity: number;
+}
+
+interface SuperradiantFlash {
+  angle: number;
+  dist: number;
+  life: number;
+  maxLife: number;
+  size: number;
+  maxOpacity: number;
+}
+
 function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   let r: number, g: number, b: number;
   if (s === 0) {
@@ -69,10 +102,21 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 }
 
 function temperatureToColor(temp: number): [number, number, number] {
-  // 0=cool(blue) 0.5=hot(purple) 1.0=extreme(white-yellow)
-  if (temp < 0.3) return hslToRgb(240 + temp * 100, 0.8, 0.4 + temp);
-  if (temp < 0.6) return hslToRgb(280 + (temp - 0.3) * 100, 0.9, 0.5 + temp * 0.3);
-  return hslToRgb(40 + (temp - 0.6) * 20, 0.6, 0.7 + temp * 0.3);
+  // Dramatic redshift: 0=cool(blue-white) 0.5=hot(orange) 1.0=extreme(deep red)
+  if (temp < 0.25) {
+    // Far: blue-white (blueshifted)
+    return hslToRgb(210 + temp * 80, 0.5 + temp * 0.5, 0.7 + temp * 0.2);
+  }
+  if (temp < 0.5) {
+    // Medium: white to yellow
+    return hslToRgb(50 + (temp - 0.25) * 120, 0.7 + temp * 0.3, 0.75 - temp * 0.3);
+  }
+  if (temp < 0.75) {
+    // Hot: orange
+    return hslToRgb(30 + (temp - 0.5) * 30, 0.95, 0.55 - (temp - 0.5) * 0.3);
+  }
+  // Extreme: deep red (redshifted)
+  return hslToRgb(5 + (1 - temp) * 15, 0.9, 0.35 - (temp - 0.75) * 0.5);
 }
 
 export default function BlackHoleCanvas({
@@ -89,10 +133,15 @@ export default function BlackHoleCanvas({
   const accretionRef = useRef<AccretionParticle[]>([]);
   const absorbedRef = useRef<AbsorbedParticle[]>([]);
   const hawkingRef = useRef<HawkingParticle[]>([]);
+  const iscoRef = useRef<ISCOOrbiter[]>([]);
+  const penroseRef = useRef<PenroseEvent[]>([]);
+  const superradiantRef = useRef<SuperradiantFlash[]>([]);
   const animationRef = useRef<number>(0);
   const timeRef = useRef(0);
   const hoverRef = useRef(false);
   const sizeRef = useRef({ w: 0, h: 0 });
+  const lastPenroseRef = useRef(0);
+  const lastSuperradiantRef = useRef(0);
 
   const init = useCallback((w: number, h: number) => {
     sizeRef.current = { w, h };
@@ -137,6 +186,19 @@ export default function BlackHoleCanvas({
       });
     }
     accretionRef.current = accretion;
+
+    // ISCO orbiters: 7 bright particles at ~3x Schwarzschild radius
+    const iscoOrbiters: ISCOOrbiter[] = [];
+    for (let i = 0; i < 7; i++) {
+      iscoOrbiters.push({
+        angle: (i / 7) * Math.PI * 2 + Math.random() * 0.3,
+        speed: 1.8 + Math.random() * 0.6,
+        size: 2 + Math.random() * 1.5,
+        brightness: 0.7 + Math.random() * 0.3,
+        trail: [],
+      });
+    }
+    iscoRef.current = iscoOrbiters;
   }, []);
 
   useEffect(() => {
@@ -171,13 +233,14 @@ export default function BlackHoleCanvas({
     function drawAccretionHalf(
       c: CanvasRenderingContext2D,
       ccx: number, ccy: number, bhR: number,
-      t: number, whIntensity: number, isBack: boolean
+      t: number, whIntensity: number, isBack: boolean,
+      ergoRadiusX: number, ergoRadiusY: number
     ) {
       const accretion = accretionRef.current;
       for (const p of accretion) {
         p.angle += p.speed * 0.016 * (1 + whIntensity * 0.6);
         p.radius -= p.spiralRate * 0.02 * (1 + whIntensity * 1.2);
-        // Dynamic temperature based on distance
+        // Dynamic temperature based on distance (dramatic redshift)
         p.temperature = Math.max(0, Math.min(1, 1 - (p.radius - bhR) / 150));
 
         if (p.radius < bhR * 0.8) {
@@ -186,6 +249,11 @@ export default function BlackHoleCanvas({
           p.life = 1;
           p.temperature = 0.2 + Math.random() * 0.3;
         }
+
+        // Frame-dragging spiral: particles near horizon get extra angular velocity
+        const distFromHorizon = (p.radius - bhR) / bhR;
+        const frameDragBoost = distFromHorizon < 1 ? (1 - distFromHorizon) * 1.5 : 0;
+        p.angle += frameDragBoost * 0.016 * 2;
 
         const px = ccx + Math.cos(p.angle) * p.radius;
         const py = ccy + Math.sin(p.angle) * p.radius * 0.3;
@@ -196,25 +264,34 @@ export default function BlackHoleCanvas({
         const distFromCenter = Math.sqrt((px - ccx) ** 2 + (py - ccy) ** 2);
         const fadeNear = distFromCenter < bhR * 1.2 ? Math.max(0, (distFromCenter - bhR) / (bhR * 0.2)) : 1;
 
-        // Thermal color shift
+        // Dramatic thermal color shift (gravitational redshift)
         const thermalColor = temperatureToColor(p.temperature);
         const [cr, cg, cb] = thermalColor;
 
         c.save();
         // Hotter particles glow more
-        const glowMultiplier = 1 + p.temperature * 2;
+        const glowMultiplier = 1 + p.temperature * 3;
 
         c.globalAlpha = p.opacity * fadeNear * (isBack ? 0.4 : 1);
-        c.fillStyle = `rgb(${cr},${cg},${cb})`;
+        c.fillStyle = `rgba(${cr},${cg},${cb},1)`;
         c.beginPath();
         c.arc(px, py, p.size * (isBack ? 0.65 : 1), 0, Math.PI * 2);
         c.fill();
 
-        // Heat glow for high-temperature particles
-        if (p.temperature > 0.6 && !isBack) {
-          c.globalAlpha = p.opacity * fadeNear * 0.2 * glowMultiplier;
+        // Heat glow for high-temperature particles (more dramatic)
+        if (p.temperature > 0.4 && !isBack) {
+          const heatAlpha = p.temperature * 0.3 * glowMultiplier;
+          c.globalAlpha = p.opacity * fadeNear * Math.min(0.5, heatAlpha);
           c.beginPath();
-          c.arc(px, py, p.size * 4 * glowMultiplier, 0, Math.PI * 2);
+          c.arc(px, py, p.size * 5 * glowMultiplier, 0, Math.PI * 2);
+          c.fill();
+        }
+
+        // Extreme temperature glow (deep red corona)
+        if (p.temperature > 0.8 && !isBack) {
+          c.globalAlpha = p.opacity * fadeNear * 0.15;
+          c.beginPath();
+          c.arc(px, py, p.size * 8, 0, Math.PI * 2);
           c.fill();
         }
 
@@ -229,45 +306,52 @@ export default function BlackHoleCanvas({
     function drawJet(
       c: CanvasRenderingContext2D,
       jcx: number, jcy: number, bhR: number,
-      t: number, intensity: number, direction: number
+      t: number, intensity: number, direction: number,
+      precessionAngle: number
     ) {
       const jetLength = bhR * 6 * intensity;
       const segments = 40;
 
       for (let i = 0; i < segments; i++) {
         const progress = i / segments;
+        // Jet precession: wobble around vertical axis
+        const precOffsetX = Math.sin(precessionAngle + progress * 0.5) * progress * bhR * 0.8;
+        const precOffsetZ = Math.cos(precessionAngle + progress * 0.5) * progress * bhR * 0.3;
         const jy = jcy + direction * (bhR * 1.2 + progress * jetLength);
         const spread = progress * bhR * 0.9 * intensity;
         const wobble1 = Math.sin(t * 3 + i * 0.4) * spread * 0.25;
         const wobble2 = Math.cos(t * 2.3 + i * 0.6) * spread * 0.15;
         const alpha = (1 - progress * 0.8) * intensity * 0.45;
+        const jx = jcx + precOffsetX + wobble1 + wobble2;
 
         c.save();
         c.globalAlpha = alpha;
-        const grad = c.createRadialGradient(jcx + wobble1 + wobble2, jy, 0, jcx + wobble1, jy, Math.max(1, spread));
+        const grad = c.createRadialGradient(jx, jy, 0, jx, jy, Math.max(1, spread));
         grad.addColorStop(0, direction === -1 ? 'rgba(168,85,247,0.9)' : 'rgba(6,214,160,0.9)');
         grad.addColorStop(0.3, direction === -1 ? 'rgba(224,64,160,0.5)' : 'rgba(168,85,247,0.5)');
         grad.addColorStop(0.6, direction === -1 ? 'rgba(6,182,212,0.2)' : 'rgba(251,191,36,0.2)');
         grad.addColorStop(1, 'rgba(0,0,0,0)');
         c.fillStyle = grad;
         c.beginPath();
-        c.ellipse(jcx + wobble1 + wobble2, jy, Math.max(1, spread), Math.max(1, spread * 0.35), 0, 0, Math.PI * 2);
+        c.ellipse(jx, jy, Math.max(1, spread), Math.max(1, spread * 0.35), 0, 0, Math.PI * 2);
         c.fill();
         c.restore();
       }
 
-      // Jet core beam
+      // Jet core beam with precession
       c.save();
       c.globalAlpha = intensity * 0.15;
-      const beamGrad = c.createLinearGradient(jcx, jcy, jcx, jcy + direction * jetLength);
+      const precBaseX = Math.sin(precessionAngle) * bhR * 0.15;
+      const precEndX = Math.sin(precessionAngle + 0.5) * bhR * 0.4;
+      const beamGrad = c.createLinearGradient(jcx, jcy, jcx + precEndX, jcy + direction * jetLength);
       beamGrad.addColorStop(0, direction === -1 ? 'rgba(168,85,247,0.6)' : 'rgba(6,214,160,0.6)');
       beamGrad.addColorStop(1, 'rgba(0,0,0,0)');
       c.fillStyle = beamGrad;
       c.beginPath();
-      c.moveTo(jcx - 2, jcy);
-      c.lineTo(jcx + 2, jcy);
-      c.lineTo(jcx + bhR * 0.15, jcy + direction * jetLength);
-      c.lineTo(jcx - bhR * 0.15, jcy + direction * jetLength);
+      c.moveTo(jcx + precBaseX - 2, jcy);
+      c.lineTo(jcx + precBaseX + 2, jcy);
+      c.lineTo(jcx + precEndX + bhR * 0.15, jcy + direction * jetLength);
+      c.lineTo(jcx + precEndX - bhR * 0.15, jcy + direction * jetLength);
       c.closePath();
       c.fill();
       c.restore();
@@ -285,6 +369,13 @@ export default function BlackHoleCanvas({
       const eventHorizon = bhRadius * 1.5;
       const wormholeIntensity = isWormholeActive ? Math.min(syncPhase ?? 0, 1) : 0;
 
+      // Ergosphere dimensions (Kerr: oblate, outside event horizon)
+      const ergoRadiusX = eventHorizon * 1.45;
+      const ergoRadiusY = eventHorizon * 1.15;
+
+      // Jet precession angle (slow wobble ~20s period)
+      const jetPrecessionAngle = t * 0.314; // ~20 second period
+
       ctx.clearRect(0, 0, w, h);
 
       // === ADVANCED GRAVITATIONAL LENSING ===
@@ -294,11 +385,10 @@ export default function BlackHoleCanvas({
         const dy = star.y - cy;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Einstein ring deflection: θ = 4GM/(rc²) ≈ R_E²/dist
         const normalizedDist = dist / einsteinRadius;
         let lensStrength = 0;
         if (normalizedDist < 1) {
-          lensStrength = 1; // Inside Einstein ring
+          lensStrength = 1;
         } else if (normalizedDist < 2.5) {
           lensStrength = 1 / (normalizedDist * normalizedDist);
         }
@@ -333,8 +423,40 @@ export default function BlackHoleCanvas({
         ctx.restore();
       }
 
+      // === FRAME-DRAGGING SPIRAL ARMS in accretion disk ===
+      if (wormholeIntensity > 0.1 || true) {
+        ctx.save();
+        const spiralArmCount = 3;
+        for (let arm = 0; arm < spiralArmCount; arm++) {
+          const armBaseAngle = (arm / spiralArmCount) * Math.PI * 2 + t * 0.15;
+          ctx.beginPath();
+          const armSteps = 120;
+          for (let s = 0; s <= armSteps; s++) {
+            const progress = s / armSteps;
+            const spiralR = eventHorizon * 1.2 + progress * bhRadius * 4;
+            // Frame-dragging: tighter spiral near horizon
+            const dragFactor = 1 + (1 - progress) * 2;
+            const spiralAngle = armBaseAngle + progress * Math.PI * 1.5 * dragFactor;
+            const sx = cx + Math.cos(spiralAngle) * spiralR;
+            const sy = cy + Math.sin(spiralAngle) * spiralR * 0.3;
+            if (s === 0) ctx.moveTo(sx, sy);
+            else ctx.lineTo(sx, sy);
+          }
+          ctx.globalAlpha = 0.04 + wormholeIntensity * 0.06;
+          ctx.strokeStyle = `rgba(168,85,247,1)`;
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+
+          // Glow pass
+          ctx.globalAlpha = 0.02 + wormholeIntensity * 0.03;
+          ctx.lineWidth = 8;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
       // === ACCRETION DISK (back half) ===
-      drawAccretionHalf(ctx, cx, cy, bhRadius, t, wormholeIntensity, true);
+      drawAccretionHalf(ctx, cx, cy, bhRadius, t, wormholeIntensity, true, ergoRadiusX, ergoRadiusY);
 
       // === BLACK HOLE CENTER with photon sphere ===
       const pulseIntensity = 1 + Math.sin(t * 0.5) * 0.15 + wormholeIntensity * 0.6;
@@ -382,25 +504,371 @@ export default function BlackHoleCanvas({
       }
 
       // === ACCRETION DISK (front half) ===
-      drawAccretionHalf(ctx, cx, cy, bhRadius, t, wormholeIntensity, false);
+      drawAccretionHalf(ctx, cx, cy, bhRadius, t, wormholeIntensity, false, ergoRadiusX, ergoRadiusY);
 
-      // === PHOTON RING (double ring) ===
-      const photonPulse = 0.35 + wormholeIntensity * 0.35 + Math.sin(t * 2) * 0.08;
+      // === ERGOSPHERE BOUNDARY (Kerr black hole) ===
       ctx.save();
-      ctx.globalAlpha = photonPulse;
-      ctx.strokeStyle = `rgba(168,85,247,${0.6 + wormholeIntensity * 0.3})`;
-      ctx.lineWidth = 2;
+      ctx.translate(cx, cy);
+      const ergoPulse = 1 + Math.sin(t * 0.8) * 0.04;
+      const ergoRotation = t * 0.2;
+
+      // Ergosphere fill (very subtle)
+      ctx.save();
+      ctx.rotate(ergoRotation);
+      ctx.globalAlpha = 0.06 + wormholeIntensity * 0.04;
+      const ergoGrad = ctx.createRadialGradient(0, 0, bhRadius, 0, 0, Math.max(2, ergoRadiusX * ergoPulse));
+      ergoGrad.addColorStop(0, 'rgba(168,85,247,0.2)');
+      ergoGrad.addColorStop(0.5, 'rgba(100,50,180,0.1)');
+      ergoGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = ergoGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, ergoRadiusX * ergoPulse, ergoRadiusY * ergoPulse, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ergosphere boundary stroke
+      ctx.globalAlpha = 0.2 + wormholeIntensity * 0.15;
+      ctx.strokeStyle = 'rgba(168,85,247,0.6)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([6, 4]);
+      ctx.lineDashOffset = -t * 12;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, ergoRadiusX * ergoPulse, ergoRadiusY * ergoPulse, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      // Forced co-rotation visual: small arrows/dots inside ergosphere
+      if (wormholeIntensity > 0.1) {
+        const coRotCount = 8;
+        ctx.globalAlpha = wormholeIntensity * 0.3;
+        for (let cri = 0; cri < coRotCount; cri++) {
+          const coAngle = (cri / coRotCount) * Math.PI * 2 + t * 1.5;
+          const coR = eventHorizon * (0.85 + Math.sin(t + cri) * 0.15);
+          const coX = Math.cos(coAngle) * coR;
+          const coY = Math.sin(coAngle) * coR * 0.5;
+          // Small trailing arc to show co-rotation direction
+          ctx.strokeStyle = 'rgba(224,64,160,0.7)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, coR, coAngle - 0.3, coAngle, false);
+          ctx.stroke();
+          // Dot at end
+          ctx.fillStyle = 'rgba(224,64,160,0.8)';
+          ctx.beginPath();
+          ctx.arc(coX, coY, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+
+      // === MULTIPLE PHOTON SPHERES (3 layers) ===
+      // Inner: thin, bright, fast pulse
+      const innerPulse = 0.4 + wormholeIntensity * 0.4 + Math.sin(t * 4) * 0.15;
+      ctx.save();
+      ctx.globalAlpha = innerPulse;
+      ctx.strokeStyle = `rgba(168,85,247,${0.8 + wormholeIntensity * 0.2})`;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(cx, cy, eventHorizon * 0.88, 0, Math.PI * 2);
-      ctx.stroke();
-      // Second photon ring (ISCO)
-      ctx.globalAlpha = photonPulse * 0.4;
-      ctx.strokeStyle = `rgba(251,191,36,${0.4 + wormholeIntensity * 0.2})`;
+  ctx.stroke();
+  // Fast pulse glow
+  ctx.globalAlpha = innerPulse * 0.3;
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.restore();
+
+  // Middle: medium, with orbiting light points
+  const middlePulse = 0.3 + wormholeIntensity * 0.35 + Math.sin(t * 2) * 0.1;
+  ctx.save();
+  ctx.globalAlpha = middlePulse;
+  ctx.strokeStyle = `rgba(200,140,255,${0.5 + wormholeIntensity * 0.3})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, eventHorizon * 1.0, 0, Math.PI * 2);
+  ctx.stroke();
+  // Glow
+  ctx.globalAlpha = middlePulse * 0.2;
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  // Orbiting light points on middle ring
+  const orbitLightCount = 5;
+  for (let oli = 0; oli < orbitLightCount; oli++) {
+    const olAngle = (oli / orbitLightCount) * Math.PI * 2 + t * 3;
+    const olR = eventHorizon * 1.0;
+    const olx = cx + Math.cos(olAngle) * olR;
+    const oly = cy + Math.sin(olAngle) * olR;
+    ctx.globalAlpha = middlePulse * 0.8;
+    ctx.fillStyle = 'rgba(255,255,255,1)';
+    ctx.beginPath();
+    ctx.arc(olx, oly, 2, 0, Math.PI * 2);
+    ctx.fill();
+    // Light point glow
+    ctx.globalAlpha = middlePulse * 0.3;
+    ctx.fillStyle = 'rgba(200,140,255,1)';
+    ctx.beginPath();
+    ctx.arc(olx, oly, 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Outer: wider, diffuse, slower
+  const outerPulse = 0.2 + wormholeIntensity * 0.25 + Math.sin(t * 1.2) * 0.08;
+  ctx.save();
+  ctx.globalAlpha = outerPulse;
+  ctx.strokeStyle = `rgba(251,191,36,${0.3 + wormholeIntensity * 0.2})`;
+  ctx.lineWidth = 3;
+  ctx.setLineDash([8, 6]);
+  ctx.lineDashOffset = t * 8;
+  ctx.beginPath();
+  ctx.arc(cx, cy, eventHorizon * 1.15, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Diffuse glow
+  ctx.globalAlpha = outerPulse * 0.15;
+  ctx.lineWidth = 12;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, eventHorizon * 1.15, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+      // === ISCO RING with orbiting particles ===
+      const iscoRadius = bhRadius * 3;
+      const iscoPulse = 0.25 + wormholeIntensity * 0.3;
+
+      // ISCO ring
+      ctx.save();
+      ctx.globalAlpha = iscoPulse * 0.4;
+      ctx.strokeStyle = 'rgba(6,214,160,0.5)';
       ctx.lineWidth = 1;
+      ctx.setLineDash([3, 5]);
+      ctx.lineDashOffset = -t * 40;
       ctx.beginPath();
-      ctx.arc(cx, cy, eventHorizon * 1.1, 0, Math.PI * 2);
+      ctx.ellipse(cx, cy, iscoRadius, iscoRadius * 0.3, 0, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.restore();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // ISCO orbiting particles
+  for (const orb of iscoRef.current) {
+    orb.angle += orb.speed * 0.016;
+    const orbX = cx + Math.cos(orb.angle) * iscoRadius;
+    const orbY = cy + Math.sin(orb.angle) * iscoRadius * 0.3;
+
+    // Trail
+    orb.trail.push({ x: orbX, y: orbY });
+    if (orb.trail.length > 10) orb.trail.shift();
+
+    const orbAlpha = iscoPulse * orb.brightness;
+
+    // Draw trail
+    if (orb.trail.length > 1) {
+      for (let ti = 1; ti < orb.trail.length; ti++) {
+        const trailAlpha = (ti / orb.trail.length) * orbAlpha * 0.4;
+        ctx.save();
+        ctx.globalAlpha = trailAlpha;
+        ctx.strokeStyle = 'rgba(6,214,160,1)';
+        ctx.lineWidth = orb.size * 0.5 * (ti / orb.trail.length);
+        ctx.beginPath();
+        ctx.moveTo(orb.trail[ti - 1].x, orb.trail[ti - 1].y);
+        ctx.lineTo(orb.trail[ti].x, orb.trail[ti].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // Particle glow
+    ctx.save();
+    ctx.globalAlpha = orbAlpha * 0.3;
+    ctx.fillStyle = 'rgba(6,214,160,1)';
+    ctx.beginPath();
+    ctx.arc(orbX, orbY, orb.size * 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Particle core
+    ctx.globalAlpha = orbAlpha;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(orbX, orbY, orb.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+      // === SUPERRADIANT SCATTERING (bright flashes near ergosphere) ===
+      if (t - lastSuperradiantRef.current > 2 + Math.random() * 4) {
+        lastSuperradiantRef.current = t;
+        superradiantRef.current.push({
+          angle: Math.random() * Math.PI * 2,
+          dist: eventHorizon * (1.1 + Math.random() * 0.3),
+          life: 0,
+          maxLife: 0.4 + Math.random() * 0.4,
+          size: 15 + Math.random() * 25,
+          maxOpacity: 0.5 + Math.random() * 0.5,
+        });
+      }
+
+      for (let si = superradiantRef.current.length - 1; si >= 0; si--) {
+        const sf = superradiantRef.current[si];
+        sf.life += 0.016;
+        if (sf.life >= sf.maxLife) {
+          superradiantRef.current.splice(si, 1);
+          continue;
+        }
+        const sProgress = sf.life / sf.maxLife;
+        const sFade = sProgress < 0.3 ? sProgress / 0.3 : 1 - (sProgress - 0.3) / 0.7;
+        const sAlpha = sFade * sf.maxOpacity;
+        const sfX = cx + Math.cos(sf.angle) * sf.dist;
+        const sfY = cy + Math.sin(sf.angle) * sf.dist * 0.3;
+
+        ctx.save();
+        const sfGrad = ctx.createRadialGradient(sfX, sfY, 0, sfX, sfY, Math.max(1, sf.size * sFade));
+        sfGrad.addColorStop(0, `rgba(255,255,255,${sAlpha * 0.9})`);
+        sfGrad.addColorStop(0.2, `rgba(168,85,247,${sAlpha * 0.6})`);
+        sfGrad.addColorStop(0.5, `rgba(224,64,160,${sAlpha * 0.3})`);
+        sfGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = sfGrad;
+        ctx.beginPath();
+        ctx.arc(sfX, sfY, Math.max(1, sf.size * sFade * 1.5), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      if (superradiantRef.current.length > 8) {
+        superradiantRef.current.splice(0, 2);
+      }
+
+      // === PENROSE PROCESS VISUALIZATION ===
+      if (t - lastPenroseRef.current > 5 + Math.random() * 8) {
+        lastPenroseRef.current = t;
+        const enterAngle = Math.random() * Math.PI * 2;
+        penroseRef.current.push({
+          phase: 'entering',
+          timer: 0,
+          enterAngle,
+          enterDist: eventHorizon * 2.5,
+          escapeAngle: 0,
+          escapeSpeed: 0,
+          escapeX: 0,
+          escapeY: 0,
+          escapeVx: 0,
+          escapeVy: 0,
+          escapeSize: 0,
+          escapeOpacity: 1,
+          inwardsOpacity: 1,
+        });
+      }
+
+      for (let pi = penroseRef.current.length - 1; pi >= 0; pi--) {
+        const pe = penroseRef.current[pi];
+        pe.timer += 0.016;
+
+        if (pe.phase === 'entering') {
+          // Particle spirals toward ergosphere
+          pe.enterDist -= 1.5;
+          pe.enterAngle += 0.04;
+
+          const peX = cx + Math.cos(pe.enterAngle) * pe.enterDist;
+          const peY = cy + Math.sin(pe.enterAngle) * pe.enterDist * 0.3;
+
+          ctx.save();
+          ctx.globalAlpha = 0.8;
+          ctx.fillStyle = 'rgba(6,182,212,1)';
+          ctx.beginPath();
+          ctx.arc(peX, peY, 3, 0, Math.PI * 2);
+          ctx.fill();
+          // Glow
+          ctx.globalAlpha = 0.2;
+          ctx.beginPath();
+          ctx.arc(peX, peY, 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          if (pe.enterDist <= eventHorizon * 1.2) {
+            pe.phase = 'splitting';
+            pe.timer = 0;
+            pe.escapeAngle = pe.enterAngle;
+            pe.escapeX = peX;
+            pe.escapeY = peY;
+            pe.escapeSpeed = 4 + Math.random() * 3;
+            pe.escapeSize = 4;
+            pe.escapeOpacity = 1;
+            pe.inwardsOpacity = 1;
+          }
+        } else if (pe.phase === 'splitting') {
+          // Split animation: bright flash
+          if (pe.timer < 0.3) {
+            const splitFlash = 1 - pe.timer / 0.3;
+            ctx.save();
+            ctx.globalAlpha = splitFlash * 0.7;
+            const splitGrad = ctx.createRadialGradient(pe.escapeX, pe.escapeY, 0, pe.escapeX, pe.escapeY, Math.max(1, 20 * splitFlash));
+            splitGrad.addColorStop(0, 'rgba(255,255,255,1)');
+            splitGrad.addColorStop(0.3, 'rgba(168,85,247,0.6)');
+            splitGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = splitGrad;
+            ctx.beginPath();
+            ctx.arc(pe.escapeX, pe.escapeY, Math.max(1, 20 * splitFlash), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // Inward-falling particle (red, fading)
+          const inwardDist = eventHorizon * 1.2 - pe.timer * 30;
+          if (inwardDist > bhRadius * 0.5) {
+            pe.inwardsOpacity -= 0.015;
+            const inX = cx + Math.cos(pe.escapeAngle + 0.05) * inwardDist;
+            const inY = cy + Math.sin(pe.escapeAngle + 0.05) * inwardDist * 0.3;
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, pe.inwardsOpacity) * 0.6;
+            ctx.fillStyle = 'rgba(255,60,60,1)';
+            ctx.beginPath();
+            ctx.arc(inX, inY, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = Math.max(0, pe.inwardsOpacity) * 0.15;
+            ctx.beginPath();
+            ctx.arc(inX, inY, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // Escaping particle (bright, high speed)
+          pe.escapeVx = Math.cos(pe.escapeAngle) * pe.escapeSpeed * 3;
+          pe.escapeVy = Math.sin(pe.escapeAngle) * pe.escapeSpeed * 3 * 0.3;
+          pe.escapeX += pe.escapeVx;
+          pe.escapeY += pe.escapeVy;
+          pe.escapeOpacity -= 0.008;
+
+          if (pe.escapeOpacity > 0) {
+            ctx.save();
+            // Bright escape particle
+            ctx.globalAlpha = pe.escapeOpacity;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(pe.escapeX, pe.escapeY, pe.escapeSize, 0, Math.PI * 2);
+            ctx.fill();
+            // Energy gain glow (bright blue-white)
+            ctx.globalAlpha = pe.escapeOpacity * 0.4;
+            const escGrad = ctx.createRadialGradient(pe.escapeX, pe.escapeY, 0, pe.escapeX, pe.escapeY, Math.max(1, pe.escapeSize * 5));
+            escGrad.addColorStop(0, 'rgba(200,220,255,1)');
+            escGrad.addColorStop(0.3, 'rgba(6,214,160,0.5)');
+            escGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = escGrad;
+            ctx.beginPath();
+            ctx.arc(pe.escapeX, pe.escapeY, Math.max(1, pe.escapeSize * 5), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          if (pe.inwardsOpacity <= 0 && pe.escapeOpacity <= 0) {
+            penroseRef.current.splice(pi, 1);
+          }
+        }
+      }
+
+      if (penroseRef.current.length > 5) {
+        penroseRef.current.splice(0, 2);
+      }
 
       // === HAWKING RADIATION (evolved: pairs emitted from horizon) ===
       if (Math.random() < 0.04 + wormholeIntensity * 0.08) {
@@ -457,10 +925,10 @@ export default function BlackHoleCanvas({
         hawkingRef.current.splice(0, 10);
       }
 
-      // === JETS (evolved: dual-frequency wobble + core beam) ===
+      // === JETS (evolved: with precession) ===
       if (wormholeIntensity > 0.05) {
-        drawJet(ctx, cx, cy, bhRadius, t, wormholeIntensity, -1);
-        drawJet(ctx, cx, cy, bhRadius, t, wormholeIntensity, 1);
+        drawJet(ctx, cx, cy, bhRadius, t, wormholeIntensity, -1, jetPrecessionAngle);
+        drawJet(ctx, cx, cy, bhRadius, t, wormholeIntensity, 1, jetPrecessionAngle);
       }
 
       // === ABSORBED PARTICLES ===
@@ -533,7 +1001,7 @@ export default function BlackHoleCanvas({
     <canvas
       ref={canvasRef}
       className="w-full h-full cursor-pointer"
-      aria-label="Buraco negro evoluido com radiacao Hawking e lente gravitacional avancada"
+      aria-label="Buraco negro evoluido com ergosfera, aneis de fotons multiples, ISCO, processo de Penrose, precessao de jatos e espalhamento superradiante"
     />
   );
 }

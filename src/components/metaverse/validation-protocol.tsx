@@ -172,7 +172,6 @@ export default function ValidationProtocol({
     }, 80);
 
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isValidating]);
 
   // Auto-scroll log

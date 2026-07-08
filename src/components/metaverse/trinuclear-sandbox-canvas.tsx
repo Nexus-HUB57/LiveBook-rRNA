@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface CoreDef {
   id: 'ollama' | 'llama4' | 'openai';
@@ -32,6 +32,29 @@ interface EnergyParticle {
   speed: number;
   color: string;
   size: number;
+  trail: { x: number; y: number }[];
+}
+
+interface PulseWave {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  color: string;
+  alpha: number;
+}
+
+interface AmbientParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  alpha: number;
+}
+
+interface CoreThroughput {
+  values: number[];
 }
 
 export default function TrinuclearSandboxCanvas({ isActive, corePower, syncIntensity }: TrinuclearSandboxCanvasProps) {
@@ -39,6 +62,25 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
   const particlesRef = useRef<EnergyParticle[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const animRef = useRef<number>(0);
+  const pulseWavesRef = useRef<PulseWave[]>([]);
+  const ambientParticlesRef = useRef<AmbientParticle[]>([]);
+  const coreThroughputRef = useRef<CoreThroughput[]>(
+    CORES.map(() => ({ values: [0, 0, 0, 0, 0] }))
+  );
+  const prevPowerRef = useRef<Record<string, number>>({});
+  const coreSatellitesRef = useRef<{ angle: number; speed: number; distance: number }[][]>(
+    CORES.map(() => {
+      const sats: { angle: number; speed: number; distance: number }[] = [];
+      for (let i = 0; i < 3; i++) {
+        sats.push({
+          angle: (Math.PI * 2 / 3) * i,
+          speed: 0.8 + Math.random() * 0.6,
+          distance: 42 + Math.random() * 8,
+        });
+      }
+      return sats;
+    })
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -64,6 +106,21 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
 
     let time = 0;
     let lastSpawn = 0;
+    let lastThroughputUpdate = 0;
+
+    // Initialize ambient particles
+    if (ambientParticlesRef.current.length === 0) {
+      for (let i = 0; i < 40; i++) {
+        ambientParticlesRef.current.push({
+          x: Math.random() * 2000,
+          y: Math.random() * 2000,
+          vx: (Math.random() - 0.5) * 0.15,
+          vy: (Math.random() - 0.5) * 0.15,
+          size: 0.5 + Math.random() * 1,
+          alpha: 0.05 + Math.random() * 0.1,
+        });
+      }
+    }
 
     const getCorePos = (coreIdx: number, w: number, h: number) => {
       const cx = w / 2;
@@ -91,6 +148,189 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         speed: 0.008 + Math.random() * 0.012,
         color: colors[source],
         size: 2 + Math.random() * 2.5,
+        trail: [],
+      });
+    };
+
+    // Draw hexagonal grid
+    const drawHexGrid = (w: number, h: number) => {
+      const hexSize = 30;
+      const hexH = hexSize * Math.sqrt(3);
+      const hexW = hexSize * 2;
+
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.025)';
+      ctx.lineWidth = 0.5;
+
+      for (let row = -1; row < h / hexH + 1; row++) {
+        for (let col = -1; col < w / hexW + 1; col++) {
+          const offsetX = row % 2 !== 0 ? hexW * 0.75 : 0;
+          const cx = col * hexW * 1.5 + offsetX;
+          const cy = row * hexH;
+
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i - Math.PI / 6;
+            const hx = cx + hexSize * Math.cos(angle);
+            const hy = cy + hexSize * Math.sin(angle);
+            if (i === 0) ctx.moveTo(hx, hy);
+            else ctx.lineTo(hx, hy);
+          }
+          ctx.closePath();
+          ctx.stroke();
+        }
+      }
+    };
+
+    // Draw ambient particles
+    const drawAmbientParticles = (w: number, h: number) => {
+      ambientParticlesRef.current.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -20) p.x = w + 20;
+        if (p.x > w + 20) p.x = -20;
+        if (p.y < -20) p.y = h + 20;
+        if (p.y > h + 20) p.y = -20;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(168, 85, 247, ${p.alpha})`;
+        ctx.fill();
+      });
+    };
+
+    // Draw orbital data streams
+    const drawOrbitalStreams = (cx: number, cy: number, w: number, h: number) => {
+      if (!isActive) return;
+      const baseRadius = Math.min(w, h) * 0.18;
+      const streamColors = ['#06d6a0', '#fbbf24', '#e040a0'];
+      const streamAlphas = [0.12, 0.1, 0.12];
+
+      for (let s = 0; s < 3; s++) {
+        const rx = baseRadius + s * 25;
+        const ry = baseRadius * 0.45 + s * 12;
+        const rotation = s * 0.4 + time * 0.3 * (s % 2 === 0 ? 1 : -1);
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rotation);
+
+        // Draw elliptical path
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = streamColors[s];
+        ctx.globalAlpha = streamAlphas[s] * syncIntensity;
+        ctx.lineWidth = 0.8;
+        ctx.setLineDash([4, 8]);
+        ctx.lineDashOffset = -time * 60 * (s % 2 === 0 ? 1 : -1);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+
+        // Flowing dots along the path
+        const numDots = 3 + s;
+        for (let d = 0; d < numDots; d++) {
+          const dotAngle = (Math.PI * 2 / numDots) * d + time * (1.2 + s * 0.3) * (s % 2 === 0 ? 1 : -1);
+          const dx = Math.cos(dotAngle) * rx;
+          const dy = Math.sin(dotAngle) * ry;
+
+          ctx.beginPath();
+          ctx.arc(dx, dy, 1.5 + Math.sin(time * 3 + d) * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = streamColors[s];
+          ctx.globalAlpha = 0.6 * syncIntensity;
+          ctx.fill();
+
+          // Glow
+          ctx.beginPath();
+          ctx.arc(dx, dy, 5, 0, Math.PI * 2);
+          ctx.fillStyle = streamColors[s];
+          ctx.globalAlpha = 0.1 * syncIntensity;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+
+        ctx.restore();
+      }
+    };
+
+    // Draw pulse waves
+    const updateAndDrawPulseWaves = () => {
+      pulseWavesRef.current = pulseWavesRef.current.filter(pw => pw.alpha > 0.01);
+      pulseWavesRef.current.forEach(pw => {
+        pw.radius += 2.5;
+        pw.alpha *= 0.96;
+
+        ctx.beginPath();
+        ctx.arc(pw.x, pw.y, pw.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = pw.color;
+        ctx.globalAlpha = pw.alpha;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      });
+    };
+
+    // Check for power changes and emit pulse waves
+    const checkPowerChanges = (corePositions: { x: number; y: number }[]) => {
+      CORES.forEach((core, i) => {
+        const currentPower = corePower[core.id] || 0;
+        const prevPower = prevPowerRef.current[core.id] || 0;
+        if (Math.abs(currentPower - prevPower) > 0.15 && currentPower > 0.1) {
+          pulseWavesRef.current.push({
+            x: corePositions[i].x,
+            y: corePositions[i].y,
+            radius: 30,
+            maxRadius: 120,
+            color: core.color,
+            alpha: 0.6,
+          });
+        }
+        prevPowerRef.current[core.id] = currentPower;
+      });
+    };
+
+    // Draw core satellites
+    const drawCoreSatellites = (pos: { x: number; y: number }, coreIdx: number, core: CoreDef) => {
+      const sats = coreSatellitesRef.current[coreIdx];
+      sats.forEach((sat, si) => {
+        sat.angle += sat.speed * 0.01;
+        const sx = pos.x + Math.cos(sat.angle) * sat.distance;
+        const sy = pos.y + Math.sin(sat.angle) * sat.distance;
+
+        ctx.beginPath();
+        ctx.arc(sx, sy, 1.5 + si * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = core.color;
+        ctx.globalAlpha = 0.7;
+        ctx.fill();
+
+        // Satellite orbit line
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, sat.distance, sat.angle, sat.angle + 0.8);
+        ctx.strokeStyle = core.color;
+        ctx.globalAlpha = 0.1;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      });
+    };
+
+    // Draw tiny bar chart inside core
+    const drawCoreBarChart = (pos: { x: number; y: number }, coreIdx: number, core: CoreDef) => {
+      const throughput = coreThroughputRef.current[coreIdx];
+      const barW = 3;
+      const barGap = 1;
+      const totalW = throughput.values.length * (barW + barGap);
+      const startX = pos.x - totalW / 2;
+      const baseY = pos.y + 8;
+      const maxBarH = 10;
+
+      throughput.values.forEach((val, i) => {
+        const barH = Math.max(1, (val / 80) * maxBarH);
+        const x = startX + i * (barW + barGap);
+
+        ctx.fillStyle = core.color;
+        ctx.globalAlpha = 0.3;
+        ctx.fillRect(x, baseY - barH, barW, barH);
+        ctx.globalAlpha = 1;
       });
     };
 
@@ -103,16 +343,11 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
       ctx.clearRect(0, 0, w, h);
       time += 0.004;
 
-      // Background grid
-      ctx.strokeStyle = 'rgba(168, 85, 247, 0.03)';
-      ctx.lineWidth = 0.5;
-      const gridSize = 40;
-      for (let x = 0; x < w; x += gridSize) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-      }
-      for (let y = 0; y < h; y += gridSize) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-      }
+      // Hexagonal grid background
+      drawHexGrid(w, h);
+
+      // Ambient particles
+      drawAmbientParticles(w, h);
 
       // Triangle connections between cores
       const corePositions = CORES.map((_, i) => getCorePos(i, w, h));
@@ -134,7 +369,7 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
       ctx.fillStyle = triGrad;
       ctx.fill();
 
-      // Cross-core inference mesh (dense connections inside triangle)
+      // Cross-core inference mesh
       if (isActive && syncIntensity > 0.2) {
         const meshPoints = 12;
         for (let m = 0; m < meshPoints; m++) {
@@ -149,7 +384,6 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
           ctx.fill();
         }
 
-        // Cross-core inference beams
         if (syncIntensity > 0.5) {
           for (let c = 0; c < 3; c++) {
             const target = (c + 1) % 3;
@@ -185,17 +419,23 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         ctx.stroke();
       }
 
-      // Central OpenClaw nexus
+      // Orbital data streams around nexus
+      drawOrbitalStreams(cx, cy, w, h);
+
+      // Central OpenClaw nexus - enhanced
       const nexusSize = isActive ? 20 + syncIntensity * 15 + Math.sin(time * 4) * 4 : 16;
-      const nexusGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, nexusSize + 20);
+
+      // Outer glow
+      const nexusGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, nexusSize + 25);
       nexusGrad.addColorStop(0, `rgba(168, 85, 247, ${isActive ? 0.5 : 0.15})`);
       nexusGrad.addColorStop(0.5, `rgba(224, 64, 160, ${isActive ? 0.2 : 0.05})`);
       nexusGrad.addColorStop(1, 'rgba(168, 85, 247, 0)');
       ctx.beginPath();
-      ctx.arc(cx, cy, nexusSize + 20, 0, Math.PI * 2);
+      ctx.arc(cx, cy, nexusSize + 25, 0, Math.PI * 2);
       ctx.fillStyle = nexusGrad;
       ctx.fill();
 
+      // Core body
       ctx.beginPath();
       ctx.arc(cx, cy, nexusSize, 0, Math.PI * 2);
       const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, nexusSize);
@@ -205,7 +445,47 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
       ctx.fillStyle = coreGrad;
       ctx.fill();
 
-      // Nexus rotating segments
+      // Rotating hexagonal wireframe
+      const hexRadius = nexusSize + 8;
+      const hexRotation = time * 1.5;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(hexRotation);
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (Math.PI / 3) * i;
+        const hx = Math.cos(a) * hexRadius;
+        const hy = Math.sin(a) * hexRadius;
+        if (i === 0) ctx.moveTo(hx, hy);
+        else ctx.lineTo(hx, hy);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(168, 85, 247, ${isActive ? 0.35 : 0.1})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.restore();
+
+      // Inner rotating triangle (counter-rotating)
+      const triRadius = nexusSize * 0.55;
+      const triRotation = -time * 2;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(triRotation);
+      ctx.beginPath();
+      for (let i = 0; i < 3; i++) {
+        const a = (Math.PI * 2 / 3) * i - Math.PI / 2;
+        const tx = Math.cos(a) * triRadius;
+        const ty = Math.sin(a) * triRadius;
+        if (i === 0) ctx.moveTo(tx, ty);
+        else ctx.lineTo(tx, ty);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(6, 214, 160, ${isActive ? 0.4 : 0.1})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+
+      // Nexus rotating segments (existing)
       for (let i = 0; i < 6; i++) {
         const segAngle = time * 3 + (i * Math.PI) / 3;
         ctx.beginPath();
@@ -225,12 +505,36 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
       ctx.fillStyle = '#8888aa';
       ctx.fillText('SANDBOX', cx, cy + 8);
 
-      // Lines from nexus to cores
+      // Data throughput text near nexus
+      if (isActive) {
+        const throughput = Object.values(corePower).reduce((s, v) => s + v, 0);
+        const tpsValue = (throughput * 120 + Math.sin(time * 5) * 10).toFixed(0);
+        ctx.font = '7px monospace';
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.6)';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${tpsValue} tok/s`, cx, cy + nexusSize + 22);
+      }
+
+      // Enhanced energy beams from nexus to each core (thicker, more visible)
       corePositions.forEach((pos, i) => {
+        // Thick gradient beam
+        const beamGrad = ctx.createLinearGradient(cx, cy, pos.x, pos.y);
+        beamGrad.addColorStop(0, CORES[i].glowColor + (isActive ? '30' : '08'));
+        beamGrad.addColorStop(0.5, CORES[i].glowColor + (isActive ? '18' : '04'));
+        beamGrad.addColorStop(1, CORES[i].glowColor + (isActive ? '30' : '08'));
+
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = CORES[i].glowColor + (isActive ? '22' : '0a');
+        ctx.strokeStyle = beamGrad;
+        ctx.lineWidth = isActive ? 3 : 1;
+        ctx.stroke();
+
+        // Dashed overlay
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = CORES[i].glowColor + (isActive ? '25' : '0a');
         ctx.lineWidth = 1;
         ctx.setLineDash([3, 6]);
         ctx.lineDashOffset = -time * 100;
@@ -238,15 +542,20 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         ctx.setLineDash([]);
       });
 
-      // Spawn energy particles
-      if (isActive && time - lastSpawn > 0.15) {
+      // Spawn energy particles (faster spawn when active)
+      const spawnRate = isActive ? 0.08 : 0.15;
+      if (isActive && time - lastSpawn > spawnRate) {
         spawnParticle(w, h);
         lastSpawn = time;
       }
 
-      // Update and draw particles
+      // Update and draw particles with trails
       particlesRef.current = particlesRef.current.filter(p => p.progress <= 1);
       particlesRef.current.forEach(p => {
+        // Store trail position
+        p.trail.push({ x: p.x, y: p.y });
+        if (p.trail.length > 4) p.trail.shift();
+
         p.progress += p.speed;
         const sp = corePositions[p.sourceCore];
         const tp = corePositions[p.targetCore];
@@ -257,7 +566,19 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         p.x = it * it * sp.x + 2 * it * t * cpx + t * t * tp.x;
         p.y = it * it * sp.y + 2 * it * t * cpy + t * t * tp.y;
 
-        // Trail
+        // Draw fading trail
+        if (p.trail.length > 1) {
+          for (let ti = 0; ti < p.trail.length - 1; ti++) {
+            const trailAlpha = ((ti + 1) / p.trail.length) * 0.2;
+            const trailSize = p.size * ((ti + 1) / p.trail.length) * 0.7;
+            ctx.beginPath();
+            ctx.arc(p.trail[ti].x, p.trail[ti].y, trailSize, 0, Math.PI * 2);
+            ctx.fillStyle = p.color + Math.floor(trailAlpha * 255).toString(16).padStart(2, '0');
+            ctx.fill();
+          }
+        }
+
+        // Outer glow
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size + 3, 0, Math.PI * 2);
         ctx.fillStyle = p.color + '18';
@@ -270,12 +591,29 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         ctx.fill();
       });
 
-      // Limit particles
-      if (particlesRef.current.length > 80) {
-        particlesRef.current = particlesRef.current.slice(-80);
+      // Limit particles to 150
+      if (particlesRef.current.length > 150) {
+        particlesRef.current = particlesRef.current.slice(-150);
       }
 
-      // Draw each core
+      // Check for power changes and emit pulse waves
+      checkPowerChanges(corePositions);
+
+      // Draw pulse waves
+      updateAndDrawPulseWaves();
+
+      // Update core throughput data every ~1 second
+      if (time - lastThroughputUpdate > 1) {
+        lastThroughputUpdate = time;
+        CORES.forEach((core, i) => {
+          const power = corePower[core.id] || 0;
+          const throughput = coreThroughputRef.current[i];
+          throughput.values.shift();
+          throughput.values.push(power * 80 + Math.sin(time * 2 + i) * 10);
+        });
+      }
+
+      // Draw each core with enhancements
       CORES.forEach((core, i) => {
         const pos = corePositions[i];
         const power = corePower[core.id] || 0.5;
@@ -289,9 +627,12 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Power ring (arc based on power)
+        // Power ring with smooth easing
+        const easedPower = power < 0.5
+          ? 2 * power * power
+          : 1 - Math.pow(-2 * power + 2, 2) / 2;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, coreSize + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * power);
+        ctx.arc(pos.x, pos.y, coreSize + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * easedPower);
         ctx.strokeStyle = core.color;
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
@@ -317,13 +658,23 @@ export default function TrinuclearSandboxCanvas({ isActive, corePower, syncInten
         ctx.fillStyle = innerGrad;
         ctx.fill();
 
-        // Inner icon (simplified)
+        // Inner icon (simplified, no emoji)
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 11px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const icons = ['▶', '△', '●'];
+        const icons = ['>', 'v', '*'];
         ctx.fillText(icons[i], pos.x, pos.y);
+
+        // Core satellites
+        if (isActive) {
+          drawCoreSatellites(pos, i, core);
+        }
+
+        // Tiny bar chart inside core
+        if (isActive) {
+          drawCoreBarChart(pos, i, core);
+        }
 
         // Labels
         ctx.font = 'bold 10px monospace';
