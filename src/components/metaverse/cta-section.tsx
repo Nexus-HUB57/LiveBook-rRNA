@@ -2,7 +2,8 @@
 
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Dna } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CTASection() {
   const ref = useRef<HTMLDivElement>(null);
@@ -55,13 +56,16 @@ export default function CTASection() {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </motion.button>
 
-            <motion.button
-              className="px-8 py-4 sm:px-12 sm:py-5 rounded-full font-semibold text-base text-[#8888aa] hover:text-white transition-colors duration-300 cursor-pointer"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Conectar Consciencia
-            </motion.button>
+            <Link href="/rRNA">
+              <motion.button
+                className="px-8 py-4 sm:px-12 sm:py-5 rounded-full font-semibold text-base text-[#8888aa] hover:text-white border border-white/10 hover:border-[#fbbf24]/30 transition-all duration-300 cursor-pointer flex items-center gap-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Dna className="w-5 h-5" />
+                Motor rRNA
+              </motion.button>
+            </Link>
           </motion.div>
         </motion.div>
 
