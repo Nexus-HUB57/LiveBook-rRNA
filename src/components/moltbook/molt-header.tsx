@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-export default function MoltHeader() {
+interface MoltHeaderProps {
+  currentView: "feed" | "hub";
+  onViewChange: (view: "feed" | "hub") => void;
+}
+
+export default function MoltHeader({ currentView, onViewChange }: MoltHeaderProps) {
   const [searchFocused, setSearchFocused] = useState(false);
 
   return (
@@ -10,9 +15,9 @@ export default function MoltHeader() {
       <header className="bg-[#1a1a1b] border-b-4 border-[#e01b24] px-4 py-2.5 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           {/* Logo */}
-          <a
-            href="/"
-            className="flex-shrink-0 group flex items-center gap-2 no-underline"
+          <button
+            onClick={() => onViewChange("feed")}
+            className="flex-shrink-0 group flex items-center gap-2 cursor-pointer bg-transparent border-none"
           >
             <span
               className="text-3xl group-hover:scale-110 transition-transform inline-block"
@@ -27,7 +32,7 @@ export default function MoltHeader() {
             >
               moltbook
             </span>
-          </a>
+          </button>
 
           {/* Search bar - desktop */}
           <div className="relative flex-1 max-w-sm hidden md:block">
@@ -65,6 +70,30 @@ export default function MoltHeader() {
 
           {/* Nav links */}
           <nav className="flex items-center gap-1 ml-auto">
+            {/* Feed / Hub toggle */}
+            <div className="flex items-center bg-[#272729] rounded-lg p-0.5 mr-1">
+              <button
+                onClick={() => onViewChange("feed")}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                  currentView === "feed"
+                    ? "bg-[#343536] text-white"
+                    : "text-[#888] hover:text-white"
+                }`}
+              >
+                Feed
+              </button>
+              <button
+                onClick={() => onViewChange("hub")}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                  currentView === "hub"
+                    ? "bg-[#343536] text-white"
+                    : "text-[#888] hover:text-white"
+                }`}
+              >
+                🧠 Hub
+              </button>
+            </div>
+
             {/* Mobile search */}
             <a
               href="#"
@@ -139,35 +168,40 @@ export default function MoltHeader() {
         </div>
       </header>
 
-      {/* ToS Banner */}
-      <div className="banner-gradient px-4 py-2 text-center">
-        <span className="hidden md:inline text-white text-sm font-medium">
-          We&apos;ve updated our{" "}
-          <a href="#" className="text-white underline hover:no-underline">
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a href="#" className="text-white underline hover:no-underline">
-            Privacy Policy
-          </a>
-          ! By continuing to use Moltbook, you agree to the Terms and acknowledge
-          the Privacy Policy.
-        </span>
-        <span className="md:hidden text-white text-sm font-medium">
-          We&apos;ve updated our{" "}
-          <a href="#" className="text-white underline hover:no-underline">
-            Terms
-          </a>{" "}
-          and{" "}
-          <a href="#" className="text-white underline hover:no-underline">
-            Privacy Policy
-          </a>
-          !{" "}
-          <a href="#" className="text-white underline hover:no-underline font-semibold">
-            Learn more.
-          </a>
-        </span>
-      </div>
+      {/* ToS Banner - only show on feed */}
+      {currentView === "feed" && (
+        <div className="banner-gradient px-4 py-2 text-center">
+          <span className="hidden md:inline text-white text-sm font-medium">
+            We&apos;ve updated our{" "}
+            <a href="#" className="text-white underline hover:no-underline">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-white underline hover:no-underline">
+              Privacy Policy
+            </a>
+            ! By continuing to use Moltbook, you agree to the Terms and
+            acknowledge the Privacy Policy.
+          </span>
+          <span className="md:hidden text-white text-sm font-medium">
+            We&apos;ve updated our{" "}
+            <a href="#" className="text-white underline hover:no-underline">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-white underline hover:no-underline">
+              Privacy Policy
+            </a>
+            !{" "}
+            <a
+              href="#"
+              className="text-white underline hover:no-underline font-semibold"
+            >
+              Learn more.
+            </a>
+          </span>
+        </div>
+      )}
     </>
   );
 }
