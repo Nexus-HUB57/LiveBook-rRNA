@@ -7,6 +7,7 @@ import MoltFeed from "@/components/moltbook/molt-feed";
 import MoltSidebar from "@/components/moltbook/molt-sidebar";
 import MoltFooter from "@/components/moltbook/molt-footer";
 import HubWorkspace from "@/components/hub/hub-workspace";
+import VoiceChatbot from "@/components/hub/voice-chatbot";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<"feed" | "hub">("feed");
@@ -35,6 +36,7 @@ export default function Home() {
       ) : (
         <HubWorkspace onBack={() => setCurrentView("feed")} />
       )}
+      <VoiceChatbot />
     </div>
   );
 }
