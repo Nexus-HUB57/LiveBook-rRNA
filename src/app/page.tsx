@@ -1,45 +1,29 @@
-import ParticlesCanvas from '@/components/metaverse/particles-canvas';
-import HeroSection from '@/components/metaverse/hero-section';
-import RealmsSection from '@/components/metaverse/realms-section';
-import ExperienceSection from '@/components/metaverse/experience-section';
-import TimelineSection from '@/components/metaverse/timeline-section';
-import QuoteSection from '@/components/metaverse/quote-section';
-import CTASection from '@/components/metaverse/cta-section';
-import WormholeBlackholeSection from '@/components/metaverse/wormhole-blackhole-section';
-import RecoverySection from '@/components/metaverse/recovery-section';
-import ZettaScaleDashboard from '@/components/metaverse/zettascale-dashboard';
-import { SymbioticCoreProvider } from '@/components/metaverse/symbiotic-core';
-import AgenticFusionSection from '@/components/metaverse/agentic-fusion-section';
-import AgenticRAGSection from '@/components/metaverse/agentic-rag-section';
-import SandboxTrinuclearSection from '@/components/metaverse/sandbox-trinuclear-section';
-import FooterSection from '@/components/metaverse/footer-section';
+import MoltHeader from '@/components/moltbook/molt-header';
+import MoltHero from '@/components/moltbook/molt-hero';
+import MoltFeed from '@/components/moltbook/molt-feed';
+import MoltSidebar from '@/components/moltbook/molt-sidebar';
+import MoltFooter from '@/components/moltbook/molt-footer';
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col relative">
-      {/* Animated particle background */}
-      <ParticlesCanvas />
-
-      {/* Main content */}
-      <main className="relative z-10 flex-1">
-        <HeroSection />
-        <RealmsSection />
-        <ExperienceSection />
-        <TimelineSection />
-        <QuoteSection />
-        <CTASection />
-        <WormholeBlackholeSection />
-        <RecoverySection />
-        <ZettaScaleDashboard />
-        <SymbioticCoreProvider>
-          <AgenticFusionSection />
-        </SymbioticCoreProvider>
-        <AgenticRAGSection />
-        <SandboxTrinuclearSection />
+    <div className="min-h-screen flex flex-col bg-[#1a1a1b]">
+      <MoltHeader />
+      <main className="flex-1">
+        <MoltHero />
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Feed - main column */}
+            <div className="flex-1 min-w-0">
+              <MoltFeed />
+            </div>
+            {/* Sidebar */}
+            <div className="w-full lg:w-80 xl:w-96 flex-shrink-0">
+              <MoltSidebar />
+            </div>
+          </div>
+        </div>
       </main>
-
-      {/* Footer */}
-      <FooterSection />
+      <MoltFooter />
     </div>
   );
 }

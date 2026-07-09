@@ -336,7 +336,7 @@ export function SymbioticCoreProvider({ children }: { children: ReactNode }) {
   });
 
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useEffect(() => { stateRef.current = state; }, [state]);
   const eventIdRef = useRef(0);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
