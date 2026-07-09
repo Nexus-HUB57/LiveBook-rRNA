@@ -60,3 +60,32 @@ Stage Summary:
 - 33 UTXOs unspent, block height 957329, preço $62,579/BTC
 - Build limpo, zero erros
 ---
+---
+Task ID: 2
+Agent: main
+Task: Validar chaves privadas HD e UTXOs não-gastos contra a mainnet
+
+Work Log:
+- Buscou 33 UTXOs reais via blockchain.info/unspent API
+- Instalou mnemonic/bip32utils/base58 para validação criptográfica
+- Executou 4 rounds de scripts de validação (validate_keys.py → validate_final.py)
+- Validou xprv↔xpub: mesma árvore (ident, pubkey, chain_code conferem) ✅
+- Validou pubkeys: caminho de derivação correto é m/0/i (5/5 primeiras conferem) ✅
+- Determinou que PRIMARY_ADDRESS é WATCH-ONLY (não derivável do xprv/xpub) ❌
+- Descobriu ACTIVE_ADDRESS tem 0.72440347 BTC real com 523 txs
+- Verificou 4 endereços importados na blockchain (3 vazios, 1 com 18 txs históricas)
+- Seed BIP39: non-standard (mnemonic.check()=false mas gera seed válido)
+- Removeu UTXO "spent" do dataset (estava listado como gasto, não é mais necessário)
+- Adicionou campo `confirmed` e `seedValid` e `derivationPath` às interfaces
+- Atualizou ACTIVE_ADDRESS_TX_COUNT de 200 para 523 (dado real)
+- Adicionou ACTIVE_ADDRESS_BALANCE = 72,440,347 sats
+- Atualizou UI: badges Watch-Only, On-Chain Validated, Non-Standard BIP39, High Activity
+- Build passou sem erros
+
+Stage Summary:
+- 33 UTXOs validados na mainnet, saldo 25.55448494 BTC
+- HD Wallet xprv↔xpub consistente, pubkeys em m/0/i, seed non-BIP39
+- Endereço primário é importado/watch-only (não controlado pelo HD wallet)
+- ACTIVE_ADDRESS: 0.72 BTC + 523 txs reais
+- Arquivos: bitcoin-data.ts reescrito, bitcoin-core.tsx atualizado
+---

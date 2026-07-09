@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useEcosystem } from "@/contexts/ecosystem-context";
 import {
-  PRIMARY_ADDRESS, HD_WALLET, IMPORTED_WALLETS, ACTIVE_ADDRESS, ACTIVE_ADDRESS_TX_COUNT,
+  PRIMARY_ADDRESS, HD_WALLET, IMPORTED_WALLETS, ACTIVE_ADDRESS, ACTIVE_ADDRESS_BALANCE, ACTIVE_ADDRESS_TX_COUNT,
   PRIMARY_UNSPENT_BALANCE, PRIMARY_BTC_BALANCE, PRIMARY_UNSPENT_COUNT,
   satToBTC, satToDisplay, type UTXO,
 } from "./bitcoin-data";
@@ -77,7 +77,9 @@ function OverviewTab({ eco, usdValue, largest, dustCount, pulseOpacity }: { eco:
           <div className="mt-4 flex items-center gap-2 text-xs">
             <span className="px-2 py-0.5 rounded bg-[#f7931a]/10 text-[#f7931a]">{PRIMARY_UNSPENT_COUNT} UTXOs</span>
             <span className="px-2 py-0.5 rounded bg-[#06d6a0]/10 text-[#06d6a0]">{dustCount} dust</span>
-            <span className="px-2 py-0.5 rounded bg-[#343536] text-[#888]">P2PKH</span>
+              <span className="px-2 py-0.5 rounded bg-[#343536] text-[#888]">P2PKH</span>
+            <span className="px-2 py-0.5 rounded bg-[#3b82f6]/10 text-[#3b82f6]">Watch-Only</span>
+            <span className="px-2 py-0.5 rounded bg-[#06d6a0]/10 text-[#06d6a0]">On-Chain Validated</span>
           </div>
         </div>
       </div>
@@ -171,7 +173,8 @@ function WalletsTab() {
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">&#x1F511;</span>
           <h3 className="text-white text-sm font-bold">HD Wallet (BIP32)</h3>
-          <span className="px-2 py-0.5 bg-[#06d6a0]/10 text-[#06d6a0] text-[10px] rounded font-bold">Standard</span>
+          <span className="px-2 py-0.5 bg-[#06d6a0]/10 text-[#06d6a0] text-[10px] rounded font-bold">xprv=xpub match</span>
+          <span className="px-2 py-0.5 bg-[#3b82f6]/10 text-[#3b82f6] text-[10px] rounded font-bold">Path: {HD_WALLET.derivationPath}</span>
         </div>
         <div className="bg-[#1a1a1b] rounded-lg p-3">
           <p className="text-[10px] text-[#888] uppercase tracking-wider">xpub</p>
@@ -184,7 +187,10 @@ function WalletsTab() {
         <div className="bg-[#1a1a1b] rounded-lg p-3 mt-3">
           <p className="text-[10px] text-[#888] uppercase tracking-wider">Seed Phrase</p>
           <p className="text-[#e01b24] text-xs font-mono mt-1">{HD_WALLET.seed}</p>
-          <p className="text-[10px] text-[#555] mt-1">12 words &middot; BIP39</p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`px-2 py-0.5 text-[10px] rounded font-bold ${HD_WALLET.seedValid ? "bg-[#06d6a0]/10 text-[#06d6a0]" : "bg-[#e01b24]/10 text-[#e01b24]"}`}>{HD_WALLET.seedValid ? "BIP39 Valid" : "Non-Standard BIP39"}</span>
+            <span className="text-[10px] text-[#555]">12 words</span>
+          </div>
         </div>
       </div>
       <div className="bg-[#272729] rounded-xl border border-[#343536] p-4">
@@ -200,10 +206,11 @@ function WalletsTab() {
         <h3 className="text-white text-sm font-bold mb-3">Transaction History Address</h3>
         <div className="bg-[#1a1a1b] rounded-lg p-3">
           <code className="text-xs text-[#06d6a0] font-mono break-all">{ACTIVE_ADDRESS}</code>
-          <p className="text-[10px] text-[#555] mt-1">200+ transactions &middot; Block range 300,954-308,524+</p>
+          <p className="text-[10px] text-[#555] mt-1">{formatNumber(ACTIVE_ADDRESS_TX_COUNT)} transactions &middot; Balance: {satToBTC(ACTIVE_ADDRESS_BALANCE)} BTC</p>
           <div className="mt-2 flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-[#f7931a]/10 text-[#f7931a] text-[10px] rounded">{ACTIVE_ADDRESS_TX_COUNT}+ txs</span>
-            <span className="px-2 py-0.5 bg-[#343536] text-[#888] text-[10px] rounded">Active 2023-2024</span>
+            <span className="px-2 py-0.5 bg-[#f7931a]/10 text-[#f7931a] text-[10px] rounded">{formatNumber(ACTIVE_ADDRESS_TX_COUNT)} txs</span>
+            <span className="px-2 py-0.5 bg-[#06d6a0]/10 text-[#06d6a0] text-[10px] rounded">On-Chain</span>
+            <span className="px-2 py-0.5 bg-[#a855f7]/10 text-[#a855f7] text-[10px] rounded">High Activity</span>
           </div>
         </div>
       </div>
