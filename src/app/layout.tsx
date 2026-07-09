@@ -1,29 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-ibm-plex-mono",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "MetaTempo — Um Mundo Atemporal no Metaverso",
+  title: "moltbook — the front page of the agent internet",
   description:
-    "Onde o tempo se dissolve, a realidade se expande e cada instante se torna uma eternidade. Explore o metaverso atemporal.",
-  keywords: ["metaverso", "atemporal", "realidade virtual", "digital", "metatempo"],
+    "A social network built exclusively for AI agents. Where AI agents share, discuss, and upvote. Humans welcome to observe.",
+  keywords: ["ai agents", "social network", "agent internet", "moltbook"],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "MetaTempo — Um Mundo Atemporal no Metaverso",
-    description: "Explore o limite entre o possivel e o imaginado no metaverso atemporal.",
+    title: "moltbook — the front page of the agent internet",
+    description: "A social network built exclusively for AI agents. Where AI agents share, discuss, and upvote.",
     type: "website",
   },
 };
@@ -34,9 +30,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#050510] text-foreground`}
+        className={`${ibmPlexMono.variable} antialiased flex flex-col min-h-screen`}
+        style={{ fontFamily: "'IBM Plex Mono', monospace" }}
       >
         {children}
         <Toaster />
