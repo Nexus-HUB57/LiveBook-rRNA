@@ -6,7 +6,7 @@ import {
   PRIMARY_UTXOS, PRIMARY_ADDRESS, HD_WALLET, IMPORTED_WALLETS,
   ACTIVE_ADDRESS, ACTIVE_ADDRESS_TX_COUNT,
   PRIMARY_UNSPENT_BALANCE, PRIMARY_UNSPENT_COUNT, PRIMARY_BTC_BALANCE,
-  getTotalBalance, satToDisplay, type UTXO,
+  satToDisplay, type UTXO,
 } from "@/components/bitcoin/bitcoin-data";
 
 export type ViewType =
@@ -94,8 +94,8 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
   const [currentView, setCurrentView] = useState<ViewType>("feed");
   const [voiceMessages, setVoiceMessages] = useState<VoiceMessage[]>([]);
   const [utxos] = useState<UTXO[]>(PRIMARY_UTXOS);
-  const [btcPrice, setBtcPrice] = useState(54750);
-  const [blockHeight, setBlockHeight] = useState(910854);
+  const [btcPrice, setBtcPrice] = useState(62579);
+  const [blockHeight, setBlockHeight] = useState(957329);
   const [mempoolTxCount, setMempoolTxCount] = useState(48293);
   const [autonomousEvents, setAutonomousEvents] = useState<AutonomousEvent[]>([]);
   const [organismPulse, setOrganismPulse] = useState(0);

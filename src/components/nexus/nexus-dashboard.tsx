@@ -23,7 +23,7 @@ export default function NexusDashboard() {
           </div>
           <div className="bg-[#272729] rounded-xl p-4 border border-[#343536]">
             <p className="text-2xl">&#x20BF;</p>
-            <p className="text-[#06d6a0] text-sm font-bold mt-1">2.5489</p>
+            <p className="text-[#06d6a0] text-sm font-bold mt-1">25.5545</p>
             <p className="text-[10px] text-[#666]">BTC Custody</p>
           </div>
         </div>

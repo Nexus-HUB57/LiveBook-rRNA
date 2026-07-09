@@ -52,6 +52,8 @@ export const PRIMARY_UTXOS: UTXO[] = [
   { txid: "201bc3890f0f12c6eb31460d455d86e7616bb6b018b07759e7e2d18745c8214d", vout: 18, value: 121970193, status: "unspent" },
   { txid: "9ee8addb633469bd2be840ab3b23db7f5fa5906c72a894a19e4890b24e38cbf9", vout: 24, value: 110031837, status: "unspent" },
   { txid: "ec193509df9db918f2d926195e82f352e9822ff1179818436b356752a22fa63d", vout: 27, value: 149742650, status: "unspent" },
+  { txid: "c1bd8d84adc95e29ccab4c2dcab041237c43848227c8cee00fa249238ac00a3b", vout: 342, value: 546, status: "unspent" },
+  { txid: "a8e72ba09454937f32812c6d46c5bf9458234acddda4b23d6ed454220260e461", vout: 0, value: 548, status: "unspent" },
   { txid: "f40a2e972408bf24b9e707710de19563258f418866c7080fefeb3be4eafdf7fd", vout: 0, value: 600, status: "unspent" },
   { txid: "2fe796c33a95e15d86534d3bc737ec85c6500f088e4a85b1aacda29f0e52799c", vout: 0, value: 600, status: "unspent" },
   { txid: "d8d4d3e2610b3844cf87759fd0a3b94769c5aafda855a19dd71b319eb55671e0", vout: 0, value: 600, status: "unspent" },
@@ -102,6 +104,10 @@ export const IMPORTED_WALLETS: WalletAddress[] = [
 
 export const ACTIVE_ADDRESS = "113aNq2MZDE2HFKsUe7uXLNrfnF5iSHQug";
 export const ACTIVE_ADDRESS_TX_COUNT = 200;
+
+export function getTotalBalance(utxos: UTXO[]): number {
+  return utxos.filter(u => u.status === "unspent").reduce((s, u) => s + u.value, 0);
+}
 
 export function satToBTC(sats: number): string {
   return (sats / 100000000).toFixed(8);

@@ -1,0 +1,29 @@
+[
+  {
+    "url": "https://finance.yahoo.com/quote/BTC-USD/history",
+    "name": "Bitcoin USD PRICE (BTC-USD) - Yahoo Finance",
+    "snippet": "Bitcoin USD PRICE (BTC-USD) ; Jul 8, 2026, 63,293.52, 63,706.89 ; Jul 7, 2026, 63,994.60, 64,257.63 ; Jul 6, 2026, 63,551.02, 64,597.57 ; Jul 5, 2026, 63,089.06 ...",
+    "host_name": "finance.yahoo.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://fortune.com/article/price-of-bitcoin-07-06-2026",
+    "name": "Current price of Bitcoin for July 6, 2026 - Fortune",
+    "snippet": "At 8:45 a.m. Eastern Time on July 6, 2026, the price of Bitcoin (1 BTC) is $61,934.50. That marks a $752.36 decrease from yesterday ...",
+    "host_name": "fortune.com",
+    "rank": 1,
+    "date": "Jul 6, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.macrotrends.net/3230/btcusd-bitcoin-daily-price-chart",
+    "name": "BTCUSD - Bitcoin Daily Price Chart (2014-2026) - Macrotrends",
+    "snippet": "Historical Chart · Annual Change.",
+    "host_name": "www.macrotrends.net",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  }
+]
