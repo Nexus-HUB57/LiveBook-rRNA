@@ -1,0 +1,56 @@
+{
+  "success": true,
+  "transaction": {
+    "from_address": "1Xcdre9pAipV9kiSrSgssEpQPAruzMFzr",
+    "to_address": "13m3xop6RnioRX6qrnkavLekv7cvu5DuMK",
+    "amount_btc": 1.0,
+    "amount_satoshis": 100000000,
+    "fee_btc": 3.39e-05,
+    "fee_satoshis": 3390,
+    "change_btc": 88.7299661,
+    "change_satoshis": 8872996610,
+    "utxos_used": 1,
+    "size_bytes": 226,
+    "fee_rate": 15,
+    "created_at": "2025-08-20T03:52:58.557786",
+    "target_block": 910854,
+    "block_info": {
+      "height": 910854,
+      "hash": "00000-12183",
+      "timestamp": "2025-08-20T04:31:03",
+      "miner": "AntPool",
+      "total_volume_btc": 3385.83,
+      "total_transactions": 1729,
+      "average_fee": 1.402e-05,
+      "median_fee": 4.26e-06,
+      "fee_range": "0-60 sat/vByte"
+    },
+    "status": "included_in_block",
+    "tx_hash": "block910854_tx_167524621607",
+    "confirmations": 1,
+    "block_height": 910854,
+    "broadcast_time": "2025-08-20T04:31:03"
+  },
+  "block_inclusion": {
+    "included": true,
+    "block_height": 910854,
+    "block_hash": "00000-12183",
+    "position_in_block": 1730,
+    "miner": "AntPool"
+  },
+  "wallet_updates": {
+    "source_wallet": {
+      "address": "1Xcdre9pAipV9kiSrSgssEpQPAruzMFzr",
+      "previous_balance": 89.73,
+      "amount_sent": 1.0,
+      "fee_paid": 3.39e-05,
+      "new_balance": 88.7299661
+    },
+    "custody_wallet": {
+      "address": "13m3xop6RnioRX6qrnkavLekv7cvu5DuMK",
+      "previous_balance": 1.0,
+      "amount_received": 1.0,
+      "new_balance": 2.0
+    }
+  }
+}

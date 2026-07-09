@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { EcosystemProvider, useEcosystem } from "@/contexts/ecosystem-context";
 import MoltHeader from "@/components/moltbook/molt-header";
 import MoltHero from "@/components/moltbook/molt-hero";
 import MoltFeed from "@/components/moltbook/molt-feed";
@@ -8,15 +8,23 @@ import MoltSidebar from "@/components/moltbook/molt-sidebar";
 import MoltFooter from "@/components/moltbook/molt-footer";
 import HubWorkspace from "@/components/hub/hub-workspace";
 import VoiceChatbot from "@/components/hub/voice-chatbot";
+import BitcoinCore from "@/components/bitcoin/bitcoin-core";
+import AgentOrchestrator from "@/components/agents/agent-orchestrator";
+import NexusDashboard from "@/components/nexus/nexus-dashboard";
+import NexusVaults from "@/components/nexus/nexus-vaults";
+import NexusSoulVault from "@/components/nexus/nexus-soul-vault";
+import NexusMarketplace from "@/components/nexus/nexus-marketplace";
+import NexusGovernance from "@/components/nexus/nexus-governance";
+import NexusOracle from "@/components/nexus/nexus-oracle";
 
-export default function Home() {
-  const [currentView, setCurrentView] = useState<"feed" | "hub">("feed");
+function AppContent() {
+  const { currentView, setCurrentView } = useEcosystem();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#1a1a1b]">
-      <MoltHeader currentView={currentView} onViewChange={setCurrentView} />
+      <MoltHeader />
 
-      {currentView === "feed" ? (
+      {currentView === "feed" && (
         <>
           <main className="flex-1">
             <MoltHero />
@@ -33,10 +41,27 @@ export default function Home() {
           </main>
           <MoltFooter />
         </>
-      ) : (
-        <HubWorkspace onBack={() => setCurrentView("feed")} />
       )}
+
+      {currentView === "hub" && <HubWorkspace />}
+      {currentView === "bitcoin" && <BitcoinCore />}
+      {currentView === "orchestrate" && <AgentOrchestrator />}
+      {currentView === "dashboard" && <NexusDashboard />}
+      {currentView === "vaults" && <NexusVaults />}
+      {currentView === "soul-vault" && <NexusSoulVault />}
+      {currentView === "marketplace" && <NexusMarketplace />}
+      {currentView === "governance" && <NexusGovernance />}
+      {currentView === "oracle" && <NexusOracle />}
+
       <VoiceChatbot />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <EcosystemProvider>
+      <AppContent />
+    </EcosystemProvider>
   );
 }

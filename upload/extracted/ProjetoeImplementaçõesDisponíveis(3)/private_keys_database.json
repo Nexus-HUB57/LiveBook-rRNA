@@ -1,0 +1,103 @@
+{
+  "metadata": {
+    "created_at": "2025-08-17T04:00:00.000000",
+    "last_updated": "2025-08-17T19:04:58.115598",
+    "version": "1.0",
+    "total_keys": 1,
+    "encryption": "AES-256",
+    "backup_enabled": true
+  },
+  "private_keys": {
+    "genesis_wallet": {
+      "address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      "private_key_wif": "5KJvsngHeMpm884wtkJNzQGaCErckhHJBGFsvd3VyK5qMZXj3hS",
+      "public_key": "0478d430274f8c5ec1321338151e9f27f4c676a008bdf8638d07c0b6be9ab35c71a1518063243acd4dfe96b66e3f2ec8013c8e072cd09b3834a19f81f659cc3455",
+      "balance_btc": 0.00395531,
+      "balance_satoshis": 395531,
+      "utxo_count": 203,
+      "imported_from": "system_generated",
+      "imported_at": "2025-08-17T04:00:00.000000",
+      "last_balance_check": "2025-08-17T03:55:00.000000",
+      "status": "active",
+      "network": "mainnet",
+      "wallet_type": "p2pkh",
+      "notes": "Genesis block wallet - Test purposes only"
+    },
+    "custody_wallet": {
+      "address": "13m3xop6RnioRX6qrnkavLekv7cvu5DuMK",
+      "private_key_wif": "ENCRYPTED_KEY_PLACEHOLDER",
+      "public_key": "ENCRYPTED_PUBKEY_PLACEHOLDER",
+      "balance_btc": 0.0,
+      "balance_satoshis": 0,
+      "utxo_count": 0,
+      "imported_from": "binance_custody",
+      "imported_at": "2025-08-17T04:00:00.000000",
+      "last_balance_check": "2025-08-17T03:55:00.000000",
+      "status": "custody",
+      "network": "mainnet",
+      "wallet_type": "p2sh",
+      "notes": "Binance custody wallet - Production use"
+    },
+    "wallet_969a08f0": {
+      "address": "1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T",
+      "private_key_wif": "Z0FBQUFBQm9vbUFhdlJzLXJITHVKNzJtTVE5cTZyQWxlRjN0OWkzbHlOVWJwdXNNZDJRQ0IxOTRpOHlRSU1wRktVaTdIeXJqUHpRYko1UHp0RDZfYTZSQkN2WmVYZHo5dkhRenNSMEtCbzB1UVh5UHhPcWFhUy1GUEZRN0FoRnIwVXBVOWk4ckZqakhBSXJkTHFEdkRPamdWQ0xRVl9SWnpBPT0=",
+      "public_key": "ENCRYPTED_PUBKEY_PLACEHOLDER",
+      "balance_btc": 0.0,
+      "balance_satoshis": 0,
+      "utxo_count": 0,
+      "imported_from": "manual_import",
+      "imported_at": "2025-08-17T19:04:58.114854",
+      "last_balance_check": null,
+      "status": "active",
+      "network": "mainnet",
+      "wallet_type": "p2pkh",
+      "notes": "Chave de teste"
+    }
+  },
+  "imported_files": {
+    "pasted_content.txt": {
+      "file_path": "/home/ubuntu/upload/pasted_content.txt",
+      "imported_at": "2025-08-17T04:00:00.000000",
+      "addresses_found": 0,
+      "keys_extracted": 0,
+      "status": "processed"
+    },
+    "pasted_content_2.txt": {
+      "file_path": "/home/ubuntu/upload/pasted_content_2.txt",
+      "imported_at": "2025-08-17T04:00:00.000000",
+      "addresses_found": 0,
+      "keys_extracted": 0,
+      "status": "processed"
+    },
+    "304.dat": {
+      "file_path": "/home/ubuntu/upload/304.dat.txt",
+      "imported_at": "2025-08-17T04:00:00.000000",
+      "addresses_found": 0,
+      "keys_extracted": 0,
+      "status": "processed"
+    },
+    "2000.dat": {
+      "file_path": "/home/ubuntu/upload/2000.dat",
+      "imported_at": "2025-08-17T04:00:00.000000",
+      "addresses_found": 0,
+      "keys_extracted": 0,
+      "status": "processed"
+    }
+  },
+  "security": {
+    "encryption_enabled": true,
+    "backup_frequency": "daily",
+    "last_backup": "2025-08-17T19:04:58.115591",
+    "access_log": [],
+    "failed_attempts": 0,
+    "locked_until": null
+  },
+  "statistics": {
+    "total_wallets": 3,
+    "active_wallets": 2,
+    "custody_wallets": 1,
+    "total_balance_btc": 0.00395531,
+    "total_balance_usd": 119.66,
+    "last_sync": "2025-08-17T04:00:00.000000"
+  }
+}

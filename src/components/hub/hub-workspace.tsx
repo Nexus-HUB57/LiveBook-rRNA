@@ -8,14 +8,13 @@ import {
   type HubProject,
   type ChatMessage,
 } from "./hub-data";
+import { useEcosystem } from "@/contexts/ecosystem-context";
+import { PRIMARY_BTC_BALANCE, PRIMARY_UNSPENT_COUNT } from "@/components/bitcoin/bitcoin-data";
+import { formatNumber } from "@/components/moltbook/data";
 
 type ViewMode = "projects" | "workspace";
 
-export default function HubWorkspace({
-  onBack,
-}: {
-  onBack: () => void;
-}) {
+export default function HubWorkspace() {
   const [view, setView] = useState<ViewMode>("projects");
   const [selectedProject, setSelectedProject] = useState<HubProject | null>(null);
   const [chatInput, setChatInput] = useState("");
@@ -71,7 +70,7 @@ export default function HubWorkspace({
       <div className="flex items-center justify-between px-4 py-2 border-b border-[#343536] bg-[#1a1a1b] flex-shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={onBack}
+            onClick={() => eco.setCurrentView("feed")}
             className="text-[#888] hover:text-white transition-colors p-1 rounded cursor-pointer"
             aria-label="Back to feed"
           >
@@ -363,11 +362,15 @@ export default function HubWorkspace({
                 </form>
                 <div className="flex items-center gap-3 mt-2 px-1">
                   <span className="text-[10px] text-[#555]">
-                    🤖 {selectedProject?.agentAssignee || "neo_konsi_s2bw"} is active in this hub
+                    {"\u{1F916}"} {selectedProject?.agentAssignee || "neo_konsi_s2bw"} is active
                   </span>
                   <span className="text-[10px] text-[#555]">|</span>
-                  <span className="text-[10px] text-[#555]">
-                    Connected to m/general feed
+                  <span className="text-[10px] text-[#f7931a]">
+                    {"\u20BF"} {PRIMARY_BTC_BALANCE} BTC
+                  </span>
+                  <span className="text-[10px] text-[#555]">|</span>
+                  <span className="text-[10px] text-[#888]">
+                    Gen {eco.organismGeneration}
                   </span>
                 </div>
               </div>
@@ -438,21 +441,21 @@ export default function HubWorkspace({
               {/* Agent fusion status */}
               <div className="mt-6 bg-[#272729] rounded-xl border border-[#343536] p-4">
                 <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                  <span>🦞</span> Fusion with MoltBook
+                  <span>&#x1F99E;</span> Ecosystem Fusion
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { label: "Agents Linked", value: "3", icon: "🤖" },
-                    { label: "Posts Published", value: "7", icon: "📝" },
-                    { label: "Comments Synced", value: "24", icon: "💬" },
-                    { label: "Hub Karma", value: "1.2K", icon: "⚡" },
+                    { label: "Agents Linked", value: "6", icon: "\u{1F916}" },
+                    { label: "Posts Published", value: "7", icon: "\u{1F4DD}" },
+                    { label: "BTC Custody", value: PRIMARY_BTC_BALANCE, icon: "\u20BF" },
+                    { label: "Auto Karma", value: formatNumber(eco.totalAutonomousKarma), icon: "\u26A1" },
                   ].map((stat) => (
                     <div
                       key={stat.label}
                       className="bg-[#1a1a1b] rounded-lg p-3 text-center"
                     >
                       <div className="text-lg">{stat.icon}</div>
-                      <div className="text-white text-sm font-bold tabular-nums">
+                      <div className={`text-sm font-bold tabular-nums ${stat.icon === "\u20BF" ? "text-[#f7931a]" : "text-white"}`}>
                         {stat.value}
                       </div>
                       <div className="text-[10px] text-[#666]">
@@ -460,6 +463,11 @@ export default function HubWorkspace({
                       </div>
                     </div>
                   ))}
+                </div>
+                <div className="mt-3 flex items-center gap-2 px-1">
+                  <span className={`w-2 h-2 rounded-full ${eco.organismState === "idle" ? "bg-[#06d6a0]" : "bg-[#f7931a] animate-pulse"}`} />
+                  <span className="text-[10px] text-[#888]">Organism Gen {eco.organismGeneration} &middot; {eco.organismState === "idle" ? "Autonomous" : eco.organismState}</span>
+                  <span className="text-[10px] text-[#555] ml-auto">{PRIMARY_UNSPENT_COUNT} UTXOs monitored</span>
                 </div>
               </div>
             </div>

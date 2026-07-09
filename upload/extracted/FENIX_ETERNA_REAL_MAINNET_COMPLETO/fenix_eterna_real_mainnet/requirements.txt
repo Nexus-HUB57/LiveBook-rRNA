@@ -1,0 +1,110 @@
+# Fênix Eterna - Bitcoin Real Mainnet
+# Dependências Python para operações Bitcoin reais
+
+# Requisições HTTP para APIs Bitcoin
+requests>=2.28.0
+
+# Criptografia para assinatura de transações
+cryptography>=3.4.8
+ecdsa>=0.18.0
+hashlib-compat>=1.0.0
+
+# Manipulação de dados Bitcoin
+base58>=2.1.1
+bech32>=1.2.0
+
+# Processamento JSON
+jsonschema>=4.0.0
+
+# Logging avançado
+colorlog>=6.6.0
+
+# Utilitários de sistema
+python-dotenv>=0.19.0
+schedule>=1.1.0
+
+# Validação de dados
+validators>=0.18.2
+
+# Manipulação de tempo
+python-dateutil>=2.8.2
+
+# Compressão e arquivos
+zipfile36>=0.1.3
+
+# Monitoramento
+psutil>=5.8.0
+
+# Backup e segurança
+cryptodome>=3.15.0
+
+# Interface web (opcional)
+flask>=2.0.0
+flask-cors>=3.0.10
+
+# Processamento assíncrono
+asyncio-mqtt>=0.11.0
+
+# Validação Bitcoin específica
+bitcoin-utils>=0.1.0
+segwit-addr>=1.2.0
+
+# Bibliotecas matemáticas
+numpy>=1.21.0
+
+# Manipulação de arquivos
+pathlib2>=2.3.6
+
+# Configurações
+configparser>=5.2.0
+
+# Testes (desenvolvimento)
+pytest>=6.2.0
+pytest-asyncio>=0.18.0
+
+# Documentação
+sphinx>=4.0.0
+
+# Qualidade de código
+flake8>=4.0.0
+black>=22.0.0
+
+# Segurança adicional
+pycryptodome>=3.15.0
+keyring>=23.0.0
+
+# Monitoramento de rede
+ping3>=4.0.0
+speedtest-cli>=2.1.3
+
+# Utilitários Bitcoin avançados
+bit>=0.8.0
+bitcoinlib>=0.12.0
+
+# Processamento paralelo
+concurrent-futures>=3.1.1
+threading2>=0.1.2
+
+# Validação de entrada
+cerberus>=1.3.4
+marshmallow>=3.14.0
+
+# Cache e performance
+cachetools>=4.2.0
+memory-profiler>=0.60.0
+
+# Logs estruturados
+structlog>=21.5.0
+python-json-logger>=2.0.0
+
+# Notificações
+plyer>=2.1.0
+
+# Backup em nuvem (opcional)
+boto3>=1.20.0
+google-cloud-storage>=2.0.0
+
+# Monitoramento avançado
+prometheus-client>=0.12.0
+grafana-api>=1.0.3
+

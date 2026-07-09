@@ -1,0 +1,16 @@
+{
+  "txid": "sample_tx_for_broadcast_demo",
+  "raw_hex": "0200000001f2b3eb2deb76566e7324307cd47c35eeb88413f971d88519859f1c5b344aa4a7010000006a473044022078b91d8b6b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b02207f8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b01210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ffffffff02102700000000000017a914b7fcead2c0b5b5c0c0c0c0c0c0c0c0c0c0c0c0c087d0fd20010000000017a914389ffce9cd9ae88dcc0631e88a821ffdbe9bfe2687000000000",
+  "amount_btc": 0.0001,
+  "amount_satoshis": 10000,
+  "fee_satoshis": 3000,
+  "from_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+  "to_address": "13m3xop6RnioRX6qrnkavLekv7cvu5DuMK",
+  "change_satoshis": 107000,
+  "created_at": "2025-08-21T07:40:02.741596",
+  "status": "ready_for_broadcast",
+  "network": "mainnet",
+  "size_bytes": 221,
+  "fee_rate_sat_per_byte": 13.574660633484163,
+  "note": "Transa\u00e7\u00e3o de exemplo para demonstra\u00e7\u00e3o do processo de broadcast"
+}

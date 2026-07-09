@@ -1,0 +1,164 @@
+{
+  "consolidation_summary": {
+    "total_wallets": 5,
+    "total_balance_btc": 31089.83890698,
+    "estimated_fees_btc": 0.0005,
+    "net_consolidation_btc": 31089.83840698,
+    "estimated_value_usd": 932695152.2094,
+    "custody_address": "13m3xop6RnioRX6qrnkavLekv7cvu5DuMK"
+  },
+  "priority_breakdown": {
+    "critical": {
+      "count": 1,
+      "total_btc": 31000.07534182,
+      "wallets": [
+        {
+          "address": "12ib7dApVFvg82TXKycWBNpN8kFyiAN1dr",
+          "balance_btc": 31000.07534182,
+          "balance_satoshi": 3100007534182,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184878",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "CRITICAL"
+        }
+      ]
+    },
+    "high": {
+      "count": 1,
+      "total_btc": 89.73000548,
+      "wallets": [
+        {
+          "address": "1Xcdre9pAipV9kiSrSgssEpQPAruzMFzr",
+          "balance_btc": 89.73000548,
+          "balance_satoshi": 8973000548,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184780",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "HIGH"
+        }
+      ]
+    },
+    "medium": {
+      "count": 0,
+      "total_btc": 0,
+      "wallets": []
+    },
+    "low": {
+      "count": 3,
+      "total_btc": 0.03355968,
+      "wallets": [
+        {
+          "address": "1CvtJkfyErRDdmrv5SSv3tHVZBxt26GJV7",
+          "balance_btc": 0.01078838,
+          "balance_satoshi": 1078838,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184707",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "LOW"
+        },
+        {
+          "address": "1KFHE7w8BhaENAswwryaoccDb6qcT6DbYY",
+          "balance_btc": 0.0032613,
+          "balance_satoshi": 326130,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184812",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "LOW"
+        },
+        {
+          "address": "1299FyEzJoPZbaKJUnpAVKNzwKPMUADAzu",
+          "balance_btc": 0.01951,
+          "balance_satoshi": 1951000,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184841",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "LOW"
+        }
+      ]
+    }
+  },
+  "transfer_phases": [
+    {
+      "phase": 1,
+      "name": "CR\u00cdTICA - Grandes Volumes",
+      "wallets": [
+        {
+          "address": "12ib7dApVFvg82TXKycWBNpN8kFyiAN1dr",
+          "balance_btc": 31000.07534182,
+          "balance_satoshi": 3100007534182,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184878",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "CRITICAL"
+        }
+      ],
+      "total_btc": 31000.07534182,
+      "execution_order": "immediate",
+      "description": "Carteiras com saldo >= 1000 BTC - Execu\u00e7\u00e3o imediata"
+    },
+    {
+      "phase": 2,
+      "name": "ALTA - Volumes Significativos",
+      "wallets": [
+        {
+          "address": "1Xcdre9pAipV9kiSrSgssEpQPAruzMFzr",
+          "balance_btc": 89.73000548,
+          "balance_satoshi": 8973000548,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184780",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "HIGH"
+        }
+      ],
+      "total_btc": 89.73000548,
+      "execution_order": "within_24h",
+      "description": "Carteiras com saldo >= 10 BTC - Execu\u00e7\u00e3o em 24h"
+    },
+    {
+      "phase": 4,
+      "name": "BAIXA - Pequenos Volumes",
+      "wallets": [
+        {
+          "address": "1CvtJkfyErRDdmrv5SSv3tHVZBxt26GJV7",
+          "balance_btc": 0.01078838,
+          "balance_satoshi": 1078838,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184707",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "LOW"
+        },
+        {
+          "address": "1KFHE7w8BhaENAswwryaoccDb6qcT6DbYY",
+          "balance_btc": 0.0032613,
+          "balance_satoshi": 326130,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184812",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "LOW"
+        },
+        {
+          "address": "1299FyEzJoPZbaKJUnpAVKNzwKPMUADAzu",
+          "balance_btc": 0.01951,
+          "balance_satoshi": 1951000,
+          "api_source": "BlockStream",
+          "status": "ready_for_transfer",
+          "integration_timestamp": "2025-08-16T22:32:05.184841",
+          "private_key_status": "required_for_transfer",
+          "transfer_priority": "LOW"
+        }
+      ],
+      "total_btc": 0.03355968,
+      "execution_order": "when_convenient",
+      "description": "Carteiras com saldo < 1 BTC - Execu\u00e7\u00e3o quando conveniente"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "system": {
+    "name": "Fênix Eterna",
+    "version": "1.0.0-REAL",
+    "protocol_tsra": true,
+    "mainnet_only": true,
+    "simulations_prohibited": true,
+    "description": "Sistema Bitcoin Real Mainnet - Zero Simulações"
+  },
+  "security": {
+    "password": "Benjamin2020*1981$",
+    "encryption": "AES-256",
+    "protocol_caisk": true,
+    "protocol_fdr": true,
+    "protocol_tsra": true
+  },
+  "bitcoin": {
+    "network": "mainnet",
+    "custodial_address": "13m3xop6RnioRX6qrnkavLekv7cvu5DuMK",
+    "min_confirmations": 1,
+    "dust_limit": 546,
+    "max_fee_rate": 100
+  },
+  "apis": {
+    "primary": {
+      "name": "mempool.space",
+      "base_url": "https://mempool.space/api",
+      "endpoints": {
+        "address_info": "/address/{address}",
+        "address_utxo": "/address/{address}/utxo",
+        "fees": "/v1/fees/recommended",
+        "broadcast": "/tx"
+      }
+    },
+    "secondary": {
+      "name": "blockstream.info",
+      "base_url": "https://blockstream.info/api",
+      "endpoints": {
+        "address_info": "/address/{address}",
+        "address_utxo": "/address/{address}/utxo",
+        "broadcast": "/tx"
+      }
+    },
+    "backup": {
+      "name": "blockchain.info",
+      "base_url": "https://api.blockchain.info",
+      "endpoints": {
+        "address_info": "/rawaddr/{address}",
+        "unspent": "/unspent?active={address}",
+        "broadcast": "/pushtx"
+      }
+    }
+  },
+  "automation": {
+    "enabled": true,
+    "amount_per_transfer": 1.0,
+    "interval_minutes": 60,
+    "max_transfers": 100,
+    "auto_fee_calculation": true,
+    "fee_priority": "fast"
+  },
+  "fdr": {
+    "enabled": true,
+    "total_balance": 2000.0,
+    "wallets": [
+      {
+        "id": "fdr_001",
+        "address": "1FDRAddress1234567890abcdefghijklmnopqrstuv",
+        "private_key": "KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU73sVHnoWn",
+        "balance": 0,
+        "processed": false,
+        "priority": 1
+      },
+      {
+        "id": "fdr_002",
+        "address": "1FDRAddress2345678901bcdefghijklmnopqrstuvw",
+        "private_key": "L1aW4aubDFB7yfras2S1mN3bqg9nwySY8nkoLmJebSLD5BWv3ENZ",
+        "balance": 0,
+        "processed": false,
+        "priority": 2
+      },
+      {
+        "id": "fdr_003",
+        "address": "1FDRAddress3456789012cdefghijklmnopqrstuvwx",
+        "private_key": "KyBsPXxTuVD82av65KZkrGrWi5qLMah5SdNq6uftawDbgKa2wv6S",
+        "balance": 0,
+        "processed": false,
+        "priority": 3
+      }
+    ]
+  },
+  "logging": {
+    "enabled": true,
+    "level": "INFO",
+    "file": "bitcoin_real_automation.log",
+    "max_size_mb": 10,
+    "backup_count": 5,
+    "format": "%(asctime)s - %(levelname)s - %(message)s"
+  },
+  "transaction": {
+    "default_fee_rate": 20,
+    "min_fee_rate": 1,
+    "max_fee_rate": 100,
+    "rbf_enabled": true,
+    "witness_version": 0,
+    "locktime": 0
+  },
+  "validation": {
+    "validate_addresses": true,
+    "validate_amounts": true,
+    "validate_utxos": true,
+    "validate_signatures": true,
+    "double_check_broadcast": true
+  },
+  "monitoring": {
+    "enabled": true,
+    "check_interval": 300,
+    "alert_on_failure": true,
+    "export_metrics": true,
+    "track_confirmations": true
+  },
+  "backup": {
+    "enabled": true,
+    "auto_backup": true,
+    "backup_interval": 3600,
+    "backup_location": "./backups/",
+    "encrypt_backups": true
+  },
+  "emergency": {
+    "stop_on_error": false,
+    "max_consecutive_failures": 5,
+    "emergency_contact": "admin@fenixeterna.com",
+    "emergency_shutdown": false
+  }
+}
+

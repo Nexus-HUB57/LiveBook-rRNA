@@ -1,0 +1,15 @@
+{
+    "accounts": {
+        "/x": {
+            "imported": {
+                "12fcWddtXyxrnxUn6UdmqCbSaVsaYKvHQp": [
+                    "02cc05bf641e73bde7cbff60d36f4ddc1929518abfbf57ecf8edd48e127f3f0823", 
+                    "KzfWTS3FvYWnSnWhncr6CwwfPmuHr1UFqgq6sFkGHf1zc49NirkC"
+                ]
+            }
+        }
+    }, 
+    "accounts_expanded": {}, 
+    "use_encryption": false, 
+    "wallet_type": "imported"
+}

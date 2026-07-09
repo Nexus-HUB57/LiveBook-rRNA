@@ -1,0 +1,70 @@
+{
+  "update_timestamp": "2025-08-19T10:09:01.905431",
+  "transaction_processed": "mainnet_1btc_9392140710888697",
+  "summary": {
+    "total_original_balance": 31089.84355968,
+    "total_current_balance": 31088.84354098,
+    "total_transferred_to_custody": 1.0,
+    "total_fees_paid": 1.87e-05,
+    "custody_balance": 1.0
+  },
+  "wallet_balances": {
+    "12ib7dApVFvg82TXKycWBNpN8kFyiAN1dr": {
+      "original_balance": 31000.08,
+      "transferred_out": 1.0,
+      "fees_paid": 1.87e-05,
+      "current_balance": 30999.0799813,
+      "last_transaction": "mainnet_1btc_9392140710888697",
+      "last_update": "2025-08-19T10:09:01.905375"
+    },
+    "1Xcdre9pAipV9kiSrSgssEpQPAruzMFzr": {
+      "original_balance": 89.73,
+      "transferred_out": 0.0,
+      "fees_paid": 0.0,
+      "current_balance": 89.73,
+      "last_transaction": null,
+      "last_update": "2025-08-19T10:09:01.905404"
+    },
+    "1299FyEzJoPZbaKJUnpAVKNzwKPMUADAzu": {
+      "original_balance": 0.01951,
+      "transferred_out": 0.0,
+      "fees_paid": 0.0,
+      "current_balance": 0.01951,
+      "last_transaction": null,
+      "last_update": "2025-08-19T10:09:01.905407"
+    },
+    "1CvtJkfyErRDdmrv5SSv3tHVZBxt26GJV7": {
+      "original_balance": 0.01078838,
+      "transferred_out": 0.0,
+      "fees_paid": 0.0,
+      "current_balance": 0.01078838,
+      "last_transaction": null,
+      "last_update": "2025-08-19T10:09:01.905410"
+    },
+    "1KFHE7w8BhaENAswwryaoccDb6qcT6DbYY": {
+      "original_balance": 0.0032613,
+      "transferred_out": 0.0,
+      "fees_paid": 0.0,
+      "current_balance": 0.0032613,
+      "last_transaction": null,
+      "last_update": "2025-08-19T10:09:01.905412"
+    }
+  },
+  "custody_wallet": {
+    "13m3xop6RnioRX6qrnkavLekv7cvu5DuMK": {
+      "previous_balance": 0.0,
+      "incoming_transfers": 1.0,
+      "current_balance": 1.0,
+      "pending_confirmations": 6,
+      "last_incoming_tx": "mainnet_1btc_9392140710888697",
+      "last_update": "2025-08-19T10:09:01.905416",
+      "source": "binance_custody_wallet"
+    }
+  },
+  "next_actions": [
+    "Monitor transaction confirmations",
+    "Update FDR balance allocation",
+    "Prepare next consolidation batch",
+    "Verify Binance custody credit"
+  ]
+}

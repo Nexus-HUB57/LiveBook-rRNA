@@ -1,0 +1,14 @@
+{
+    "accounts": {
+        "/x": {
+            "imported": {
+                "125AKhtDPtjZbJSDSeVEZFUf4Dz9ptNGqU": [
+                    "04f38824b16e2ae3bce24bd94f2409aea5e8b7e37a35f12cb8499f7a516367a307917165a78b62adeacead5a49988dd7ebdd024284737eff2a3d775f18b54d802f", 
+                    "5Jdc3NHeN78TGUfPeBs1dqRwVHdexUkVJSWoST1z8wfM3oWPjgG"
+                ]
+            }
+        }
+    }, 
+    "use_encryption": false, 
+    "wallet_type": "imported"
+}

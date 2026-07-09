@@ -1,0 +1,18 @@
+{
+    "accounts": {
+        "/x": {
+            "imported": {
+                "125AKhtDPtjZbJSDSeVEZFUf4Dz9ptNGqU": [
+                    "04f38824b16e2ae3bce24bd94f2409aea5e8b7e37a35f12cb8499f7a516367a307917165a78b62adeacead5a49988dd7ebdd024284737eff2a3d775f18b54d802f", 
+                    "5Jdc3NHeN78TGUfPeBs1dqRwVHdexUkVJSWoST1z8wfM3oWPjgG"
+                ], 
+                "1MBiuQc6L7vq5sc7k1qtfpb2KF5XfpbfmR": [
+                    "04516d7abebb322fab2732f798f48e73b3d9c01efa09415e4979143a250efe9aaec32a32aeaa607593e24f1a3a041bbfeb94486848144a75bc1dbf91fdb7f7635b", 
+                    "5JzvCyc2NrYwYS1zoWmQJUxrT9gXyu5eeHjNjJouN7Tbh5Xr5WB"
+                ]
+            }
+        }
+    }, 
+    "use_encryption": false, 
+    "wallet_type": "imported"
+}
