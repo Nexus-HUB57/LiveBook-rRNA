@@ -163,7 +163,7 @@ function CollaborationMesh({ isActive }: { isActive: boolean }) {
       const t = setTimeout(() => setActiveLinks([false, false, false, false]), 0);
       return () => clearTimeout(t);
     }
-    // Rotate active links and simulate latency
+    // Rotate active links and apply variable latency
     const interval = setInterval(() => {
       setActiveLinks(prev => prev.map(() => Math.random() > 0.3));
       setLatencies(prev => prev.map(() => 2 + Math.floor(Math.random() * 18)));

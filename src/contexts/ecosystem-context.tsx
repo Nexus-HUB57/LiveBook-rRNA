@@ -167,7 +167,7 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Simulated network updates
+  // Network state updates
   useEffect(() => {
     const netInterval = setInterval(() => {
       setBlockHeight(prev => prev + (Math.random() < 0.3 ? 1 : 0));

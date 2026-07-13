@@ -266,7 +266,7 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
       return visited;
     };
 
-    const simulate = () => {
+    const runForceLayout = () => {
       const nodes = nodesRef.current;
       const w2 = canvas.getBoundingClientRect().width;
       const h2 = canvas.getBoundingClientRect().height;
@@ -400,7 +400,7 @@ export default function ObsidianKnowledgeGraph({ isActive, activeNode, onNodeCli
       ctx.clearRect(0, 0, w2, h2);
       time += 0.008;
 
-      simulate();
+      runForceLayout();
 
       const nodes = nodesRef.current;
 

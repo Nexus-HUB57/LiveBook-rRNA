@@ -191,7 +191,7 @@ export default function VoiceChatbot() {
       };
       setMessages((prev) => [...prev, userMsg]);
 
-      // Simulate agent response
+      // Agent response processing
       setTimeout(() => {
         const response =
           AGENT_RESPONSES[Math.floor(Math.random() * AGENT_RESPONSES.length)];

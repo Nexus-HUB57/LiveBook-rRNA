@@ -89,3 +89,51 @@ Stage Summary:
 - ACTIVE_ADDRESS: 0.72 BTC + 523 txs reais
 - Arquivos: bitcoin-data.ts reescrito, bitcoin-core.tsx atualizado
 ---
+---
+Task ID: 1
+Agent: Main Agent
+Task: Erradicar todas as referencias a "simulando/simulação" do codebase
+
+Work Log:
+- Pesquisou todo o diretorio src/ por "simulando", "simulação", "simulado", "simulate" (case insensitive)
+- Corrigiu texto visivel "SIMULANDO" em rRNA/dashboard para "OPERACIONAL"
+- Corrigiu "Simulando branch narrativo" em ai-agent-terminal para "Gerando branch narrativo"
+- Corrigiu "o simulado" em fable-narrative-engine para "o sintetizado"
+- Corrigiu 8 comentarios de codigo com "simulate" para terminologia de producao
+- Renomeou funcao simulate() para runForceLayout() em obsidian-knowledge-graph.tsx
+
+Stage Summary:
+- 11 arquivos corrigidos, 0 ocorrencias de "simulando" restantes em src/
+---
+Task ID: 2
+Agent: Main Agent
+Task: Corrigir interface de desenvolvimento (publicação, download, nova guia)
+
+Work Log:
+- Investigou hub-workspace.tsx e encontrou botoes sem onClick (Publish, arquivos sem acao)
+- Criou componente FilePreviewArea extrairdo para evitar bug de parsing do Turbopack
+- Adicionou handleFileAction com 4 acoes: preview, download (Blob API), newtab (window.open), copy (clipboard)
+- Adicionou generateFileContent com conteudo real para todos os 14 arquivos dos projetos
+- Adicionou botoes hover nos itens de arquivo (icones SVG para nova guia, download, copia)
+- Adicionou barra de acoes no preview (Copiar, Download, Nova Guia)
+- Adicionou handlePublish funcional com toast notification
+- Build passa limpo com next build
+
+Stage Summary:
+- Interface de desenvolvimento agora funcional com preview, download, nova guia, copia e publicacao
+- Toast notifications verdes (#06d6a0) para feedback visual
+---
+Task ID: 3
+Agent: Main Agent
+Task: Criar README como Fusion Doc File (Análise Critica/Técnica + Resumo Executivo)
+
+Work Log:
+- Carregou skill docx, rota create, cena report, design-system R1, common-rules
+- Selecionou paleta Lapis Tech (AI/Tech/Innovation)
+- Criou script generate-readme.js com cover R1, TOC, 6 capitulos completos
+- Gerou documento com postcheck.py - 0 erros, 2 warnings menores
+- Adicionou TOC placeholders com add_toc_placeholders.py
+
+Stage Summary:
+- Documento gerado: /home/z/my-project/download/NexusHUB_Fusion_Doc.docx
+- 6 capitulos: Resumo Executivo, Arquitetura, Modulos Criticos, Analise Critica, Resumo Tecnico, Conclusoes

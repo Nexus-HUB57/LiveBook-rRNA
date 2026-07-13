@@ -68,14 +68,14 @@ export default function AgenticFusionSection() {
     }
   }, [events.length]);
 
-  // Manually drive subsystem intensities during fusion (simulate real subsystems)
+  // Manually drive subsystem intensities during fusion (replicate real subsystems)
   useEffect(() => {
     if (fusionPhase === 'dormant') return;
     const interval = setInterval(() => {
       for (const id of subsystemIds) {
         const sub = subsystems[id];
         if (!sub) continue;
-        // Simulate natural intensity fluctuations
+        // Natural intensity fluctuations
         const base = fusionPhase === 'transcendent' ? 0.85 : fusionPhase === 'symbiotic' ? 0.65 : 0.4;
         const noise = Math.sin(Date.now() * 0.001 + id.length * 7) * 0.15;
         const target = base + noise;

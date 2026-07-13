@@ -82,7 +82,7 @@ export default function AgentOrchestrator() {
           };
           setSteps(prev => [...prev, callStep]);
 
-          // Simulate processing delay for visual effect
+          // Processing delay for sequential visual feedback
           await new Promise(r => setTimeout(r, 500));
 
           const resultStep: OrchestrationStep = {

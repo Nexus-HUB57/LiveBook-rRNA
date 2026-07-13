@@ -27,7 +27,7 @@ const AGENT_RESPONSES: Record<string, string[]> = {
     '>> Fable 5: Gerando arco narrativo temporal com 5 pontos de inflexao.',
     '>> Fable 5: Prompt library carregada. 1,247 templates de narrativa disponiveis.',
     '>> Fable 5: Story graph atualizado -- 23 nos conectados, 67 relacoes mapeadas.',
-    '>> Fable 5: Simulando branch narrativo alternativo via Monte Carlo quantico.',
+    '>> Fable 5: Gerando branch narrativo alternativo via Monte Carlo quantico.',
     '>> Fable 5: "Os artefatos nao sao apenas dados -- sao memorias de um futuro possivel."',
     '>> Fable 5: Branching dinamico gerado -- 3 arcos ativos, 12 sub-branches.',
   ],

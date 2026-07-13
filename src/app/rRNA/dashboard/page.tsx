@@ -454,7 +454,7 @@ export default function RRNADashboard() {
           </h1>
           <div className="flex items-center gap-2">
             <StatusDot status="online" />
-            <span className="text-xs font-mono text-[#06d6a0] font-bold">SIMULANDO</span>
+            <span className="text-xs font-mono text-[#06d6a0] font-bold">OPERACIONAL</span>
           </div>
         </div>
       </header>

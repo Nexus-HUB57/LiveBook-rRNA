@@ -288,7 +288,7 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
           ep.vy *= 0.998;
         });
 
-        // Draw connections between nearby points (cosine similarity > 0.8 simulation)
+        // Draw connections between nearby points (cosine similarity > 0.8 threshold)
         for (let i = 0; i < embeddingPoints.length; i++) {
           for (let j = i + 1; j < embeddingPoints.length; j++) {
             const a = embeddingPoints[i];
@@ -296,7 +296,7 @@ export default function KnowledgeVaultCanvas({ isActive, ragPhase, onFileActivat
             const dx = b.x - a.x;
             const dy = b.y - a.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            // Simulate cosine similarity via distance threshold
+            // Cosine similarity via distance threshold
             if (dist < 70) {
               const simAlpha = Math.max(0, (1 - dist / 70)) * 0.08;
               ctx.beginPath();

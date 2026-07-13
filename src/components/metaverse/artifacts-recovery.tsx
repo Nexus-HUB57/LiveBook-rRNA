@@ -135,7 +135,7 @@ export default function ArtifactsRecovery({
   const [filter, setFilter] = useState<'all' | '2026' | '2077'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Simulate progressive recovery
+  // Progressive recovery
   useEffect(() => {
     if (!recoveryActive) return;
     const interval = setInterval(() => {
