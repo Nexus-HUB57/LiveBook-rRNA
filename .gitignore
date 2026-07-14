@@ -62,9 +62,7 @@ server.log
 /download/
 /worklog.md
 /agent-ctx/
-/chinese-independent-developer/
 /examples/
 /mini-services/
-/scripts/parsed-projects.json
-/scripts/*.json
 /tmp/agents/
+chinese-independent-developer/

@@ -1,12 +1,52 @@
 import { db } from "@/lib/db";
+import * as fs from "fs";
+import * as path from "path";
+import { execSync } from "child_process";
 
-const PROJECTS_JSON = "/home/z/my-project/scripts/parsed-projects.json";
+const SCRIPTS_DIR = path.join(process.cwd(), "scripts");
+const JSON_PATH = path.join(SCRIPTS_DIR, "parsed-projects.json");
+const DATA_REPO = path.join(process.cwd(), "chinese-independent-developer");
+
+function ensureDataFile(): string {
+  // If parsed JSON exists, use it
+  if (fs.existsSync(JSON_PATH)) {
+    console.log(`Using existing ${JSON_PATH}`);
+    return JSON_PATH;
+  }
+
+  // If data repo exists, run parser
+  if (fs.existsSync(DATA_REPO)) {
+    console.log("Data repo found, running parser...");
+    try {
+      execSync(`python3 ${path.join(SCRIPTS_DIR, "parse-readme.py")}`, { stdio: "inherit" });
+      if (fs.existsSync(JSON_PATH)) return JSON_PATH;
+    } catch (e) {
+      console.error("Parser failed:", e);
+    }
+  }
+
+  // Try cloning the data repo
+  console.log("Cloning data repo...");
+  try {
+    execSync(
+      "git clone --depth 1 https://github.com/1c7/chinese-independent-developer.git " + DATA_REPO,
+      { stdio: "inherit", cwd: process.cwd() }
+    );
+    execSync(`python3 ${path.join(SCRIPTS_DIR, "parse-readme.py")}`, { stdio: "inherit" });
+    if (fs.existsSync(JSON_PATH)) return JSON_PATH;
+  } catch (e) {
+    console.error("Clone/parser failed:", e);
+  }
+
+  throw new Error("No project data available. Ensure parsed-projects.json exists or chinese-independent-developer is cloned.");
+}
 
 async function seed() {
-  console.log("Seeding 2402 projects...");
+  const dataPath = ensureDataFile();
+  console.log(`Seeding from ${dataPath}...`);
   await db.project.deleteMany();
   
-  const raw = require(PROJECTS_JSON) as Array<Record<string, string | null>>;
+  const raw = require(dataPath) as Array<Record<string, string | null>>;
 
   let count = 0;
   for (const p of raw) {
