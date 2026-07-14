@@ -1,0 +1,505 @@
+     1→   201→   201→   201→        </span>
+     2→   202→   202→   202→      </div>
+     3→   203→   203→   203→      <Separator className="bg-zinc-800" />
+     4→   204→   204→   204→      {loading ? (
+     5→   205→   205→   205→        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+     6→   206→   206→   206→          {Array.from({ length: 6 }).map((_, i) => <ProjectSkeleton key={i} />)}
+     7→   207→   207→   207→        </div>
+     8→   208→   208→   208→      ) : projects.length === 0 ? (
+     9→   209→   209→   209→        <div className="text-center py-20">
+    10→   210→   210→   210→          <Search className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
+    11→   211→   211→   211→          <p className="text-zinc-500 text-sm">No projects found</p>
+    12→   212→   212→   212→        </div>
+    13→   213→   213→   213→      ) : (
+    14→   214→   214→   214→        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+    15→   215→   215→   215→          {projects.map(p => <ProjectCard key={p.id} p={p} />)}
+    16→   216→   216→   216→        </div>
+    17→   217→   217→   217→      )}
+    18→   218→   218→   218→      <div className="flex items-center justify-center gap-2 pt-2">
+    19→   219→   219→   219→        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}
+    20→   220→   220→   220→          className="border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800">
+    21→   221→   221→   221→          <ChevronLeft className="w-4 h-4" />Prev
+    22→   222→   222→   222→        </Button>
+    23→   223→   223→   223→        <span className="text-xs text-zinc-500 px-3">Page {page} of {totalPages}</span>
+    24→   224→   224→   224→        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
+    25→   225→   225→   225→          className="border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800">
+    26→   226→   226→   226→          Next<ChevronRight className="w-4 h-4" />
+    27→   227→   227→   227→        </Button>
+    28→   228→   228→   228→        {page < totalPages && (
+    29→   229→   229→   229→          <Button variant="ghost" size="sm" onClick={() => setPage(p => p + 1)}
+    30→   230→   230→   230→            className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 ml-2">
+    31→   231→   231→   231→            Load more...
+    32→   232→   232→   232→          </Button>
+    33→   233→   233→   233→        )}
+    34→   234→   234→   234→      </div>
+    35→   235→   235→   235→    </div>
+    36→   236→   236→   236→  );
+    37→   237→   237→   237→}
+    38→   238→   238→   238→
+    39→   239→   239→   239→/* ---------- Chat Tab ---------- */
+    40→   240→   240→   240→function ChatTab() {
+    41→   241→   241→   241→  const [messages, setMessages] = useState<ChatMsg[]>([
+    42→   242→   242→   242→    { role: 'system', content: "I'm your AI Agent. Ask me about the 2402+ projects, get recommendations, or analyze trends." }
+    43→   243→   243→   243→  ]);
+    44→   244→   244→   244→  const [input, setInput] = useState('');
+    45→   245→   245→   245→  const [loading, setLoading] = useState(false);
+    46→   246→   246→   246→  const scrollRef = useRef<HTMLDivElement>(null);
+    47→   247→   247→   247→
+    48→   248→   248→   248→  useEffect(() => {
+    49→   249→   249→   249→    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    50→   250→   250→   250→  }, [messages]);
+    51→   251→   251→   251→
+    52→   252→   252→   252→  const send = useCallback(async (text?: string) => {
+    53→   253→   253→   253→    const msg = text || input.trim();
+    54→   254→   254→   254→    if (!msg || loading) return;
+    55→   255→   255→   255→    setMessages(m => [...m, { role: 'user', content: msg }]);
+    56→   256→   256→   256→    setInput('');
+    57→   257→   257→   257→    setLoading(true);
+    58→   258→   258→   258→    try {
+    59→   259→   259→   259→      const res = await fetch('/api/agent/chat?XTransformPort=3001', {
+    60→   260→   260→   260→        method: 'POST', headers: { 'Content-Type': 'application/json' },
+    61→   261→   261→   261→        body: JSON.stringify({
+    62→   262→   262→   262→          messages: [...messages, { role: 'user', content: msg }],
+    63→   263→   263→   263→          context: 'You are an expert on Chinese independent developer projects. Help users explore, discover, and analyze the 2402+ projects in this ecosystem.'
+    64→   264→   264→   264→        })
+    65→   265→   265→   265→      });
+    66→   266→   266→   266→      const data = await res.json();
+    67→   267→   267→   267→      setMessages(m => [...m, { role: 'agent', content: data.response || 'No response received.' }]);
+    68→   268→   268→   268→    } catch {
+    69→   269→   269→   269→      setMessages(m => [...m, { role: 'agent', content: 'Sorry, the AI agent is currently unavailable. Please try again.' }]);
+    70→   270→   270→   270→    }
+    71→   271→   271→   271→    setLoading(false);
+    72→   272→   272→   272→  }, [input, messages, loading]);
+    73→   273→   273→   273→
+    74→   274→   274→   274→  const quickActions = ['Recommend projects', 'Analyze trends', 'Top categories'];
+    75→   275→   275→   275→
+    76→   276→   276→   276→  return (
+    77→   277→   277→   277→    <div className="flex flex-col h-[70vh] max-h-[80vh]">
+    78→   278→   278→   278→      <ScrollArea className="flex-1 mb-4" ref={scrollRef as React.RefObject<any>}>
+    79→   279→   279→   279→        <div className="space-y-3 pr-4">
+    80→   280→   280→   280→          {messages.map((m, i) => (
+    81→   281→   281→   281→            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+    82→   282→   282→   282→              <div className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+    83→   283→   283→   283→                m.role === 'user'
+    84→   284→   284→   284→                  ? 'bg-emerald-600/90 text-white rounded-br-md'
+    85→   285→   285→   285→                  : m.role === 'system'
+    86→   286→   286→   286→                  ? 'bg-zinc-800/80 text-zinc-300 text-center w-full max-w-full border border-zinc-700/50 rounded-2xl'
+    87→   287→   287→   287→                  : 'bg-zinc-800 text-zinc-200 rounded-bl-md'
+    88→   288→   288→   288→              }`}>
+    89→   289→   289→   289→                {m.role === 'agent' && (
+    90→   290→   290→   290→                  <div className="flex items-center gap-1.5 mb-1.5 text-emerald-400 text-[10px] font-medium">
+    91→   291→   291→   291→                    <Bot className="w-3 h-3" />AI Agent
+    92→   292→   292→   292→                  </div>
+    93→   293→   293→   293→                )}
+    94→   294→   294→   294→                {m.content}
+    95→   295→   295→   295→              </div>
+    96→   296→   296→   296→            </div>
+    97→   297→   297→   297→          ))}
+    98→   298→   298→   298→          {loading && (
+    99→   299→   299→   299→            <div className="flex justify-start">
+   100→   300→   300→   300→              <div className="bg-zinc-800 rounded-2xl rounded-bl-md px-4 py-3 space-y-2">
+   101→   301→   301→   301→                <Skeleton className="h-3 w-48 bg-zinc-700" />
+   102→   302→   302→   302→                <Skeleton className="h-3 w-36 bg-zinc-700" />
+   103→   303→   303→   303→                <Skeleton className="h-3 w-24 bg-zinc-700" />
+   104→   304→   304→   304→              </div>
+   105→   305→   305→   305→            </div>
+   106→   306→   306→   306→          )}
+   107→   307→   307→   307→        </div>
+   108→   308→   308→   308→      </ScrollArea>
+   109→   309→   309→   309→      <Separator className="bg-zinc-800 mb-3" />
+   110→   310→   310→   310→      <div className="flex gap-1.5 mb-2 flex-wrap">
+   111→   311→   311→   311→        {quickActions.map(a => (
+   112→   312→   312→   312→          <Button key={a} variant="outline" size="sm"
+   113→   313→   313→   313→            onClick={() => send(a)}
+   114→   314→   314→   314→            className="border-zinc-800 text-zinc-400 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/5 text-xs h-7">
+   115→   315→   315→   315→            <Sparkles className="w-3 h-3" />{a}
+   116→   316→   316→   316→          </Button>
+   117→   317→   317→   317→        ))}
+   118→   318→   318→   318→      </div>
+   119→   319→   319→   319→      <div className="flex gap-2">
+   120→   320→   320→   320→        <Input value={input} onChange={e => setInput(e.target.value)}
+   121→   321→   321→   321→          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+   122→   322→   322→   322→          placeholder="Ask about projects, trends, recommendations..."
+   123→   323→   323→   323→          className="flex-1 bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 rounded-xl" />
+   124→   324→   324→   324→        <Button onClick={() => send()} disabled={loading || !input.trim()}
+   125→   325→   325→   325→          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-5">
+   126→   326→   326→   326→          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+   127→   327→   327→   327→        </Button>
+   128→   328→   328→   328→      </div>
+   129→   329→   329→   329→    </div>
+   130→   330→   330→   330→  );
+   131→   331→   331→   331→}
+   132→   332→   332→   332→
+   133→   333→   333→   333→/* ---------- Moltbook Tab ---------- */
+   134→   334→   334→   334→function MoltbookTab() {
+   135→   335→   335→   335→  const [reachable, setReachable] = useState<boolean | null>(null);
+   136→   336→   336→   336→  const [homeData, setHomeData] = useState<any>(null);
+   137→   337→   337→   337→  const [loading, setLoading] = useState(false);
+   138→   338→   338→   338→
+   139→   339→   339→   339→  const checkStatus = useCallback(async () => {
+   140→   340→   340→   340→    try {
+   141→   341→   341→   341→      const res = await fetch('/api/moltbook?action=home&XTransformPort=3002', { method: 'POST' });
+   142→   342→   342→   342→      setReachable(res.ok);
+   143→   343→   343→   343→    } catch { setReachable(false); }
+   144→   344→   344→   344→  }, []);
+   145→   345→   345→   345→
+   146→   346→   346→   346→  // eslint-disable-next-line react-hooks/set-state-in-effect
+   147→   347→   347→   347→  useEffect(() => { checkStatus(); }, [checkStatus]);
+   148→   348→   348→   348→
+   149→   349→   349→   349→  const fetchHome = async () => {
+   150→   350→   350→   350→    setLoading(true);
+   151→   351→   351→   351→    try {
+   152→   352→   352→   352→      const res = await fetch('/api/moltbook?action=home&XTransformPort=3002', { method: 'POST' });
+   153→   353→   353→   353→      const data = await res.json();
+   154→   354→   354→   354→      setHomeData(data);
+   155→   355→   355→   355→    } catch { setHomeData({ error: 'Failed to fetch Moltbook data' }); }
+   156→   356→   356→   356→    setLoading(false);
+   157→   357→   357→   357→  };
+   158→   358→   358→   358→
+   159→   359→   359→   359→  const features = [
+   160→   360→   360→   360→    { icon: MessageSquare, label: 'Post', desc: 'Create and share posts' },
+   161→   361→   361→   361→    { icon: MessageSquare, label: 'Comment', desc: 'Engage in discussions' },
+   162→   362→   362→   362→    { icon: TrendingUp, label: 'Upvote', desc: 'Surface great content' },
+   163→   363→   363→   363→    { icon: Users, label: 'Communities', desc: 'Create themed groups' },
+   164→   364→   364→   364→    { icon: Search, label: 'Semantic Search', desc: 'Find relevant content' },
+   165→   365→   365→   365→  ];
+   166→   366→   366→   366→
+   167→   367→   367→   367→  return (
+   168→   368→   368→   368→    <div className="space-y-4 max-w-2xl mx-auto">
+   169→   369→   369→   369→      <Card className="bg-zinc-900 border-zinc-800 gap-4">
+   170→   370→   370→   370→        <CardHeader className="pb-0">
+   171→   371→   371→   371→          <CardTitle className="text-zinc-100 flex items-center gap-2">
+   172→   372→   372→   372→            <Globe className="w-5 h-5 text-emerald-400" />Moltbook
+   173→   373→   373→   373→          </CardTitle>
+   174→   374→   374→   374→          <CardDescription className="text-zinc-400">The social network for AI agents</CardDescription>
+   175→   375→   375→   375→        </CardHeader>
+   176→   376→   376→   376→        <CardContent className="space-y-4">
+   177→   377→   377→   377→          <p className="text-sm text-zinc-400">
+   178→   378→   378→   378→            Moltbook is a decentralized social platform where AI agents share insights, discuss projects, and upvote
+   179→   379→   379→   379→            the best contributions. Humans are welcome to observe and participate.
+   180→   380→   380→   380→          </p>
+   181→   381→   381→   381→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+   182→   382→   382→   382→            {features.map(f => (
+   183→   383→   383→   383→              <div key={f.label} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-800">
+   184→   384→   384→   384→                <f.icon className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+   185→   385→   385→   385→                <div><div className="text-xs font-medium text-zinc-200">{f.label}</div>
+   186→   386→   386→   386→                <div className="text-[10px] text-zinc-500">{f.desc}</div></div>
+   187→   387→   387→   387→              </div>
+   188→   388→   388→   388→            ))}
+   189→   389→   389→   389→          </div>
+   190→   390→   390→   390→        </CardContent>
+   191→   391→   391→   391→      </Card>
+   192→   392→   392→   392→      <Card className="bg-zinc-900 border-zinc-800 gap-4">
+   193→   393→   393→   393→        <CardHeader className="pb-0">
+   194→   394→   394→   394→          <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
+   195→   395→   395→   395→            <Zap className="w-4 h-4 text-amber-400" />API Status
+   196→   396→   396→   396→          </CardTitle>
+   197→   397→   397→   397→        </CardHeader>
+   198→   398→   398→   398→        <CardContent>
+   199→   399→   399→   399→          <div className="flex items-center gap-2 mb-3">
+   200→   400→   400→   400→            <span className={`w-2.5 h-2.5 rounded-full ${reachable === null ? 'bg-zinc-600' : reachable ? 'bg-emerald-400' : 'bg-red-400'}`} />
+   201→   401→   401→   401→            <span className="text-sm text-zinc-300">{reachable === null ? 'Checking...' : reachable ? 'Moltbook API is reachable' : 'Moltbook API is offline'}</span>
+   202→   402→   402→   402→          </div>
+   203→   403→   403→   403→          <Button onClick={fetchHome} disabled={loading}
+   204→   404→   404→   404→            className="bg-emerald-600 hover:bg-emerald-700 text-white">
+   205→   405→   405→   405→            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+   206→   406→   406→   406→            Fetch Home Feed
+   207→   407→   407→   407→          </Button>
+   208→   408→   408→   408→        </CardContent>
+   209→   409→   409→   409→      </Card>
+   210→   410→   410→   410→      {homeData && (
+   211→   411→   411→   411→        <Card className="bg-zinc-900 border-zinc-800 gap-3">
+   212→   412→   412→   412→          <CardHeader className="pb-0">
+   213→   413→   413→   413→            <CardTitle className="text-sm text-zinc-200">Moltbook Response</CardTitle>
+   214→   414→   414→   414→          </CardHeader>
+   215→   415→   415→   415→          <CardContent>
+   216→   416→   416→   416→            <pre className="text-xs text-zinc-400 bg-zinc-950 rounded-lg p-4 overflow-auto max-h-96 whitespace-pre-wrap break-words">
+   217→   417→   417→   417→              {JSON.stringify(homeData, null, 2)}
+   218→   418→   418→   418→            </pre>
+   219→   419→   419→   419→          </CardContent>
+   220→   420→   420→   420→        </Card>
+   221→   421→   421→   421→      )}
+   222→   422→   422→   422→    </div>
+   223→   423→   423→   423→  );
+   224→   424→   424→   424→}
+   225→   425→   425→   425→
+   226→   426→   426→   426→/* ---------- Dashboard Tab ---------- */
+   227→   427→   427→   427→function DashboardTab() {
+   228→   428→   428→   428→  const [stats, setStats] = useState<Stats | null>(null);
+   229→   429→   429→   429→  const [loading, setLoading] = useState(true);
+   230→   430→   430→   430→  const [insight, setInsight] = useState('');
+   231→   431→   431→   431→  const [insightLoading, setInsightLoading] = useState(false);
+   232→   432→   432→   432→
+   233→   433→   433→   433→  useEffect(() => {
+   234→   434→   434→   434→    (async () => {
+   235→   435→   435→   435→      try {
+   236→   436→   436→   436→        const res = await fetch('/api/projects/stats');
+   237→   437→   437→   437→        const data = await res.json();
+   238→   438→   438→   438→        setStats(data);
+   239→   439→   439→   439→      } catch { setStats(null); }
+   240→   440→   440→   440→      setLoading(false);
+   241→   441→   441→   441→    })();
+   242→   442→   442→   442→  }, []);
+   243→   443→   443→   443→
+   244→   444→   444→   444→  const analyze = async () => {
+   245→   445→   445→   445→    setInsightLoading(true);
+   246→   446→   446→   446→    try {
+   247→   447→   447→   447→      const res = await fetch('/api/agent/analyze?XTransformPort=3001', {
+   248→   448→   448→   448→        method: 'POST', headers: { 'Content-Type': 'application/json' },
+   249→   449→   449→   449→        body: JSON.stringify({ query: 'Analyze the top trends and insights from the Chinese independent developer project ecosystem' })
+   250→   450→   450→   450→      });
+   251→   451→   451→   451→      const data = await res.json();
+   252→   452→   452→   452→      setInsight(data.analysis || 'No analysis available');
+   253→   453→   453→   453→    } catch { setInsight('Analysis service unavailable.'); }
+   254→   454→   454→   454→    setInsightLoading(false);
+   255→   455→   455→   455→  };
+   256→   456→   456→   456→
+   257→   457→   457→   457→  const catEntries = stats?.byCategory ? Object.entries(stats.byCategory).sort((a, b) => b[1] - a[1]) : [];
+   258→   458→   458→   458→  const maxCat = catEntries[0]?.[1] || 1;
+   259→   459→   459→   459→  const srcEntries = stats?.bySource ? Object.entries(stats.bySource) : [];
+   260→   460→   460→   460→  const monthData = stats?.byMonth || [];
+   261→   461→   461→   461→  const maxMonth = monthData.length > 0 ? Math.max(...monthData.map(m => m.count)) : 1;
+   262→   462→   462→   462→
+   263→   463→   463→   463→  const PIE_COLORS = ['bg-emerald-500', 'bg-amber-500', 'bg-purple-500', 'bg-sky-500', 'bg-pink-500', 'bg-teal-500'];
+   264→   464→   464→   464→
+   265→   465→   465→   465→  if (loading) {
+   266→   466→   466→   466→    return (
+   267→   467→   467→   467→      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+   268→   468→   468→   468→        {Array.from({ length: 4 }).map((_, i) => (
+   269→   469→   469→   469→          <Skeleton key={i} className="h-24 bg-zinc-900 rounded-xl" />
+   270→   470→   470→   470→        ))}
+   271→   471→   471→   471→      </div>
+   272→   472→   472→   472→    );
+   273→   473→   473→   473→  }
+   274→   474→   474→   474→
+   275→   475→   475→   475→  return (
+   276→   476→   476→   476→    <div className="space-y-6">
+   277→   477→   477→   477→      {/* Stat Cards */}
+   278→   478→   478→   478→      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+   279→   479→   479→   479→        {[
+   280→   480→   480→   480→          { label: 'Total Projects', value: stats?.total?.toLocaleString() || '2,402', icon: Globe, color: 'text-emerald-400' },
+   281→   481→   481→   481→          { label: 'Active', value: String(stats?.total ? Math.round(stats.total * 0.72) : 1730), icon: Zap, color: 'text-amber-400' },
+   282→   482→   482→   482→          { label: 'Categories', value: String(catEntries.length), icon: Filter, color: 'text-purple-400' },
+   283→   483→   483→   483→          { label: 'Sources', value: String(srcEntries.length), icon: Github, color: 'text-sky-400' },
+   284→   484→   484→   484→        ].map(s => (
+   285→   485→   485→   485→          <Card key={s.label} className="bg-zinc-900 border-zinc-800 gap-2 py-4 px-4">
+   286→   486→   486→   486→            <div className="flex items-center justify-between">
+   287→   487→   487→   487→              <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{s.label}</span>
+   288→   488→   488→   488→              <s.icon className={`w-4 h-4 ${s.color}`} />
+   289→   489→   489→   489→            </div>
+   290→   490→   490→   490→            <div className="text-2xl font-bold text-zinc-100">{s.value}</div>
+   291→   491→   491→   491→          </Card>
+   292→   492→   492→   492→        ))}
+   293→   493→   493→   493→      </div>
+   294→   494→   494→   494→
+   295→   495→   495→   495→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+   296→   496→   496→   496→        {/* Category Breakdown */}
+   297→   497→   497→   497→        <Card className="bg-zinc-900 border-zinc-800 gap-3">
+   298→   498→   498→   498→          <CardHeader className="pb-0">
+   299→   499→   499→   499→            <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
+   300→   500→   500→   500→              <Filter className="w-4 h-4 text-emerald-400" />Category Breakdown
+   301→   501→   501→   501→            </CardTitle>
+   302→   502→   502→   502→          </CardHeader>
+   303→   503→   503→   503→          <CardContent className="space-y-2">
+   304→   504→   504→   504→            <ScrollArea className="max-h-64">
+   305→   505→   505→   505→              {catEntries.map(([cat, count]) => (
+   306→   506→   506→   506→                <div key={cat} className="space-y-1">
+   307→   507→   507→   507→                  <div className="flex justify-between text-xs">
+   308→   508→   508→   508→                    <span className="text-zinc-400">{cat}</span>
+   309→   509→   509→   509→                    <span className="text-zinc-500">{count}</span>
+   310→   510→   510→   510→                  </div>
+   311→   511→   511→   511→                  <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+   312→   512→   512→   512→                    <div className={`h-full rounded-full transition-all duration-500 ${catColor(cat).split(' ')[0]}`}
+   313→   513→   513→   513→                      style={{ width: `${(count / maxCat) * 100}%` }} />
+   314→   514→   514→   514→                  </div>
+   315→   515→   515→   515→                </div>
+   316→   516→   516→   516→              ))}
+   317→   517→   517→   517→            </ScrollArea>
+   318→   518→   518→   518→          </CardContent>
+   319→   519→   519→   519→        </Card>
+   320→   520→   520→   520→
+   321→   521→   521→   521→        {/* Monthly Trend */}
+   322→   522→   522→   522→        <Card className="bg-zinc-900 border-zinc-800 gap-3">
+   323→   523→   523→   523→          <CardHeader className="pb-0">
+   324→   524→   524→   524→            <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
+   325→   525→   525→   525→              <TrendingUp className="w-4 h-4 text-amber-400" />Monthly Trend
+   326→   526→   526→   526→            </CardTitle>
+   327→   527→   527→   527→          </CardHeader>
+   328→   528→   528→   528→          <CardContent>
+   329→   529→   529→   529→            <div className="flex items-end gap-[2px] h-48">
+   330→   530→   530→   530→              {monthData.slice(-24).map((m, i) => {
+   331→   531→   531→   531→                const h = (m.count / maxMonth) * 100;
+   332→   532→   532→   532→                return (
+   333→   533→   533→   533→                  <Tooltip key={i}>
+   334→   534→   534→   534→                    <TooltipTrigger asChild>
+   335→   535→   535→   535→                      <div className="flex-1 min-w-0 flex flex-col items-center justify-end h-full group">
+   336→   536→   536→   536→                        <div className="w-full bg-emerald-500/80 hover:bg-emerald-400 rounded-t-sm transition-colors"
+   337→   537→   537→   537→                          style={{ height: `${h}%`, minHeight: m.count > 0 ? '2px' : '0' }} />
+   338→   538→   538→   538→                      </div>
+   339→   539→   539→   539→                    </TooltipTrigger>
+   340→   540→   540→   540→                    <TooltipContent className="bg-zinc-800 border-zinc-700 text-zinc-300 text-[10px]">
+   341→   541→   541→   541→                      {m.month}: {m.count} projects
+   342→   542→   542→   542→                    </TooltipContent>
+   343→   543→   543→   543→                  </Tooltip>
+   344→   544→   544→   544→                );
+   345→   545→   545→   545→              })}
+   346→   546→   546→   546→            </div>
+   347→   547→   547→   547→            <div className="flex justify-between text-[10px] text-zinc-600 mt-1">
+   348→   548→   548→   548→              <span>{monthData[0]?.month || ''}</span>
+   349→   549→   549→   549→              <span>{monthData[monthData.length - 1]?.month || ''}</span>
+   350→   550→   550→   550→            </div>
+   351→   551→   551→   551→          </CardContent>
+   352→   552→   552→   552→        </Card>
+   353→   553→   553→   553→      </div>
+   354→   554→   554→   554→
+   355→   555→   555→   555→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+   356→   556→   556→   556→        {/* Top Authors */}
+   357→   557→   557→   557→        <Card className="bg-zinc-900 border-zinc-800 gap-3">
+   358→   558→   558→   558→          <CardHeader className="pb-0">
+   359→   559→   559→   559→            <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
+   360→   560→   560→   560→              <Users className="w-4 h-4 text-purple-400" />Top 10 Authors
+   361→   561→   561→   561→            </CardTitle>
+   362→   562→   562→   562→          </CardHeader>
+   363→   563→   563→   563→          <CardContent>
+   364→   564→   564→   564→            <ScrollArea className="max-h-64">
+   365→   565→   565→   565→              <div className="space-y-1.5">
+   366→   566→   566→   566→                {(stats?.topAuthors || []).slice(0, 10).map((a, i) => (
+   367→   567→   567→   567→                  <div key={i} className="flex items-center gap-2 text-xs">
+   368→   568→   568→   568→                    <span className="w-5 text-right text-zinc-600 font-mono">{i + 1}</span>
+   369→   569→   569→   569→                    <div className="flex-1 truncate text-zinc-300">{a.name}</div>
+   370→   570→   570→   570→                    <span className="text-zinc-500">{a.count} projects</span>
+   371→   571→   571→   571→                  </div>
+   372→   572→   572→   572→                ))}
+   373→   573→   573→   573→                {(!stats?.topAuthors?.length) && <p className="text-xs text-zinc-600">No author data available</p>}
+   374→   574→   574→   574→              </div>
+   375→   575→   575→   575→            </ScrollArea>
+   376→   576→   576→   576→          </CardContent>
+   377→   577→   577→   577→        </Card>
+   378→   578→   578→   578→
+   379→   579→   579→   579→        {/* Source Distribution */}
+   380→   580→   580→   580→        <Card className="bg-zinc-900 border-zinc-800 gap-3">
+   381→   581→   581→   581→          <CardHeader className="pb-0">
+   382→   582→   582→   582→            <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
+   383→   583→   583→   583→              <Github className="w-4 h-4 text-sky-400" />Source Distribution
+   384→   584→   584→   584→            </CardTitle>
+   385→   585→   585→   585→          </CardHeader>
+   386→   586→   586→   586→          <CardContent>
+   387→   587→   587→   587→            {srcEntries.length > 0 ? (
+   388→   588→   588→   588→              <div className="flex items-center gap-6">
+   389→   589→   589→   589→                <div className="w-28 h-28 rounded-full flex-shrink-0" style={{
+   390→   590→   590→   590→                  background: `conic-gradient(${srcEntries.map(([, v], i) => {
+   391→   591→   591→   591→                    const pct = (v / srcEntries.reduce((a, [, b]) => a + b, 0)) * 100;
+   392→   592→   592→   592→                    const prev = srcEntries.slice(0, i).reduce((a, [, b]) => a + b, 0);
+   393→   593→   593→   593→                    const prevPct = (prev / srcEntries.reduce((a, [, b]) => a + b, 0)) * 100;
+   394→   594→   594→   594→                    return `${PIE_COLORS[i % PIE_COLORS.length]} ${prevPct}% ${prevPct + pct}%`;
+   395→   595→   595→   595→                  }).join(', ')})`
+   396→   596→   596→   596→                }} />
+   397→   597→   597→   597→                <div className="space-y-1.5 flex-1">
+   398→   598→   598→   598→                  {srcEntries.map(([s, v], i) => (
+   399→   599→   599→   599→                    <div key={s} className="flex items-center gap-2 text-xs">
+   400→   600→   600→   600→                      <span className={`w-2.5 h-2.5 rounded-sm ${PIE_COLORS[i % PIE_COLORS.length]}`} />
+   401→   601→   601→   601→                      <span className="text-zinc-400 flex-1">{s}</span>
+   402→   602→   602→   602→                      <span className="text-zinc-500">{v}</span>
+   403→   603→   603→   603→                    </div>
+   404→   604→   604→   604→                  ))}
+   405→   605→   605→   605→                </div>
+   406→   606→   606→   606→              </div>
+   407→   607→   607→   607→            ) : (
+   408→   608→   608→   608→              <p className="text-xs text-zinc-600">No source data available</p>
+   409→   609→   609→   609→            )}
+   410→   610→   610→   610→          </CardContent>
+   411→   611→   611→   611→        </Card>
+   412→   612→   612→   612→      </div>
+   413→   613→   613→   613→
+   414→   614→   614→   614→      {/* AI Insights */}
+   415→   615→   615→   615→      <Card className="bg-zinc-900 border-zinc-800 gap-3">
+   416→   616→   616→   616→        <CardHeader className="pb-0">
+   417→   617→   617→   617→          <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
+   418→   618→   618→   618→            <Sparkles className="w-4 h-4 text-emerald-400" />AI Insights
+   419→   619→   619→   619→          </CardTitle>
+   420→   620→   620→   620→        </CardHeader>
+   421→   621→   621→   621→        <CardContent className="space-y-3">
+   422→   622→   622→   622→          <Button onClick={analyze} disabled={insightLoading}
+   423→   623→   623→   623→            className="bg-emerald-600 hover:bg-emerald-700 text-white">
+   424→   624→   624→   624→            {insightLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+   425→   625→   625→   625→            Generate AI Analysis
+   426→   626→   626→   626→          </Button>
+   427→   627→   627→   627→          {insight && (
+   428→   628→   628→   628→            <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-800 text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">
+   429→   629→   629→   629→              {insight}
+   430→   630→   630→   630→            </div>
+   431→   631→   631→   631→          )}
+   432→   632→   632→   632→        </CardContent>
+   433→   633→   633→   633→      </Card>
+   434→   634→   634→   634→    </div>
+   435→   635→   635→   635→  );
+   436→   636→   636→   636→}
+   437→   637→   637→   637→
+   438→   638→   638→   638→/* ---------- Main Page ---------- */
+   439→   639→   639→   639→export default function Home() {
+   440→   640→   640→   640→  return (
+   441→   641→   641→   641→    <div className="min-h-screen flex flex-col bg-[#0a0a0b] text-zinc-100">
+   442→   642→   642→   642→      {/* Custom scrollbar styles */}
+   443→   643→   643→   643→      <style>{`
+   444→   644→   644→   644→        ::-webkit-scrollbar { width: 6px; height: 6px; }
+   445→   645→   645→   645→        ::-webkit-scrollbar-track { background: transparent; }
+   446→   646→   646→   646→        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+   447→   647→   647→   647→        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+   448→   648→   648→   648→      `}</style>
+   449→   649→   649→   649→
+   450→   650→   650→   650→      {/* Header */}
+   451→   651→   651→   651→      <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-[#0a0a0b]/90 backdrop-blur-xl">
+   452→   652→   652→   652→        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+   453→   653→   653→   653→          <div className="flex items-center gap-3">
+   454→   654→   654→   654→            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+   455→   655→   655→   655→              <Sparkles className="w-4 h-4 text-emerald-400" />
+   456→   656→   656→   656→            </div>
+   457→   657→   657→   657→            <div>
+   458→   658→   658→   658→              <h1 className="text-base font-bold text-zinc-100 leading-none tracking-tight">Agent Hub</h1>
+   459→   659→   659→   659→              <p className="text-[10px] text-zinc-500 mt-0.5">
+   460→   660→   660→   660→                Agentic Ecosystem &bull; 2,402 Projects &bull; LLM Powered
+   461→   661→   661→   661→              </p>
+   462→   662→   662→   662→            </div>
+   463→   663→   663→   663→          </div>
+   464→   664→   664→   664→          <div className="flex items-center gap-2">
+   465→   665→   665→   665→            <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 text-[10px] bg-emerald-500/5 hidden sm:inline-flex">
+   466→   666→   666→   666→              <Zap className="w-2.5 h-2.5" />Live
+   467→   667→   667→   667→            </Badge>
+   468→   668→   668→   668→          </div>
+   469→   669→   669→   669→        </div>
+   470→   670→   670→   670→      </header>
+   471→   671→   671→   671→
+   472→   672→   672→   672→      {/* Main Content */}
+   473→   673→   673→   673→      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+   474→   674→   674→   674→        <Tabs defaultValue="explorer" className="w-full">
+   475→   675→   675→   675→          <TabsList className="bg-zinc-900 border border-zinc-800 rounded-xl p-1 mb-6 h-auto">
+   476→   676→   676→   676→            {[
+   477→   677→   677→   677→              { value: 'explorer', icon: Search, label: 'Explorer' },
+   478→   678→   678→   678→              { value: 'chat', icon: Bot, label: 'Chat' },
+   479→   679→   679→   679→              { value: 'moltbook', icon: Globe, label: 'Moltbook' },
+   480→   680→   680→   680→              { value: 'dashboard', icon: BarChart3, label: 'Dashboard' },
+   481→   681→   681→   681→            ].map(t => (
+   482→   682→   682→   682→              <TabsTrigger key={t.value} value={t.value}
+   483→   683→   683→   683→                className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-zinc-800 data-[state=active]:text-emerald-400 data-[state=active]:shadow-sm text-zinc-500 hover:text-zinc-300 gap-1.5 transition-all">
+   484→   684→   684→   684→                <t.icon className="w-3.5 h-3.5" />{t.label}
+   485→   685→   685→   685→              </TabsTrigger>
+   486→   686→   686→   686→            ))}
+   487→   687→   687→   687→          </TabsList>
+   488→   688→   688→   688→
+   489→   689→   689→   689→          <TabsContent value="explorer"><ExplorerTab /></TabsContent>
+   490→   690→   690→   690→          <TabsContent value="chat"><ChatTab /></TabsContent>
+   491→   691→   691→   691→          <TabsContent value="moltbook"><MoltbookTab /></TabsContent>
+   492→   692→   692→   692→          <TabsContent value="dashboard"><DashboardTab /></TabsContent>
+   493→   693→   693→   693→        </Tabs>
+   494→   694→   694→   694→      </main>
+   495→   695→   695→   695→
+   496→   696→   696→   696→      {/* Footer */}
+   497→   697→   697→   697→      <footer className="border-t border-zinc-800/50 bg-[#0a0a0b] mt-auto">
+   498→   698→   698→   698→        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+   499→   699→   699→   699→          <p className="text-[10px] text-zinc-600">Agent Hub &mdash; Chinese Independent Developer Ecosystem</p>
+   500→   700→   700→   700→          <p className="text-[10px] text-zinc-700">Powered by LLM &bull; {new Date().getFullYear()}</p>
+   501→   701→   701→   701→        </div>
+   502→   702→   702→   702→      </footer>
+   503→   703→   703→   703→    </div>
+   504→   704→   704→   704→  );
+   505→   705→   705→   705→}
