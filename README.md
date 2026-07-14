@@ -1,6 +1,6 @@
 # Fusão LLM 2401 — Agentic AI Ecosystem Dashboard
 
-> Dashboard de inteligência artificial agentic com 2.402 projetos de desenvolvedores independentes chineses, 5 agentes AI integrados, pipeline RAG rRNA estilo Langchain, análise LLM em tempo real e chat com agente integrado.
+> **Agente Generativo Orquestrador Ativo** — Dashboard de ecossistema com 2.415 projetos indie, 5 AI Agents com Live GitHub Sync, pipeline RAG rRNA estilo Langchain, tRPC Nativo resolutivo, análise LLM e chat com agente integrado. Produção em Ambiente Real ao Vivo + Preview de Desenvolvimento.
 
 ---
 
@@ -10,7 +10,7 @@ A **Fusão LLM 2401** é um ecossistema Agentic AI fullstack que combina dados e
 
 O sistema parseriza automaticamente o repositório [chinese-independent-developer](https://github.com/1c7/chinese-independent-developer) (5.800+ linhas de Markdown), extrai dados estruturados via regex hierárquico (data → autor → projeto), classifica por categoria via heurística de keywords, e alimenta um dashboard de 10 painéis com APIs REST e integração LLM direta.
 
-**Nível de Arquitetura:** Fullstack Monorepo — Next.js 16 + Prisma ORM + SQLite + z-ai-web-dev-sdk + RAG rRNA Engine
+**Nível de Arquitetura:** Fullstack Monorepo — Next.js 16 + tRPC Nativo + Prisma ORM + SQLite + z-ai-web-dev-sdk + RAG rRNA Engine + GitHub Live Sync
 
 ---
 
@@ -20,13 +20,13 @@ O sistema parseriza automaticamente o repositório [chinese-independent-develope
 
 | Métrica | Valor |
 |---------|-------|
-| **Total de Projetos** | 2.402 |
-| **Desenvolvedores Únicos** | 1.467 |
+| **Total de Projetos** | 2.415+ |
+| **Desenvolvedores Únicos** | 1.479+ |
 | **Categorias Ativas** | 11 |
 | **Fontes de Dados** | 4 (main, programmer, game, archive) |
-| **Projetos Ativos** | 1.979 (82,4%) |
-| **Projetos Encerrados** | 395 (16,4%) |
-| **Em Desenvolvimento** | 28 (1,2%) |
+| **Projetos Ativos** | 1.992+ (82,5%) |
+| **Projetos Encerrados** | 395+ (16,4%) |
+| **Em Desenvolvimento** | 28+ (1,2%) |
 | **Período Coberto** | 2018 — Julho 2026 |
 | **Meses com Dados** | 24+ |
 
@@ -67,47 +67,50 @@ O sistema parseriza automaticamente o repositório [chinese-independent-develope
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                      Fusão LLM 2401 v2                           │
+│                 Fusão LLM 2401 v3 — Agente Generativo             │
+│                Orquestrador Ativo — tRPC Nativo                   │
 ├──────────────────────────────────────────────────────────────────┤
 │  Frontend (Next.js 16 + React 19 + Tailwind 4 + shadcn/ui)     │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────┐ │
-│  │ Dashboard │ │Agent Hub │ │ RAG rRNA │ │ Chat AI  │ │ Quick │ │
-│  │ 10 panels│ │ 5 agents │ │  Chat    │ │Flutuante │ │Search │ │
-│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └───┬───┘ │
-│       └─────────────┴─────────────┴─────────────┴──────────┘     │
-│                          │ REST API                              │
-├──────────────────────────┼──────────────────────────────────────┤
-│  API Layer (Next.js Route Handlers)                               │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────┐ │
-│  │/api/projects │ │/api/projects/│ │ /api/rag/    │ │/api/   │ │
-│  │  (search,    │ │  stats       │ │  query       │ │agent/  │ │
-│  │   filters,   │ │  (10 metrics)│ │  (rRNA pipe) │ │chat    │ │
-│  │   paginate)  │ │              │ │              │ │(LLM)   │ │
-│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └───┬────┘ │
-│         └────────────────┼────────────────┼──────────────┘      │
-│                          │ Prisma Client                      │
-├──────────────────────────┼──────────────────────────────────────┤
-│  Data Layer (SQLite + Prisma ORM)                                │
-│  ┌──────────────────────────────────────────────────────────┐    │
-│  │ Project (2.402) | Agent (5) | AgentSkill (29) |          │    │
-│  │ KnowledgeEntry (40+) | ChatMessage | MoltbookState       │    │
-│  │ 12+ indexes otimizados                                   │    │
-│  └──────────────────────────────────────────────────────────┘    │
+│  ┌──────────┐ ┌──────────────┐ ┌──────────┐ ┌──────────┐ ┌───┐ │
+│  │ Dashboard │ │ Agent Hub    │ │ RAG rRNA │ │ Chat AI  │ │Q. │ │
+│  │ 10 nucleos│ │ LIVE SYNCED │ │  Chat    │ │Flutuante │ │S. │ │
+│  │ (tRPC)   │ │ 5 agents     │ │          │ │          │ │   │ │
+│  └────┬─────┘ └────┬─────────┘ └────┬─────┘ └────┬─────┘ └─┬─┘ │
+│       └─────────────┴────────────────┴─────────────┴──────────┘     │
+│                    │ tRPC Nativo (type-safe)                       │
+├────────────────────┼──────────────────────────────────────────────┤
+│  tRPC Layer — Resolutivo, type-safe, auto-cached                   │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────┐    │
+│  │trpc.dashboard│ │trpc.agents   │ │trpc.agents   │ │/api/   │    │
+│  │  .stats()    │ │  .list()     │ │  .sync()     │ │rag/    │    │
+│  │  (10 metrics)│ │  (+live data)│ │ (GitHub API) │ │query   │    │
+│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └───┬────┘    │
+│         └────────────────┼────────────────┼──────────────┘         │
+│                    │ Prisma Client + GitHub API                    │
+├────────────────────┼──────────────────────────────────────────────┤
+│  Data Layer (SQLite + Prisma ORM + GitHub REST API v3)            │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │ Project (2.415) | Agent (5) | AgentSkill (29) |          │     │
+│  │ KnowledgeEntry (40+) | ChatMessage | MoltbookState       │     │
+│  │ + Live Sync Cache (stars, forks, commits, language)      │     │
+│  │ 12+ indexes otimizados                                   │     │
+│  └──────────────────────────────────────────────────────────┘     │
 ├──────────────────────────────────────────────────────────────────┤
 │  RAG rRNA Engine (src/lib/rag-engine.ts)                         │
-│  ┌──────────┐ ┌─────────┐ ┌─────┐ ┌────────┐ ┌───────────────┐ │
-│  │Recursive │ │TF-IDF   │ │BM25 │ │Cross-  │ │ LLM Synthesis │ │
-│  │Chunking  │ │Encoding │ │Retr.│ │Encoder │ │ (GLM-4-Flash) │ │
-│  │(500,50)  │ │(n-grams)│ │(k1= │ │Rerank  │ │  + Offline    │ │
-│  │          │ │         │ │1.5) │ │        │ │  Fallback     │ │
-│  └──────────┘ └─────────┘ └─────┘ └────────┘ └───────────────┘ │
+│  ┌──────────┐ ┌─────────┐ ┌─────┐ ┌────────┐ ┌───────────────┐  │
+│  │Recursive │ │TF-IDF   │ │BM25 │ │Cross-  │ │ LLM Synthesis │  │
+│  │Chunking  │ │Encoding │ │Retr.│ │Encoder │ │ (GLM-4-Flash) │  │
+│  │(500,50)  │ │(n-grams)│ │(k1= │ │Rerank  │ │  + Offline    │  │
+│  │          │ │         │ │1.5) │ │        │ │  Fallback     │  │
+│  └──────────┘ └─────────┘ └─────┘ └────────┘ └───────────────┘  │
 ├──────────────────────────────────────────────────────────────────┤
-│  Knowledge Extraction (scripts/seed-knowledge-rag.ts)            │
-│  ┌────────────┐ → ┌──────────────┐ → ┌────────────┐ → DB       │
-│  │ 5 Agent    │    │ Flow/Schema  │    │ 40+       │            │
-│  │ Repos      │    │ Extraction   │    │ Knowledge  │            │
-│  │ (real code)│    │              │    │ Entries    │            │
-│  └────────────┘ └──────────────┘ └────────────┘            │
+│  GitHub Live Sync (src/lib/github-sync.ts)                       │
+│  ┌────────────┐ → ┌──────────────┐ → ┌────────────┐ → DB         │
+│  │ 5 Agent    │    │ GitHub API   │    │ Moltbook   │             │
+│  │ Repos      │    │ v3 (REST)    │    │ State Cache│             │
+│  │ (real)     │    │ stars,forks, │    │ + Status   │             │
+│  │            │    │ commits,lang │    │ Update     │             │
+│  └────────────┘ └──────────────┘ └────────────┘             │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -278,7 +281,38 @@ prisma/
 
 ---
 
-## API Endpoints
+## tRPC Nativo — Resolutivo Type-Safe Communication
+
+O sistema utiliza **tRPC v11** com `@trpc/react-query` para comunicação cliente-servidor completamente type-safe. Todas as queries são automaticamente cacheadas (30s stale time) e revalidadas ao focar a janela. Mutations invalidam caches automaticamente.
+
+### Procedures
+
+| Procedure | Tipo | Descrição |
+|-----------|------|-----------|
+| `trpc.dashboard.stats.query()` | Query | 10 métricas agregadas do dashboard (total, status, categorias, tendências, autores, cidades, fontes, projetos recentes) |
+| `trpc.agents.list.query()` | Query | Lista 5 agentes com skills, knowledge counts, sync data e lastSync timestamp |
+| `trpc.agents.sync.mutate()` | Mutation | Dispara sync com GitHub API v3 — busca stars, forks, commits/30d, language, last push de todos os 5 repositórios |
+| `trpc.agents.syncStatus.query()` | Query | Status de sincronização sem triggerar novo sync (polling-friendly) |
+
+### tRPC Infrastructure
+
+```
+src/server/trpc.ts          → initTRPC, createContext, publicProcedure
+src/server/root.ts           → appRouter (aggregates all sub-routers)
+src/server/routers/dashboard.ts → dashboardRouter (stats procedure)
+src/server/routers/agents.ts   → agentsRouter (list, sync, syncStatus)
+src/lib/trpc.ts              → createTRPCReact (client hooks)
+src/providers/trpc-provider.tsx → TRPCProvider (QueryClient + tRPC client)
+src/app/api/trpc/[trpc]/route.ts → fetchRequestHandler adapter
+```
+
+### GitHub Live Sync
+
+O `agents.sync` mutation busca dados reais do GitHub API v3 para cada um dos 5 repositórios Nexus-HUB57. Os dados incluem: stars, forks, open issues, language, repo size, last push date e commits recentes (30 dias). Os resultados são cacheados no MoltbookState e o status do agente é atualizado automaticamente (active/idle/offline baseado na data do último push).
+
+---
+
+## REST API Endpoints (Legado)
 
 ### Projetos
 
@@ -293,11 +327,7 @@ prisma/
 | `page` | query | Página (default: 1) |
 | `limit` | query | Itens por página (max: 50) |
 
-**`GET /api/projects/stats`** — 10 métricas agregadas para o dashboard.
-
-### Agentes
-
-**`GET /api/agents`** — Lista 5 agentes com skills, contadores de knowledge e messages, e summary agregado.
+**`GET /api/projects/stats`** — 10 métricas agregadas para o dashboard (legado — preferir `trpc.dashboard.stats`).
 
 ### RAG rRNA
 

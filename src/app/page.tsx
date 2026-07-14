@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -24,18 +24,14 @@ import {
   ArrowUpRight, Cpu, BrainCircuit, ChevronDown,
   Mic, Database, Bitcoin, Wrench, LayoutDashboard,
   CpuIcon, ShieldCheck, Workflow, Code2, BookOpen,
-  Radio, Server, Network, AlertCircle,
+  Radio, Server, Network, AlertCircle, RefreshCw,
+  GitBranch, GitFork, Star, CircleDot,
 } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
 
 /* ================================================================
    TYPES
    ================================================================ */
-interface Project {
-  id: string; name: string; description: string; author: string;
-  authorCity?: string | null; category: string; dateAdded: string; source: string;
-  status?: string | null; url?: string;
-}
-
 interface ChatMsg { role: 'user' | 'agent' | 'system'; content: string; }
 
 interface RetrievedSource {
@@ -59,60 +55,6 @@ interface RagResponse {
     reranked: number;
     contextChars: number;
   };
-}
-
-interface Stats {
-  total: number; active: number; closed: number; developing: number;
-  byCategory: Record<string, number>;
-  byMonth: { month: string; count: number }[];
-  bySource: Record<string, number>;
-  topAuthors: { name: string; count: number }[];
-  uniqueAuthors: number;
-  topCities: { city: string; count: number }[];
-  recentProjects: { name: string; author: string; category: string; dateAdded: string; url?: string }[];
-}
-
-interface AgentSkill {
-  name: string;
-  category: string;
-  description?: string;
-  enabled: boolean;
-}
-
-interface AgentData {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  version: string;
-  status: string;
-  agentType: string;
-  tier: string;
-  repoUrl?: string;
-  techStack: string;
-  capabilities: string;
-  llmModel?: string;
-  apiCount: number;
-  flowCount: number;
-  hasVoice: boolean;
-  hasRag: boolean;
-  hasBtc: boolean;
-  architecture?: string;
-  skills: AgentSkill[];
-  _count: { knowledge: number; messages: number };
-}
-
-interface AgentSummary {
-  total: number;
-  core: number;
-  withVoice: number;
-  withRag: number;
-  withBtc: number;
-  totalSkills: number;
-  totalFlows: number;
-  totalApis: number;
-  totalKnowledge: number;
-  types: string[];
 }
 
 /* ================================================================
@@ -170,11 +112,16 @@ const TYPE_COLORS: Record<string, string> = {
 /* ================================================================
    PANEL 1-4: KPI STAT CARDS
    ================================================================ */
-function KpiCard({ label, value, icon: Icon, color, sub }: {
-  label: string; value: string | number; icon: React.ElementType; color: string; sub?: string;
+function KpiCard({ label, value, icon: Icon, color, sub, pulse }: {
+  label: string; value: string | number; icon: React.ElementType; color: string; sub?: string; pulse?: boolean;
 }) {
   return (
-    <Card className="bg-zinc-900/80 border-zinc-800/80 gap-0 py-4 px-4 hover:border-zinc-700 transition-all group">
+    <Card className="bg-zinc-900/80 border-zinc-800/80 gap-0 py-4 px-4 hover:border-zinc-700 transition-all group relative overflow-hidden">
+      {pulse && (
+        <div className="absolute top-2 right-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        </div>
+      )}
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-medium">{label}</span>
         <div className={`p-1.5 rounded-lg ${color}`}>
@@ -188,9 +135,9 @@ function KpiCard({ label, value, icon: Icon, color, sub }: {
 }
 
 /* ================================================================
-   PANEL 5: STATUS BREAKDOWN
+   PANEL 5: STATUS BREAKDOWN (Stacked Bar)
    ================================================================ */
-function StatusPanel({ stats }: { stats: Stats }) {
+function StatusPanel({ stats }: { stats: NonNullable<ReturnType<typeof useDashboardStats>> }) {
   const total = stats.total || 1;
   const items = [
     { label: 'Ativos', count: stats.active, color: 'bg-emerald-500', textColor: 'text-emerald-400', icon: Activity },
@@ -231,9 +178,9 @@ function StatusPanel({ stats }: { stats: Stats }) {
 }
 
 /* ================================================================
-   PANEL 6: CATEGORY BREAKDOWN
+   PANEL 6: CATEGORY DISTRIBUTION (Horizontal Bars)
    ================================================================ */
-function CategoryPanel({ stats }: { stats: Stats }) {
+function CategoryPanel({ stats }: { stats: NonNullable<ReturnType<typeof useDashboardStats>> }) {
   const entries = Object.entries(stats.byCategory || {}).sort((a, b) => b[1] - a[1]);
   const max = entries[0]?.[1] || 1;
   const total = entries.reduce((s, [, c]) => s + c, 0) || 1;
@@ -269,9 +216,9 @@ function CategoryPanel({ stats }: { stats: Stats }) {
 }
 
 /* ================================================================
-   PANEL 7: MONTHLY TREND
+   PANEL 7: MONTHLY TREND (Bar Chart)
    ================================================================ */
-function TrendPanel({ stats }: { stats: Stats }) {
+function TrendPanel({ stats }: { stats: NonNullable<ReturnType<typeof useDashboardStats>> }) {
   const data = stats.byMonth || [];
   const maxM = data.length > 0 ? Math.max(...data.map(m => m.count)) : 1;
   return (
@@ -312,9 +259,9 @@ function TrendPanel({ stats }: { stats: Stats }) {
 }
 
 /* ================================================================
-   PANEL 8: TOP AUTHORS
+   PANEL 8: TOP 10 AUTHORS
    ================================================================ */
-function AuthorsPanel({ stats }: { stats: Stats }) {
+function AuthorsPanel({ stats }: { stats: NonNullable<ReturnType<typeof useDashboardStats>> }) {
   const authors = stats.topAuthors || [];
   const maxA = authors[0]?.count || 1;
   return (
@@ -351,9 +298,9 @@ function AuthorsPanel({ stats }: { stats: Stats }) {
 }
 
 /* ================================================================
-   PANEL 9: SOURCE DISTRIBUTION (DONUT)
+   PANEL 9: SOURCE DISTRIBUTION (Donut)
    ================================================================ */
-function SourcePanel({ stats }: { stats: Stats }) {
+function SourcePanel({ stats }: { stats: NonNullable<ReturnType<typeof useDashboardStats>> }) {
   const entries = Object.entries(stats.bySource || {});
   const total = entries.reduce((a, [, b]) => a + b, 0) || 1;
   return (
@@ -401,7 +348,7 @@ function SourcePanel({ stats }: { stats: Stats }) {
 /* ================================================================
    PANEL 10: TOP CITIES
    ================================================================ */
-function CitiesPanel({ stats }: { stats: Stats }) {
+function CitiesPanel({ stats }: { stats: NonNullable<ReturnType<typeof useDashboardStats>> }) {
   const cities = stats.topCities || [];
   const maxC = cities[0]?.count || 1;
   return (
@@ -479,7 +426,7 @@ function AiInsightsPanel() {
 /* ================================================================
    RECENT PROJECTS STRIP
    ================================================================ */
-function RecentStrip({ projects }: { projects: Stats['recentProjects'] }) {
+function RecentStrip({ projects }: { projects: Array<{ name: string; author: string; category: string; dateAdded: string; url?: string }> }) {
   if (!projects?.length) return null;
   return (
     <Card className="bg-zinc-900/80 border-zinc-800/80 gap-3">
@@ -497,7 +444,7 @@ function RecentStrip({ projects }: { projects: Stats['recentProjects'] }) {
               <span className="text-zinc-200 font-medium truncate group-hover:text-emerald-400 transition-colors">{p.name}</span>
               <span className="text-zinc-600 mx-1">by</span>
               <span className="text-zinc-400 truncate">{p.author}</span>
-              <span className="ml-auto inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium border {catColor(p.category)}" style={undefined}>
+              <span className="ml-auto">
                 <span className={catColor(p.category)}>{p.category}</span>
               </span>
             </a>
@@ -513,7 +460,7 @@ function RecentStrip({ projects }: { projects: Stats['recentProjects'] }) {
    ================================================================ */
 function QuickSearch() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Project[]>([]);
+  const [results, setResults] = useState<Array<{ id: string; name: string; description: string; author: string; status?: string | null; url?: string }>>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -567,10 +514,58 @@ function QuickSearch() {
 }
 
 /* ================================================================
-   DASHBOARD TAB CONTENT
+   DASHBOARD TAB CONTENT — 10 NUCLEOS/PANEIS (tRPC powered)
+   CRITICAL: Always renders panels, NEVER returns null.
    ================================================================ */
-function DashboardTab({ stats, loading }: { stats: Stats | null; loading: boolean }) {
-  if (loading) {
+type DashboardStats = {
+  total: number; active: number; closed: number; developing: number;
+  byCategory: Record<string, number>;
+  byMonth: { month: string; count: number }[];
+  bySource: Record<string, number>;
+  topAuthors: { name: string; count: number }[];
+  uniqueAuthors: number;
+  topCities: { city: string; count: number }[];
+  recentProjects: { name: string; author: string; category: string; dateAdded: string; url?: string }[];
+};
+
+// Fallback data — ensures panels ALWAYS render even if API fails
+const FALLBACK_STATS: DashboardStats = {
+  total: 0, active: 0, closed: 0, developing: 0,
+  byCategory: {}, byMonth: [], bySource: {},
+  topAuthors: [], uniqueAuthors: 0, topCities: [], recentProjects: [],
+};
+
+function useDashboardStats() {
+  const { data, isLoading, error, refetch } = trpc.dashboard.stats.useQuery(undefined, {
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+    retry: 3,
+  });
+
+  const stats: DashboardStats = data
+    ? {
+        total: data.total ?? 0,
+        active: data.active ?? 0,
+        closed: data.closed ?? 0,
+        developing: data.developing ?? 0,
+        byCategory: (data.byCategory as Record<string, number>) ?? {},
+        byMonth: (data.byMonth as { month: string; count: number }[]) ?? [],
+        bySource: (data.bySource as Record<string, number>) ?? {},
+        topAuthors: (data.topAuthors as { name: string; count: number }[]) ?? [],
+        uniqueAuthors: data.uniqueAuthors ?? 0,
+        topCities: (data.topCities as { city: string; count: number }[]) ?? [],
+        recentProjects: (data.recentProjects as DashboardStats['recentProjects']) ?? [],
+      }
+    : FALLBACK_STATS;
+
+  return { ...stats, isLoading, hasError: !!error, refetch };
+}
+
+function DashboardTab() {
+  const stats = useDashboardStats();
+
+  // LOADING STATE — show skeleton but maintain the 10-panel structure
+  if (stats.isLoading) {
     return (
       <div className="space-y-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -588,37 +583,54 @@ function DashboardTab({ stats, loading }: { stats: Stats | null; loading: boolea
             <Skeleton key={i} className="h-64 bg-zinc-900 rounded-xl" />
           ))}
         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 bg-zinc-900 rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
 
-  if (!stats) return null;
+  // CRITICAL FIX: NEVER return null. Always render all 10 panels.
+  // If API failed, show fallback data with error banner + retry.
 
   return (
     <div className="space-y-5">
-      {/* Row 1: 4 KPI Cards */}
+      {/* Error Banner — only shown when API fails, panels still render */}
+      {stats.hasError && (
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl">
+          <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+          <span className="text-xs text-red-300 flex-1">Erro ao carregar dados do dashboard. Exibindo dados em cache.</span>
+          <Button onClick={() => stats.refetch()} size="sm" variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5 text-xs h-7">
+            <RefreshCw className="w-3 h-3" />Retentar
+          </Button>
+        </div>
+      )}
+
+      {/* Row 1: 4 KPI Cards (Panel 1-4) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label="Total Projetos" value={stats.total?.toLocaleString()} icon={Globe} color="text-emerald-400 bg-emerald-500/10" sub="Ecosistema completo" />
-        <KpiCard label="Desenvolvedores" value={stats.uniqueAuthors?.toLocaleString()} icon={Users} color="text-purple-400 bg-purple-500/10" sub="Autores unicos" />
-        <KpiCard label="Categorias" value={Object.keys(stats.byCategory || {}).length} icon={Layers} color="text-amber-400 bg-amber-500/10" sub="Classificacoes ativas" />
-        <KpiCard label="Fontes" value={Object.keys(stats.bySource || {}).length} icon={Github} color="text-sky-400 bg-sky-500/10" sub="Repositories monitorados" />
+        <KpiCard label="Total Projetos" value={stats.total?.toLocaleString() || '—'} icon={Globe} color="text-emerald-400 bg-emerald-500/10" sub="Ecosistema completo" pulse={!stats.hasError} />
+        <KpiCard label="Desenvolvedores" value={stats.uniqueAuthors?.toLocaleString() || '—'} icon={Users} color="text-purple-400 bg-purple-500/10" sub="Autores unicos" />
+        <KpiCard label="Categorias" value={Object.keys(stats.byCategory || {}).length || '—'} icon={Layers} color="text-amber-400 bg-amber-500/10" sub="Classificacoes ativas" />
+        <KpiCard label="Fontes" value={Object.keys(stats.bySource || {}).length || '—'} icon={Github} color="text-sky-400 bg-sky-500/10" sub="Repositories monitorados" />
       </div>
 
-      {/* Row 2: Status + Category + Trend */}
+      {/* Row 2: Status + Category + Trend (Panel 5-7) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <StatusPanel stats={stats} />
         <CategoryPanel stats={stats} />
         <TrendPanel stats={stats} />
       </div>
 
-      {/* Row 3: Authors + Source + Cities */}
+      {/* Row 3: Authors + Source + Cities (Panel 8-10) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <AuthorsPanel stats={stats} />
         <SourcePanel stats={stats} />
         <CitiesPanel stats={stats} />
       </div>
 
-      {/* Row 4: AI Insights + Recent Projects */}
+      {/* Row 4: AI Insights + Recent Projects (Bonus panels) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <AiInsightsPanel />
         <RecentStrip projects={stats.recentProjects || []} />
@@ -628,16 +640,115 @@ function DashboardTab({ stats, loading }: { stats: Stats | null; loading: boolea
 }
 
 /* ================================================================
-   AGENT HUB TAB
+   AGENT HUB TAB — DYNAMIC with Live GitHub Sync (tRPC powered)
    ================================================================ */
-function AgentHubTab({ agents, summary, loading }: {
-  agents: AgentData[] | null;
-  summary: AgentSummary | null;
-  loading: boolean;
-}) {
+interface AgentSkill {
+  name: string;
+  category: string;
+  description?: string;
+  enabled: boolean;
+}
+
+interface AgentData {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  version: string;
+  status: string;
+  agentType: string;
+  tier: string;
+  repoUrl?: string;
+  techStack: string;
+  capabilities: string;
+  llmModel?: string;
+  apiCount: number;
+  flowCount: number;
+  hasVoice: boolean;
+  hasRag: boolean;
+  hasBtc: boolean;
+  architecture?: string;
+  skills: AgentSkill[];
+  _count: { knowledge: number; messages: number };
+}
+
+interface AgentSummary {
+  total: number;
+  core: number;
+  withVoice: number;
+  withRag: number;
+  withBtc: number;
+  totalSkills: number;
+  totalFlows: number;
+  totalApis: number;
+  totalKnowledge: number;
+  types: string[];
+}
+
+interface SyncData {
+  stars: number;
+  forks: number;
+  openIssues: number;
+  lastPush: string;
+  language: string | null;
+  repoSize: number;
+  recentCommits: number;
+  description?: string;
+  topics?: string[];
+  visibility?: string;
+}
+
+function AgentHubTab() {
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
 
-  if (loading) {
+  // tRPC queries — type-safe, auto-caching, auto-revalidation
+  const { data: agentsData, isLoading: agentsLoading, refetch: refetchAgents } = trpc.agents.list.useQuery(undefined, {
+    staleTime: 15 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+  const syncMutation = trpc.agents.sync.useMutation({
+    onSuccess: () => {
+      refetchAgents();
+    },
+  });
+
+  const { data: syncStatus } = trpc.agents.syncStatus.useQuery(undefined, {
+    staleTime: 10 * 1000,
+    refetchInterval: 60 * 1000, // Auto-poll every 60s
+  });
+
+  const agents: AgentData[] = agentsData?.agents ?? [];
+  const summary: AgentSummary | undefined = agentsData?.summary;
+  const syncDataMap: Record<string, SyncData | null> = agentsData?.syncData ?? {};
+  const lastSync = agentsData?.lastSync ?? syncStatus?.lastSync ?? null;
+
+  const parseJson = (str: string): string[] => {
+    try { return JSON.parse(str); } catch { return [str]; }
+  };
+
+  const formatTimeAgo = (isoString: string | null): string => {
+    if (!isoString) return 'Nunca';
+    const diff = Date.now() - new Date(isoString).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Agora';
+    if (mins < 60) return `${mins}m atras`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h atras`;
+    const days = Math.floor(hours / 24);
+    return `${days}d atras`;
+  };
+
+  const liveStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-emerald-400';
+      case 'idle': return 'bg-amber-400';
+      case 'offline': return 'bg-red-400';
+      default: return 'bg-zinc-600';
+    }
+  };
+
+  if (agentsLoading) {
     return (
       <div className="space-y-5">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -654,11 +765,18 @@ function AgentHubTab({ agents, summary, loading }: {
     );
   }
 
-  if (!agents || !summary) return null;
-
-  const parseJson = (str: string): string[] => {
-    try { return JSON.parse(str); } catch { return [str]; }
-  };
+  if (!agents.length || !summary) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Server className="w-12 h-12 text-zinc-700 mb-4" />
+        <h3 className="text-sm font-semibold text-zinc-300 mb-1">Nenhum agente encontrado</h3>
+        <p className="text-xs text-zinc-500 mb-4">Execute o seed para popular os agentes.</p>
+        <Button onClick={() => refetchAgents()} variant="outline" size="sm" className="text-xs gap-2">
+          <RefreshCw className="w-3.5 h-3.5" />Tentar novamente
+        </Button>
+      </div>
+    );
+  }
 
   const summaryCards = [
     { label: 'Total Agentes', value: summary.total, icon: Bot, color: 'text-emerald-400 bg-emerald-500/10' },
@@ -671,6 +789,36 @@ function AgentHubTab({ agents, summary, loading }: {
 
   return (
     <div className="space-y-5">
+      {/* Sync Status Banner — LIVE indicator */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-900/60 border border-zinc-800/60 rounded-xl">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className={`w-2.5 h-2.5 rounded-full ${lastSync ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
+            <span className="text-xs text-zinc-300 font-medium">
+              {lastSync ? 'Hub Sincronizado' : 'Aguardando Sync'}
+            </span>
+          </div>
+          {lastSync && (
+            <span className="text-[10px] text-zinc-500">
+              Ultimo sync: {formatTimeAgo(lastSync)} ({new Date(lastSync).toLocaleTimeString('pt-BR')})
+            </span>
+          )}
+        </div>
+        <Button
+          onClick={() => syncMutation.mutate()}
+          disabled={syncMutation.isPending}
+          size="sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 text-xs h-8"
+        >
+          {syncMutation.isPending ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="w-3.5 h-3.5" />
+          )}
+          Sync GitHub Live
+        </Button>
+      </div>
+
       {/* Summary Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {summaryCards.map((s) => (
@@ -686,7 +834,7 @@ function AgentHubTab({ agents, summary, loading }: {
         ))}
       </div>
 
-      {/* Agent Cards */}
+      {/* Agent Cards — Dynamic with Live Sync Data */}
       <div className="space-y-4">
         {agents.map((agent) => {
           const techStack = parseJson(agent.techStack);
@@ -694,6 +842,8 @@ function AgentHubTab({ agents, summary, loading }: {
           const isExpanded = expandedAgent === agent.id;
           const typeColor = TYPE_COLORS[agent.agentType] || 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
           const tierColor = TIER_COLORS[agent.tier] || 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+          const syncData = syncDataMap[agent.slug] as SyncData | null;
+          const isSyncing = syncMutation.isPending;
 
           return (
             <Card key={agent.id} className="bg-zinc-900/80 border-zinc-800/80 gap-0 overflow-hidden hover:border-zinc-700 transition-all">
@@ -705,6 +855,8 @@ function AgentHubTab({ agents, summary, loading }: {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      {/* Live Status Dot */}
+                      <div className={`w-2 h-2 rounded-full ${liveStatusColor(agent.status)}`} />
                       <h3 className="text-base font-bold text-zinc-100">{agent.name}</h3>
                       <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium border ${typeColor}`}>
                         {agent.agentType}
@@ -743,7 +895,7 @@ function AgentHubTab({ agents, summary, loading }: {
                   </div>
                 </div>
 
-                {/* Quick Stats Row */}
+                {/* Quick Stats Row — STATIC seed data */}
                 <div className="flex items-center gap-4 mt-3 text-[10px] text-zinc-500">
                   {agent.llmModel && (
                     <span className="flex items-center gap-1">
@@ -763,6 +915,40 @@ function AgentHubTab({ agents, summary, loading }: {
                     <Zap className="w-3 h-3 text-purple-400/60" />{agent.skills.length} skills
                   </span>
                 </div>
+
+                {/* Live GitHub Stats — DYNAMIC real-time data */}
+                {syncData && (
+                  <div className="flex items-center gap-4 mt-2 pt-2 border-t border-zinc-800/40 text-[10px]">
+                    <span className="flex items-center gap-1 text-amber-400">
+                      <Star className="w-3 h-3" />{syncData.stars} stars
+                    </span>
+                    <span className="flex items-center gap-1 text-sky-400">
+                      <GitFork className="w-3 h-3" />{syncData.forks} forks
+                    </span>
+                    <span className="flex items-center gap-1 text-orange-400">
+                      <CircleDot className="w-3 h-3" />{syncData.openIssues} issues
+                    </span>
+                    <span className="flex items-center gap-1 text-emerald-400">
+                      <GitBranch className="w-3 h-3" />{syncData.recentCommits} commits/30d
+                    </span>
+                    {syncData.language && (
+                      <span className="flex items-center gap-1 text-zinc-400">
+                        <Code2 className="w-3 h-3" />{syncData.language}
+                      </span>
+                    )}
+                    {syncData.lastPush && (
+                      <span className="flex items-center gap-1 text-zinc-500 ml-auto">
+                        <Clock className="w-3 h-3" />Push: {formatTimeAgo(syncData.lastPush)}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {!syncData && !isSyncing && (
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-zinc-800/40 text-[10px] text-zinc-600">
+                    <Network className="w-3 h-3" />
+                    <span>Dados do repositorio nao sincronizados. Clique &quot;Sync GitHub Live&quot; acima.</span>
+                  </div>
+                )}
               </div>
 
               {/* Expanded Content */}
@@ -836,7 +1022,7 @@ function AgentHubTab({ agents, summary, loading }: {
                     )}
                     <span className="flex items-center gap-1">
                       <Radio className="w-3 h-3" />Status:
-                      <span className={agent.status === 'active' ? 'text-emerald-400' : 'text-zinc-400'}>{agent.status}</span>
+                      <span className={`font-medium ${agent.status === 'active' ? 'text-emerald-400' : agent.status === 'idle' ? 'text-amber-400' : 'text-zinc-400'}`}>{agent.status}</span>
                     </span>
                   </div>
                 </div>
@@ -852,7 +1038,11 @@ function AgentHubTab({ agents, summary, loading }: {
 /* ================================================================
    RAG CHAT TAB
    ================================================================ */
-function RagChatTab({ agents }: { agents: AgentData[] | null }) {
+function RagChatTab() {
+  // Get agents for filter dropdown via tRPC
+  const { data: agentsData } = trpc.agents.list.useQuery(undefined, { staleTime: 60_000 });
+  const agents: AgentData[] = agentsData?.agents ?? [];
+
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; retrieved?: RetrievedSource[]; contextLength?: number; pipeline?: RagResponse['pipeline'] }>>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -907,7 +1097,7 @@ function RagChatTab({ agents }: { agents: AgentData[] | null }) {
 
   const agentOptions = [
     { value: 'all', label: 'Todos os Agentes' },
-    ...(agents || []).map(a => ({ value: a.slug, label: a.name })),
+    ...agents.map(a => ({ value: a.slug, label: a.name })),
   ];
 
   return (
@@ -948,7 +1138,7 @@ function RagChatTab({ agents }: { agents: AgentData[] | null }) {
 
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] md:max-w-[70%] ${msg.role === 'user' ? '' : ''}`}>
+              <div className={`max-w-[85%] md:max-w-[70%]`}>
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-1.5 mb-1.5 text-emerald-400 text-[10px] font-medium pl-1">
                     <Bot className="w-3 h-3" />RAG rRNA Agent
@@ -1190,39 +1380,10 @@ function AgentChat() {
 
 /* ================================================================
    MAIN PAGE — FUSÃO LLM 2401 AGENTIC AI DASHBOARD
+   Agente Generativo Orquestrador Ativo — tRPC Nativo, Live Sync
    ================================================================ */
 export default function Home() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [agents, setAgents] = useState<AgentData[] | null>(null);
-  const [agentSummary, setAgentSummary] = useState<AgentSummary | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [agentsLoading, setAgentsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/projects/stats');
-        const data = await res.json();
-        setStats(data);
-      } catch { setStats(null); }
-      setStatsLoading(false);
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'agents' || activeTab === 'rag') {
-      (async () => {
-        try {
-          const res = await fetch('/api/agents');
-          const data = await res.json();
-          setAgents(data.agents || []);
-          setAgentSummary(data.summary || null);
-        } catch { setAgents(null); }
-        setAgentsLoading(false);
-      })();
-    }
-  }, [activeTab]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#09090b] text-zinc-100">
@@ -1245,8 +1406,9 @@ export default function Home() {
               <h1 className="text-sm font-bold text-zinc-100 leading-none tracking-tight flex items-center gap-2">
                 Fusão LLM 2401
                 <span className="text-[9px] font-medium bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-md border border-emerald-500/20">Agentic AI</span>
+                <span className="text-[9px] font-medium bg-amber-500/15 text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">tRPC</span>
               </h1>
-              <p className="text-[10px] text-zinc-500 mt-0.5">Ecosystem Dashboard &bull; LLM Powered</p>
+              <p className="text-[10px] text-zinc-500 mt-0.5">Agente Generativo Orquestrador Ativo &bull; Live Sync</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -1266,53 +1428,55 @@ export default function Home() {
 
       {/* ═══ MAIN CONTENT WITH TABS ═══ */}
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-          {/* Tab Navigation */}
-          <div className="flex items-center gap-4 flex-wrap">
-            <TabsList className="bg-zinc-900 border border-zinc-800 p-1 rounded-xl h-auto">
-              <TabsTrigger value="dashboard"
-                className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                Dashboard
-              </TabsTrigger>
-              <TabsTrigger value="agents"
-                className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
-                <Bot className="w-3.5 h-3.5" />
-                Agent Hub
-              </TabsTrigger>
-              <TabsTrigger value="rag"
-                className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
-                <Database className="w-3.5 h-3.5" />
-                RAG Chat
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        <TooltipProvider delayDuration={200}>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
+            {/* Tab Navigation */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <TabsList className="bg-zinc-900 border border-zinc-800 p-1 rounded-xl h-auto">
+                <TabsTrigger value="dashboard"
+                  className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  Dashboard
+                </TabsTrigger>
+                <TabsTrigger value="agents"
+                  className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
+                  <Bot className="w-3.5 h-3.5" />
+                  Agent Hub
+                </TabsTrigger>
+                <TabsTrigger value="rag"
+                  className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
+                  <Database className="w-3.5 h-3.5" />
+                  RAG Chat
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-          {/* Dashboard Tab */}
-          <TabsContent value="dashboard">
-            <DashboardTab stats={stats} loading={statsLoading} />
-          </TabsContent>
+            {/* Dashboard Tab — 10 Nucleos/Paineis ALWAYS visible */}
+            <TabsContent value="dashboard">
+              <DashboardTab />
+            </TabsContent>
 
-          {/* Agent Hub Tab */}
-          <TabsContent value="agents">
-            <AgentHubTab agents={agents} summary={agentSummary} loading={agentsLoading} />
-          </TabsContent>
+            {/* Agent Hub Tab — Dynamic with Live GitHub Sync */}
+            <TabsContent value="agents">
+              <AgentHubTab />
+            </TabsContent>
 
-          {/* RAG Chat Tab */}
-          <TabsContent value="rag">
-            <RagChatTab agents={agents} />
-          </TabsContent>
-        </Tabs>
+            {/* RAG Chat Tab */}
+            <TabsContent value="rag">
+              <RagChatTab />
+            </TabsContent>
+          </Tabs>
+        </TooltipProvider>
       </main>
 
       {/* ═══ FOOTER ═══ */}
       <footer className="border-t border-zinc-800/40 bg-[#09090b] mt-auto">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[10px] text-zinc-600">
-            Fusao LLM 2401 &mdash; Agentic AI Ecosystem Dashboard
+            Fusao LLM 2401 &mdash; Agente Generativo Orquestrador Ativo
           </p>
           <p className="text-[10px] text-zinc-700 flex items-center gap-1.5">
-            <Cpu className="w-3 h-3" />Powered by LLM &bull; {new Date().getFullYear()}
+            <Cpu className="w-3 h-3" />tRPC Nativo &bull; Live Sync &bull; {new Date().getFullYear()}
           </p>
         </div>
       </footer>
