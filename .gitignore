@@ -67,4 +67,4 @@ server.log
 /mini-services/
 /scripts/parsed-projects.json
 /scripts/*.json
-/tmp/
+/tmp/agents/

@@ -8,13 +8,23 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  Collapsible, CollapsibleTrigger, CollapsibleContent,
+} from '@/components/ui/collapsible';
 import {
   Search, Bot, BarChart3, ExternalLink, Github,
   MapPin, Calendar, Sparkles, Globe, Send, Loader2,
   Filter, TrendingUp, Users, Zap, Activity, Layers,
   Building2, Clock, Eye, MessageSquare, ChevronRight,
-  ArrowUpRight, Cpu, BrainCircuit
+  ArrowUpRight, Cpu, BrainCircuit, ChevronDown,
+  Mic, Database, Bitcoin, Wrench, LayoutDashboard,
+  CpuIcon, ShieldCheck, Workflow, Code2, BookOpen,
+  Radio, Server, Network, AlertCircle,
 } from 'lucide-react';
 
 /* ================================================================
@@ -28,6 +38,23 @@ interface Project {
 
 interface ChatMsg { role: 'user' | 'agent' | 'system'; content: string; }
 
+interface RetrievedSource {
+  id?: string;
+  title: string;
+  source: string;
+  agent: string;
+  agentSlug?: string;
+  score: number;
+  chunkType?: string;
+}
+
+interface RagResponse {
+  query: string;
+  answer: string;
+  retrieved: RetrievedSource[];
+  contextLength: number;
+}
+
 interface Stats {
   total: number; active: number; closed: number; developing: number;
   byCategory: Record<string, number>;
@@ -37,6 +64,49 @@ interface Stats {
   uniqueAuthors: number;
   topCities: { city: string; count: number }[];
   recentProjects: { name: string; author: string; category: string; dateAdded: string; url?: string }[];
+}
+
+interface AgentSkill {
+  name: string;
+  category: string;
+  description?: string;
+  enabled: boolean;
+}
+
+interface AgentData {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  version: string;
+  status: string;
+  agentType: string;
+  tier: string;
+  repoUrl?: string;
+  techStack: string;
+  capabilities: string;
+  llmModel?: string;
+  apiCount: number;
+  flowCount: number;
+  hasVoice: boolean;
+  hasRag: boolean;
+  hasBtc: boolean;
+  architecture?: string;
+  skills: AgentSkill[];
+  _count: { knowledge: number; messages: number };
+}
+
+interface AgentSummary {
+  total: number;
+  core: number;
+  withVoice: number;
+  withRag: number;
+  withBtc: number;
+  totalSkills: number;
+  totalFlows: number;
+  totalApis: number;
+  totalKnowledge: number;
+  types: string[];
 }
 
 /* ================================================================
@@ -63,19 +133,45 @@ const catColor = (c: string) => CAT_COLORS[c] || CAT_COLORS['其他'] || 'bg-zin
 const statusDot = (s?: string | null) =>
   s === 'active' ? 'bg-emerald-400' : s === 'developing' ? 'bg-amber-400' : s === 'closed' ? 'bg-red-400' : 'bg-zinc-600';
 
-const PIE_COLORS = ['bg-emerald-500', 'bg-amber-500', 'bg-purple-500', 'bg-sky-500', 'bg-pink-500', 'bg-teal-500', 'bg-orange-500', 'bg-indigo-500'];
+const PIE_COLORS = ['#10b981', '#f59e0b', '#a855f7', '#0ea5e9', '#ec4899', '#14b8a6', '#f97316', '#6366f1'];
+
+const SKILL_CAT_COLORS: Record<string, string> = {
+  reasoning: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+  execution: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
+  perception: 'bg-sky-500/15 text-sky-400 border-sky-500/25',
+  finance: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/25',
+  voice: 'bg-purple-500/15 text-purple-400 border-purple-500/25',
+  governance: 'bg-teal-500/15 text-teal-400 border-teal-500/25',
+  analysis: 'bg-rose-500/15 text-rose-400 border-rose-500/25',
+  integration: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/25',
+};
+const skillCatColor = (c: string) => SKILL_CAT_COLORS[c] || 'bg-zinc-500/15 text-zinc-400 border-zinc-500/25';
+
+const TIER_COLORS: Record<string, string> = {
+  core: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  extended: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  external: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  orchestrator: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  specialist: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  analyst: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  voice: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+  guardian: 'bg-red-500/20 text-red-400 border-red-500/30',
+};
 
 /* ================================================================
    PANEL 1-4: KPI STAT CARDS
    ================================================================ */
 function KpiCard({ label, value, icon: Icon, color, sub }: {
-  label: string; value: string | number; icon: any; color: string; sub?: string;
+  label: string; value: string | number; icon: React.ElementType; color: string; sub?: string;
 }) {
   return (
     <Card className="bg-zinc-900/80 border-zinc-800/80 gap-0 py-4 px-4 hover:border-zinc-700 transition-all group">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-medium">{label}</span>
-        <div className={`p-1.5 rounded-lg ${color} bg-opacity-10`}>
+        <div className={`p-1.5 rounded-lg ${color}`}>
           <Icon className="w-3.5 h-3.5" />
         </div>
       </div>
@@ -103,7 +199,6 @@ function StatusPanel({ stats }: { stats: Stats }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Stacked bar */}
         <div className="flex h-4 rounded-full overflow-hidden bg-zinc-800">
           {items.map((item) => (
             <div
@@ -135,6 +230,7 @@ function StatusPanel({ stats }: { stats: Stats }) {
 function CategoryPanel({ stats }: { stats: Stats }) {
   const entries = Object.entries(stats.byCategory || {}).sort((a, b) => b[1] - a[1]);
   const max = entries[0]?.[1] || 1;
+  const total = entries.reduce((s, [, c]) => s + c, 0) || 1;
   return (
     <Card className="bg-zinc-900/80 border-zinc-800/80 gap-3">
       <CardHeader className="pb-0">
@@ -149,7 +245,7 @@ function CategoryPanel({ stats }: { stats: Stats }) {
               <div key={cat} className="group">
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-zinc-300 font-medium group-hover:text-emerald-400 transition-colors">{cat}</span>
-                  <span className="text-zinc-500 font-mono">{count}</span>
+                  <span className="text-zinc-500 font-mono">{count} ({Math.round((count / total) * 100)}%)</span>
                 </div>
                 <div className="h-2.5 bg-zinc-800 rounded-full overflow-hidden">
                   <div
@@ -249,7 +345,7 @@ function AuthorsPanel({ stats }: { stats: Stats }) {
 }
 
 /* ================================================================
-   PANEL 9: SOURCE DISTRIBUTION
+   PANEL 9: SOURCE DISTRIBUTION (DONUT)
    ================================================================ */
 function SourcePanel({ stats }: { stats: Stats }) {
   const entries = Object.entries(stats.bySource || {});
@@ -264,20 +360,23 @@ function SourcePanel({ stats }: { stats: Stats }) {
       <CardContent>
         {entries.length > 0 ? (
           <div className="flex items-center gap-6">
-            <div className="w-32 h-32 rounded-full flex-shrink-0 relative" style={{
-              background: `conic-gradient(${entries.map(([, v], i) => {
-                const pct = (v / total) * 100;
-                const prev = entries.slice(0, i).reduce((a, [, b]) => a + b, 0);
-                const prevPct = (prev / total) * 100;
-                return `${PIE_COLORS[i % PIE_COLORS.length].replace('bg-', '#')} ${prevPct}% ${prevPct + pct}%`;
-              }).join(', ')})`
-            }}>
+            <div
+              className="w-32 h-32 rounded-full flex-shrink-0 relative"
+              style={{
+                background: `conic-gradient(${entries.map(([, v], i) => {
+                  const pct = (v / total) * 100;
+                  const prev = entries.slice(0, i).reduce((a, [, b]) => a + b, 0);
+                  const prevPct = (prev / total) * 100;
+                  return `${PIE_COLORS[i % PIE_COLORS.length]} ${prevPct}% ${prevPct + pct}%`;
+                }).join(', ')})`,
+              }}
+            >
               <div className="absolute inset-3 rounded-full bg-zinc-900" />
             </div>
             <div className="space-y-2 flex-1">
               {entries.map(([s, v], i) => (
                 <div key={s} className="flex items-center gap-2.5 text-xs">
-                  <span className={`w-3 h-3 rounded-sm ${PIE_COLORS[i % PIE_COLORS.length]}`} />
+                  <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                   <span className="text-zinc-300 flex-1 capitalize">{s}</span>
                   <span className="text-zinc-500 font-mono">{v}</span>
                   <span className="text-zinc-600 text-[10px]">{Math.round((v / total) * 100)}%</span>
@@ -294,51 +393,7 @@ function SourcePanel({ stats }: { stats: Stats }) {
 }
 
 /* ================================================================
-   PANEL 10: AI INSIGHTS (LLM Analysis)
-   ================================================================ */
-function AiInsightsPanel() {
-  const [insight, setInsight] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const analyze = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/agent/analyze', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: 'analyze' })
-      });
-      const data = await res.json();
-      setInsight(data.analysis || 'Analise indisponivel.');
-    } catch { setInsight('Servico de analise indisponivel.'); }
-    setLoading(false);
-  };
-
-  return (
-    <Card className="bg-zinc-900/80 border-zinc-800/80 gap-3">
-      <CardHeader className="pb-0">
-        <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
-          <BrainCircuit className="w-4 h-4 text-emerald-400" />AI Insights — Analise LLM
-        </CardTitle>
-        <CardDescription className="text-[10px] text-zinc-500">Analise inteligente do ecossistema via LLM</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Button onClick={analyze} disabled={loading} size="sm"
-          className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
-          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-          Gerar Analise AI
-        </Button>
-        {insight && (
-          <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50 text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">
-            {insight}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ================================================================
-   EXTRA: TOP CITIES PANEL (bonus data from stats)
+   PANEL 10: TOP CITIES
    ================================================================ */
 function CitiesPanel({ stats }: { stats: Stats }) {
   const cities = stats.topCities || [];
@@ -371,6 +426,51 @@ function CitiesPanel({ stats }: { stats: Stats }) {
 }
 
 /* ================================================================
+   AI INSIGHTS PANEL
+   ================================================================ */
+function AiInsightsPanel() {
+  const [insight, setInsight] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const analyze = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/agent/analyze', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: 'analyze' }),
+      });
+      const data = await res.json();
+      setInsight(data.analysis || 'Analise indisponivel.');
+    } catch {
+      setInsight('Servico de analise indisponivel.');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Card className="bg-zinc-900/80 border-zinc-800/80 gap-3">
+      <CardHeader className="pb-0">
+        <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
+          <BrainCircuit className="w-4 h-4 text-emerald-400" />AI Insights — Analise LLM
+        </CardTitle>
+        <CardDescription className="text-[10px] text-zinc-500">Analise inteligente do ecossistema via LLM</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Button onClick={analyze} disabled={loading} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+          Gerar Analise AI
+        </Button>
+        {insight && (
+          <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50 text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">
+            {insight}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ================================================================
    RECENT PROJECTS STRIP
    ================================================================ */
 function RecentStrip({ projects }: { projects: Stats['recentProjects'] }) {
@@ -391,8 +491,8 @@ function RecentStrip({ projects }: { projects: Stats['recentProjects'] }) {
               <span className="text-zinc-200 font-medium truncate group-hover:text-emerald-400 transition-colors">{p.name}</span>
               <span className="text-zinc-600 mx-1">by</span>
               <span className="text-zinc-400 truncate">{p.author}</span>
-              <span className={`ml-auto inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium ${catColor(p.category)}`}>
-                {p.category}
+              <span className="ml-auto inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium border {catColor(p.category)}" style={undefined}>
+                <span className={catColor(p.category)}>{p.category}</span>
               </span>
             </a>
           ))}
@@ -403,14 +503,14 @@ function RecentStrip({ projects }: { projects: Stats['recentProjects'] }) {
 }
 
 /* ================================================================
-   QUICK PROJECT SEARCH (embedded)
+   QUICK PROJECT SEARCH
    ================================================================ */
 function QuickSearch() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Project[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const search = useCallback((q: string) => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -432,7 +532,7 @@ function QuickSearch() {
     <div className="relative">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-        <Input placeholder="Buscar nos 2.402 projetos..." value={query}
+        <Input placeholder="Buscar nos projetos..." value={query}
           onChange={e => { setQuery(e.target.value); search(e.target.value); }}
           onFocus={() => query.trim() && setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 200)}
@@ -461,12 +561,493 @@ function QuickSearch() {
 }
 
 /* ================================================================
-   LLM CHAT PANEL (slide-in)
+   DASHBOARD TAB CONTENT
+   ================================================================ */
+function DashboardTab({ stats, loading }: { stats: Stats | null; loading: boolean }) {
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 bg-zinc-900 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-64 bg-zinc-900 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-64 bg-zinc-900 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
+
+  return (
+    <div className="space-y-5">
+      {/* Row 1: 4 KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard label="Total Projetos" value={stats.total?.toLocaleString()} icon={Globe} color="text-emerald-400 bg-emerald-500/10" sub="Ecosistema completo" />
+        <KpiCard label="Desenvolvedores" value={stats.uniqueAuthors?.toLocaleString()} icon={Users} color="text-purple-400 bg-purple-500/10" sub="Autores unicos" />
+        <KpiCard label="Categorias" value={Object.keys(stats.byCategory || {}).length} icon={Layers} color="text-amber-400 bg-amber-500/10" sub="Classificacoes ativas" />
+        <KpiCard label="Fontes" value={Object.keys(stats.bySource || {}).length} icon={Github} color="text-sky-400 bg-sky-500/10" sub="Repositories monitorados" />
+      </div>
+
+      {/* Row 2: Status + Category + Trend */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <StatusPanel stats={stats} />
+        <CategoryPanel stats={stats} />
+        <TrendPanel stats={stats} />
+      </div>
+
+      {/* Row 3: Authors + Source + Cities */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <AuthorsPanel stats={stats} />
+        <SourcePanel stats={stats} />
+        <CitiesPanel stats={stats} />
+      </div>
+
+      {/* Row 4: AI Insights + Recent Projects */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <AiInsightsPanel />
+        <RecentStrip projects={stats.recentProjects || []} />
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================
+   AGENT HUB TAB
+   ================================================================ */
+function AgentHubTab({ agents, summary, loading }: {
+  agents: AgentData[] | null;
+  summary: AgentSummary | null;
+  loading: boolean;
+}) {
+  const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
+
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 bg-zinc-900 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-72 bg-zinc-900 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!agents || !summary) return null;
+
+  const parseJson = (str: string): string[] => {
+    try { return JSON.parse(str); } catch { return [str]; }
+  };
+
+  const summaryCards = [
+    { label: 'Total Agentes', value: summary.total, icon: Bot, color: 'text-emerald-400 bg-emerald-500/10' },
+    { label: 'Core', value: summary.core, icon: ShieldCheck, color: 'text-amber-400 bg-amber-500/10' },
+    { label: 'Skills', value: summary.totalSkills, icon: Zap, color: 'text-purple-400 bg-purple-500/10' },
+    { label: 'Flows', value: summary.totalFlows, icon: Workflow, color: 'text-sky-400 bg-sky-500/10' },
+    { label: 'APIs', value: summary.totalApis, icon: Server, color: 'text-cyan-400 bg-cyan-500/10' },
+    { label: 'Knowledge', value: summary.totalKnowledge, icon: BookOpen, color: 'text-rose-400 bg-rose-500/10' },
+  ];
+
+  return (
+    <div className="space-y-5">
+      {/* Summary Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {summaryCards.map((s) => (
+          <Card key={s.label} className="bg-zinc-900/80 border-zinc-800/80 gap-0 py-3 px-3 hover:border-zinc-700 transition-all">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] text-zinc-500 uppercase tracking-widest font-medium">{s.label}</span>
+              <div className={`p-1 rounded-md ${s.color}`}>
+                <s.icon className="w-3 h-3" />
+              </div>
+            </div>
+            <div className="text-xl font-bold text-zinc-100 tracking-tight">{s.value}</div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Agent Cards */}
+      <div className="space-y-4">
+        {agents.map((agent) => {
+          const techStack = parseJson(agent.techStack);
+          const capabilities = parseJson(agent.capabilities);
+          const isExpanded = expandedAgent === agent.id;
+          const typeColor = TYPE_COLORS[agent.agentType] || 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+          const tierColor = TIER_COLORS[agent.tier] || 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+
+          return (
+            <Card key={agent.id} className="bg-zinc-900/80 border-zinc-800/80 gap-0 overflow-hidden hover:border-zinc-700 transition-all">
+              {/* Agent Header */}
+              <div
+                className="p-4 cursor-pointer"
+                onClick={() => setExpandedAgent(isExpanded ? null : agent.id)}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      <h3 className="text-base font-bold text-zinc-100">{agent.name}</h3>
+                      <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium border ${typeColor}`}>
+                        {agent.agentType}
+                      </span>
+                      <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium border ${tierColor}`}>
+                        {agent.tier}
+                      </span>
+                      <span className="inline-flex items-center text-[9px] text-zinc-500">
+                        v{agent.version}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">{agent.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      {agent.hasVoice && (
+                        <Tooltip>
+                          <TooltipTrigger><Badge variant="outline" className="text-[9px] px-1.5 py-0 border-pink-500/30 text-pink-400 bg-pink-500/5"><Mic className="w-2.5 h-2.5 mr-0.5" />Voz</Badge></TooltipTrigger>
+                          <TooltipContent className="text-[10px] bg-zinc-800 border-zinc-700">Voice Ativo</TooltipContent>
+                        </Tooltip>
+                      )}
+                      {agent.hasRag && (
+                        <Tooltip>
+                          <TooltipTrigger><Badge variant="outline" className="text-[9px] px-1.5 py-0 border-emerald-500/30 text-emerald-400 bg-emerald-500/5"><Database className="w-2.5 h-2.5 mr-0.5" />RAG</Badge></TooltipTrigger>
+                          <TooltipContent className="text-[10px] bg-zinc-800 border-zinc-700">RAG Ativo</TooltipContent>
+                        </Tooltip>
+                      )}
+                      {agent.hasBtc && (
+                        <Tooltip>
+                          <TooltipTrigger><Badge variant="outline" className="text-[9px] px-1.5 py-0 border-yellow-500/30 text-yellow-400 bg-yellow-500/5"><Bitcoin className="w-2.5 h-2.5 mr-0.5" />BTC</Badge></TooltipTrigger>
+                          <TooltipContent className="text-[10px] bg-zinc-800 border-zinc-700">Bitcoin Integrado</TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                  </div>
+                </div>
+
+                {/* Quick Stats Row */}
+                <div className="flex items-center gap-4 mt-3 text-[10px] text-zinc-500">
+                  {agent.llmModel && (
+                    <span className="flex items-center gap-1">
+                      <Cpu className="w-3 h-3 text-emerald-400/60" />{agent.llmModel}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Workflow className="w-3 h-3 text-sky-400/60" />{agent.flowCount} flows
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Server className="w-3 h-3 text-cyan-400/60" />{agent.apiCount} APIs
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <BookOpen className="w-3 h-3 text-rose-400/60" />{agent._count.knowledge} docs
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-purple-400/60" />{agent.skills.length} skills
+                  </span>
+                </div>
+              </div>
+
+              {/* Expanded Content */}
+              {isExpanded && (
+                <div className="border-t border-zinc-800/60">
+                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Skills */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
+                        <Zap className="w-3.5 h-3.5 text-purple-400" />Skills ({agent.skills.length})
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {agent.skills.map((skill, i) => (
+                          <Tooltip key={i}>
+                            <TooltipTrigger>
+                              <span className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium border ${skillCatColor(skill.category)} ${!skill.enabled ? 'opacity-40' : ''}`}>
+                                {skill.name}
+                              </span>
+                            </TooltipTrigger>
+                            {skill.description && (
+                              <TooltipContent className="text-[10px] bg-zinc-800 border-zinc-700 max-w-xs">
+                                <span className="text-emerald-400 font-medium">{skill.category}</span>: {skill.description}
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Tech Stack */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
+                        <Code2 className="w-3.5 h-3.5 text-sky-400" />Tech Stack
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {techStack.map((tech, i) => (
+                          <span key={i} className="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Capabilities */}
+                    <div className="md:col-span-2">
+                      <h4 className="text-xs font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
+                        <Wrench className="w-3.5 h-3.5 text-amber-400" />Capacidades
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {capabilities.map((cap, i) => (
+                          <span key={i} className="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            {cap}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Architecture & Repo */}
+                  <div className="px-4 pb-4 flex items-center gap-4 text-[10px] text-zinc-500">
+                    {agent.architecture && (
+                      <span className="flex items-center gap-1">
+                        <LayoutDashboard className="w-3 h-3" />{agent.architecture}
+                      </span>
+                    )}
+                    {agent.repoUrl && (
+                      <a href={agent.repoUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-zinc-400 hover:text-emerald-400 transition-colors">
+                        <Github className="w-3 h-3" />Repositorio <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <Radio className="w-3 h-3" />Status:
+                      <span className={agent.status === 'active' ? 'text-emerald-400' : 'text-zinc-400'}>{agent.status}</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================
+   RAG CHAT TAB
+   ================================================================ */
+function RagChatTab({ agents }: { agents: AgentData[] | null }) {
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; retrieved?: RetrievedSource[]; contextLength?: number }>>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<string>('all');
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages]);
+
+  const sendQuery = useCallback(async (text?: string) => {
+    const query = text || input.trim();
+    if (!query || loading) return;
+
+    setMessages(prev => [...prev, { role: 'user', content: query }]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const body: { query: string; agentSlug?: string } = { query };
+      if (selectedAgent !== 'all') body.agentSlug = selectedAgent;
+
+      const res = await fetch('/api/rag/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data: RagResponse = await res.json();
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.answer || 'Sem resposta disponivel.',
+        retrieved: data.retrieved || [],
+        contextLength: data.contextLength || 0,
+      }]);
+    } catch {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Erro ao processar consulta. Tente novamente.',
+      }]);
+    }
+    setLoading(false);
+  }, [input, loading, selectedAgent]);
+
+  const quickActions = [
+    'O que e OODA?',
+    'Como funciona o RAG?',
+    'Capacidades Bitcoin',
+    'Arquitetura Sabio Heroi',
+  ];
+
+  const agentOptions = [
+    { value: 'all', label: 'Todos os Agentes' },
+    ...(agents || []).map(a => ({ value: a.slug, label: a.name })),
+  ];
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-180px)] min-h-[500px]">
+      {/* Top bar: Agent Filter */}
+      <div className="flex items-center gap-3 mb-4 flex-shrink-0">
+        <span className="text-xs text-zinc-500 flex items-center gap-1.5">
+          <Filter className="w-3.5 h-3.5" />Filtrar por Agente:
+        </span>
+        <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+          <SelectTrigger className="w-[220px] bg-zinc-900 border-zinc-800 text-zinc-200 text-xs h-9 rounded-lg">
+            <SelectValue placeholder="Selecionar agente" />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-800">
+            {agentOptions.map(opt => (
+              <SelectItem key={opt.value} value={opt.value} className="text-xs text-zinc-200 focus:bg-zinc-800 focus:text-zinc-100">
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Chat Messages */}
+      <Card className="flex-1 bg-zinc-900/80 border-zinc-800/80 flex flex-col overflow-hidden gap-0">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center py-12">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
+                <BrainCircuit className="w-7 h-7 text-emerald-400" />
+              </div>
+              <h3 className="text-sm font-semibold text-zinc-200 mb-1">RAG Chat — Pergunte ao Ecossistema</h3>
+              <p className="text-xs text-zinc-500 max-w-md">
+                Consulte a base de conhecimento dos agentes Nexus usando Retrieval Augmented Generation. As respostas sao fundamentadas nos documentos reais.
+              </p>
+            </div>
+          )}
+
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] md:max-w-[70%] ${msg.role === 'user' ? '' : ''}`}>
+                {msg.role === 'assistant' && (
+                  <div className="flex items-center gap-1.5 mb-1.5 text-emerald-400 text-[10px] font-medium pl-1">
+                    <Bot className="w-3 h-3" />RAG Agent
+                    {msg.contextLength !== undefined && msg.contextLength > 0 && (
+                      <span className="text-zinc-600 ml-2">{msg.contextLength} chars de contexto</span>
+                    )}
+                  </div>
+                )}
+                <div className={`rounded-xl px-4 py-2.5 text-xs leading-relaxed ${
+                  msg.role === 'user'
+                    ? 'bg-emerald-600/90 text-white rounded-br-sm'
+                    : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-zinc-700/50'
+                }`}>
+                  {msg.content}
+                </div>
+
+                {/* Retrieved Sources */}
+                {msg.retrieved && msg.retrieved.length > 0 && (
+                  <Collapsible className="mt-2">
+                    <CollapsibleTrigger className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-emerald-400 transition-colors pl-1 py-1">
+                      <ChevronRight className="w-3 h-3 transition-transform [[data-state=open]>&]:rotate-90" />
+                      <Database className="w-3 h-3" />
+                      {msg.retrieved.length} fonte{msg.retrieved.length > 1 ? 's' : ''} recuperada{msg.retrieved.length > 1 ? 's' : ''}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="mt-1.5 space-y-1 pl-1">
+                        {msg.retrieved.map((src, j) => (
+                          <div key={j} className="flex items-center gap-2 text-[10px] p-2 rounded-lg bg-zinc-800/50 border border-zinc-800">
+                            <span className="w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-mono text-[9px] font-bold flex-shrink-0">
+                              {j + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-zinc-300 font-medium truncate">{src.title}</div>
+                              <div className="text-zinc-600 truncate">{src.source}</div>
+                            </div>
+                            <Badge variant="outline" className="text-[8px] px-1.5 py-0 border-zinc-700 text-zinc-500 flex-shrink-0">
+                              {src.agent}
+                            </Badge>
+                            <Badge variant="outline" className="text-[8px] px-1.5 py-0 border-amber-500/30 text-amber-400 flex-shrink-0">
+                              {src.score}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {loading && (
+            <div className="flex justify-start">
+              <div className="bg-zinc-800 rounded-xl rounded-bl-sm px-4 py-2.5 border border-zinc-700/50">
+                <div className="flex items-center gap-2 text-xs text-zinc-400">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                  Buscando no conhecimento...
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  <Skeleton className="h-2 w-48 bg-zinc-700" />
+                  <Skeleton className="h-2 w-36 bg-zinc-700" />
+                  <Skeleton className="h-2 w-40 bg-zinc-700" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        {messages.length === 0 && (
+          <div className="px-4 py-2 border-t border-zinc-800/60 flex gap-2 flex-wrap flex-shrink-0">
+            {quickActions.map(action => (
+              <button key={action} onClick={() => sendQuery(action)}
+                className="px-3 py-1.5 rounded-lg text-[11px] text-zinc-400 border border-zinc-800 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
+                {action}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="p-3 border-t border-zinc-800/60 flex-shrink-0">
+          <div className="flex gap-2">
+            <Input value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendQuery()}
+              placeholder="Pergunte sobre OODA, RAG, Bitcoin, arquitetura dos agentes..."
+              className="flex-1 bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600 rounded-lg h-10 text-xs" />
+            <Button onClick={() => sendQuery()} disabled={loading || !input.trim()}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-4 h-10 gap-2">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span className="hidden sm:inline text-xs">Consultar</span>
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ================================================================
+   FLOATING AGENT CHAT (LLM Chat)
    ================================================================ */
 function AgentChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMsg[]>([
-    { role: 'system', content: 'Agente AI ativo. Pergunte sobre os 2.402 projetos, tendencias, ou pecas recomendacoes.' }
+    { role: 'system', content: 'Agente AI ativo. Pergunte sobre os projetos, tendencias, ou peca recomendacoes.' },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -480,14 +1061,16 @@ function AgentChat() {
     const msg = text || input.trim();
     if (!msg || loading) return;
     setMessages(m => [...m, { role: 'user', content: msg }]);
-    setInput(''); setLoading(true);
+    setInput('');
+    setLoading(true);
     try {
       const res = await fetch('/api/agent/chat', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, { role: 'user', content: msg }],
-          context: 'Voce e um Agente AI especialista em projetos de desenvolvedores independentes chineses. Responda em Portugues. Seja conciso e util.'
-        })
+          context: 'Voce e um Agente AI especialista em projetos de desenvolvedores independentes. Responda em Portugues. Seja conciso e util.',
+        }),
       });
       const data = await res.json();
       setMessages(m => [...m, { role: 'agent', content: data.response || 'Sem resposta.' }]);
@@ -598,7 +1181,11 @@ function AgentChat() {
    ================================================================ */
 export default function Home() {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [agents, setAgents] = useState<AgentData[] | null>(null);
+  const [agentSummary, setAgentSummary] = useState<AgentSummary | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [agentsLoading, setAgentsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   useEffect(() => {
     (async () => {
@@ -607,13 +1194,27 @@ export default function Home() {
         const data = await res.json();
         setStats(data);
       } catch { setStats(null); }
-      setLoading(false);
+      setStatsLoading(false);
     })();
   }, []);
 
+  useEffect(() => {
+    if (activeTab === 'agents' || activeTab === 'rag') {
+      (async () => {
+        try {
+          const res = await fetch('/api/agents');
+          const data = await res.json();
+          setAgents(data.agents || []);
+          setAgentSummary(data.summary || null);
+        } catch { setAgents(null); }
+        setAgentsLoading(false);
+      })();
+    }
+  }, [activeTab]);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#09090b] text-zinc-100">
-      {/* Scrollbar */}
+      {/* Custom Scrollbar */}
       <style>{`
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -633,7 +1234,7 @@ export default function Home() {
                 Fusão LLM 2401
                 <span className="text-[9px] font-medium bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-md border border-emerald-500/20">Agentic AI</span>
               </h1>
-              <p className="text-[10px] text-zinc-500 mt-0.5">Ecosystem Dashboard &bull; 2,402 Projetos &bull; LLM Powered</p>
+              <p className="text-[10px] text-zinc-500 mt-0.5">Ecosystem Dashboard &bull; LLM Powered</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -651,54 +1252,45 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ═══ MAIN DASHBOARD — 10 PANELS ═══ */}
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-6 space-y-5">
-
-        {/* ─── ROW 1: 4 KPI Cards (Panels 1-4) ─── */}
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-28 bg-zinc-900 rounded-xl" />
-            ))}
+      {/* ═══ MAIN CONTENT WITH TABS ═══ */}
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
+          {/* Tab Navigation */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <TabsList className="bg-zinc-900 border border-zinc-800 p-1 rounded-xl h-auto">
+              <TabsTrigger value="dashboard"
+                className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
+                <LayoutDashboard className="w-3.5 h-3.5" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="agents"
+                className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
+                <Bot className="w-3.5 h-3.5" />
+                Agent Hub
+              </TabsTrigger>
+              <TabsTrigger value="rag"
+                className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
+                <Database className="w-3.5 h-3.5" />
+                RAG Chat
+              </TabsTrigger>
+            </TabsList>
           </div>
-        ) : stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <KpiCard label="Total Projetos" value={stats.total?.toLocaleString()} icon={Globe} color="text-emerald-400 bg-emerald-500/10" sub="Ecosistema completo" />
-            <KpiCard label="Desenvolvedores" value={stats.uniqueAuthors?.toLocaleString()} icon={Users} color="text-purple-400 bg-purple-500/10" sub="Autores unicos" />
-            <KpiCard label="Categorias" value={Object.keys(stats.byCategory || {}).length} icon={Layers} color="text-amber-400 bg-amber-500/10" sub="Classificacoes ativas" />
-            <KpiCard label="Fontes" value={Object.keys(stats.bySource || {}).length} icon={Github} color="text-sky-400 bg-sky-500/10" sub="Repositories monitorados" />
-          </div>
-        )}
 
-        {loading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-64 bg-zinc-900 rounded-xl" />
-            ))}
-          </div>
-        ) : stats && (
-          <>
-            {/* ─── ROW 2: Status + Category + Trend (Panels 5-7) ─── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <StatusPanel stats={stats} />
-              <CategoryPanel stats={stats} />
-              <TrendPanel stats={stats} />
-            </div>
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard">
+            <DashboardTab stats={stats} loading={statsLoading} />
+          </TabsContent>
 
-            {/* ─── ROW 3: Authors + Source + Cities (Panels 8-9 + bonus) ─── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <AuthorsPanel stats={stats} />
-              <SourcePanel stats={stats} />
-              <CitiesPanel stats={stats} />
-            </div>
+          {/* Agent Hub Tab */}
+          <TabsContent value="agents">
+            <AgentHubTab agents={agents} summary={agentSummary} loading={agentsLoading} />
+          </TabsContent>
 
-            {/* ─── ROW 4: AI Insights + Recent Projects (Panel 10 + bonus) ─── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <AiInsightsPanel />
-              <RecentStrip projects={stats.recentProjects || []} />
-            </div>
-          </>
-        )}
+          {/* RAG Chat Tab */}
+          <TabsContent value="rag">
+            <RagChatTab agents={agents} />
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* ═══ FOOTER ═══ */}

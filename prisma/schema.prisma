@@ -31,15 +31,83 @@ model Project {
   @@index([source])
 }
 
+// ─── AGENT ECOSYSTEM ───
+
+model Agent {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  version     String   @default("1.0.0")
+  status      String   @default("active") // active | idle | offline
+  agentType   String   // orchestrator | specialist | analyst | voice | guardian
+  tier        String   @default("core") // core | extended | external
+  repoUrl     String?
+  techStack   String   // JSON array of tech
+  capabilities String  // JSON array of capability strings
+  llmModel    String?  // e.g. "gemini-2.5-flash", "glm-4-flash"
+  apiCount    Int      @default(0)
+  flowCount   Int      @default(0)
+  hasVoice    Boolean  @default(false)
+  hasRag      Boolean  @default(false)
+  hasBtc      Boolean  @default(false)
+  architecture String? // "monorepo" | "fullstack" | "binary"
+  readme      String?  // Full README content for RAG
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  skills      AgentSkill[]
+  knowledge   KnowledgeEntry[] @relation("AgentKnowledge")
+  messages    ChatMessage[] @relation("AgentMessages")
+
+  @@index([slug])
+  @@index([agentType])
+  @@index([tier])
+  @@index([status])
+}
+
+model AgentSkill {
+  id          String   @id @default(cuid())
+  agentId     String
+  name        String
+  category    String   // reasoning | execution | perception | finance | voice | governance
+  description String?
+  enabled     Boolean  @default(true)
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([category])
+}
+
+model KnowledgeEntry {
+  id        String   @id @default(cuid())
+  agentId   String
+  source    String   // repo_name, section, flow
+  title     String
+  content   String   // Full text content for RAG
+  chunkType String   @default("doc") // doc | flow | api | config
+  embedding String?  // Future: vector embedding
+  agent     Agent    @relation("AgentKnowledge", fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([agentId])
+  @@index([source])
+  @@index([chunkType])
+}
+
 model ChatMessage {
   id        String   @id @default(cuid())
   role      String
   content   String
   sessionId String
   agentName String?
+  agentId   String?
   createdAt DateTime @default(now())
 
+  agent     Agent?   @relation("AgentMessages", fields: [agentId], references: [id], onDelete: SetNull)
+
   @@index([sessionId])
+  @@index([agentId])
 }
 
 model MoltbookState {
