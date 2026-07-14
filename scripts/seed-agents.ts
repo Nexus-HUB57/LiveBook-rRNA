@@ -15,7 +15,7 @@ const AGENTS = [
     apiCount: 1,
     flowCount: 37,
     hasVoice: false,
-    hasRag: false,
+    hasRag: true,
     hasBtc: true,
     architecture: "fullstack",
     skills: [
@@ -42,7 +42,7 @@ const AGENTS = [
     apiCount: 0,
     flowCount: 33,
     hasVoice: false,
-    hasRag: false,
+    hasRag: true,
     hasBtc: false,
     architecture: "fullstack",
     skills: [
@@ -118,7 +118,7 @@ const AGENTS = [
     apiCount: 16,
     flowCount: 0,
     hasVoice: true,
-    hasRag: false,
+    hasRag: true,
     hasBtc: false,
     architecture: "monorepo",
     skills: [

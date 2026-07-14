@@ -53,6 +53,12 @@ interface RagResponse {
   answer: string;
   retrieved: RetrievedSource[];
   contextLength: number;
+  pipeline?: {
+    documentsScanned: number;
+    retrieved: number;
+    reranked: number;
+    contextChars: number;
+  };
 }
 
 interface Stats {
@@ -847,7 +853,7 @@ function AgentHubTab({ agents, summary, loading }: {
    RAG CHAT TAB
    ================================================================ */
 function RagChatTab({ agents }: { agents: AgentData[] | null }) {
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; retrieved?: RetrievedSource[]; contextLength?: number }>>([]);
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; retrieved?: RetrievedSource[]; contextLength?: number; pipeline?: RagResponse['pipeline'] }>>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<string>('all');
@@ -881,6 +887,7 @@ function RagChatTab({ agents }: { agents: AgentData[] | null }) {
         content: data.answer || 'Sem resposta disponivel.',
         retrieved: data.retrieved || [],
         contextLength: data.contextLength || 0,
+        pipeline: data.pipeline,
       }]);
     } catch {
       setMessages(prev => [...prev, {
@@ -932,9 +939,9 @@ function RagChatTab({ agents }: { agents: AgentData[] | null }) {
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
                 <BrainCircuit className="w-7 h-7 text-emerald-400" />
               </div>
-              <h3 className="text-sm font-semibold text-zinc-200 mb-1">RAG Chat — Pergunte ao Ecossistema</h3>
+              <h3 className="text-sm font-semibold text-zinc-200 mb-1">RAG rRNA — Pergunte ao Ecossistema</h3>
               <p className="text-xs text-zinc-500 max-w-md">
-                Consulte a base de conhecimento dos agentes Nexus usando Retrieval Augmented Generation. As respostas sao fundamentadas nos documentos reais.
+                Pipeline: RecursiveChunk → TF-IDF → BM25 → Cross-Encoder Rerank → LLM. Base de conhecimento com 40+ entradas extraidas dos 5 agentes Nexus.
               </p>
             </div>
           )}
@@ -944,9 +951,14 @@ function RagChatTab({ agents }: { agents: AgentData[] | null }) {
               <div className={`max-w-[85%] md:max-w-[70%] ${msg.role === 'user' ? '' : ''}`}>
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-1.5 mb-1.5 text-emerald-400 text-[10px] font-medium pl-1">
-                    <Bot className="w-3 h-3" />RAG Agent
+                    <Bot className="w-3 h-3" />RAG rRNA Agent
                     {msg.contextLength !== undefined && msg.contextLength > 0 && (
-                      <span className="text-zinc-600 ml-2">{msg.contextLength} chars de contexto</span>
+                      <span className="text-zinc-600 ml-2">{msg.contextLength} chars contexto</span>
+                    )}
+                    {msg.pipeline && (
+                      <span className="text-zinc-600 ml-1">
+                        | {msg.pipeline.documentsScanned} docs → {msg.pipeline.retrieved} retrieved → {msg.pipeline.reranked} reranked
+                      </span>
                     )}
                   </div>
                 )}

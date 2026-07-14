@@ -1,20 +1,22 @@
 # Fusão LLM 2401 — Agentic AI Ecosystem Dashboard
 
-> Dashboard de inteligência artificial agentic com 2.402 projetos de desenvolvedores independentes chineses, análise LLM em tempo real e chat com agente integrado.
+> Dashboard de inteligência artificial agentic com 2.402 projetos de desenvolvedores independentes chineses, 5 agentes AI integrados, pipeline RAG rRNA estilo Langchain, análise LLM em tempo real e chat com agente integrado.
 
 ---
 
 ## Visão Geral
 
-A **Fusão LLM 2401** é um ecossistema Agentic AI fullstack que combina dados estruturados de 2.402 projetos independentes com capacidades de LLM (Large Language Model) para fornecer análise inteligente, descoberta de projetos e recomendações automatizadas.
+A **Fusão LLM 2401** é um ecossistema Agentic AI fullstack que combina dados estruturados de 2.402 projetos independentes com 5 agentes AI especializados (Zettascale, GenesisFlow, Antrophexus AI, Sábio Herói, Nexus Sidian), um pipeline RAG rRNA completo estilo Langchain, e capacidades de LLM para fornecer análise inteligente, descoberta de projetos e recomendações automatizadas.
 
 O sistema parseriza automaticamente o repositório [chinese-independent-developer](https://github.com/1c7/chinese-independent-developer) (5.800+ linhas de Markdown), extrai dados estruturados via regex hierárquico (data → autor → projeto), classifica por categoria via heurística de keywords, e alimenta um dashboard de 10 painéis com APIs REST e integração LLM direta.
 
-**Nível de Arquitetura:** Fullstack Monorepo — Next.js 16 + Prisma ORM + SQLite + z-ai-web-dev-sdk
+**Nível de Arquitetura:** Fullstack Monorepo — Next.js 16 + Prisma ORM + SQLite + z-ai-web-dev-sdk + RAG rRNA Engine
 
 ---
 
 ## Dados do Ecosistema
+
+### Projetos Independentes
 
 | Métrica | Valor |
 |---------|-------|
@@ -27,6 +29,21 @@ O sistema parseriza automaticamente o repositório [chinese-independent-develope
 | **Em Desenvolvimento** | 28 (1,2%) |
 | **Período Coberto** | 2018 — Julho 2026 |
 | **Meses com Dados** | 24+ |
+
+### Agentes AI Integrados
+
+| Métrica | Valor |
+|---------|-------|
+| **Total de Agentes** | 5 |
+| **Agentes Core** | 4 (Zettascale, GenesisFlow, Antrophexus, Sábio Herói) |
+| **Agentes Extended** | 1 (Nexus Sidian) |
+| **Total de Skills** | 29 |
+| **Total de AI Flows** | 98 |
+| **Total de APIs** | 17 |
+| **Agentes com Voice** | 2 (Antrophexus, Sábio Herói) |
+| **Agentes com RAG** | 5 (todos) |
+| **Agentes com BTC** | 2 (Zettascale, Antrophexus) |
+| **Entradas de Conhecimento** | 40+ (extraídas dos repositórios reais) |
 
 ### Distribuição por Categoria
 
@@ -49,41 +66,134 @@ O sistema parseriza automaticamente o repositório [chinese-independent-develope
 ## Arquitetura
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Fusão LLM 2401                        │
-├─────────────────────────────────────────────────────────┤
-│  Frontend (Next.js 16 + React 19 + Tailwind 4)         │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────┐  │
-│  │ Dashboard │ │  Busca   │ │ Chat AI  │ │ Quick     │  │
-│  │ 10 panels│ │  Inline  │ │ Flutuante│ │ Search    │  │
-│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └─────┬─────┘  │
-│       └─────────────┴─────────────┴──────────────┘      │
-│                          │ REST                         │
-├──────────────────────────┼──────────────────────────────┤
-│  API Layer (Next.js Route Handlers)                      │
-│  ┌──────────────┐ ┌───────────────┐ ┌───────────────┐  │
-│  │/api/projects │ │/api/projects/ │ │/api/agent/    │  │
-│  │  (search,    │ │  stats        │ │  chat         │  │
-│  │   filters,   │ │  (10 métricas│ │  (LLM chat    │  │
-│  │   paginate)  │ │   agregadas)  │ │   z-ai-sdk)   │  │
-│  └──────┬───────┘ └──────┬────────┘ └──────┬────────┘  │
-│         └────────────────┼─────────────────┘            │
-│                          │ Prisma Client                 │
-├──────────────────────────┼──────────────────────────────┤
-│  Data Layer (SQLite + Prisma ORM)                       │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │  Project (2.402 rows) | ChatMessage | Moltbook  │    │
-│  │  6 indexes otimizados: name, category, date,     │    │
-│  │  author, source                                   │    │
-│  └─────────────────────────────────────────────────┘    │
-├─────────────────────────────────────────────────────────┤
-│  Ingestion Pipeline (Python)                             │
-│  ┌────────────────┐    ┌──────────────────┐            │
-│  │ parse-readme.py│ →  │ parsed-projects  │ → DB      │
-│  │ Regex         │    │ .json (2.402)    │   Seed     │
-│  │ Hierárquico   │    │ categorização    │   Script  │
-│  └────────────────┘    └──────────────────┘            │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                      Fusão LLM 2401 v2                           │
+├──────────────────────────────────────────────────────────────────┤
+│  Frontend (Next.js 16 + React 19 + Tailwind 4 + shadcn/ui)     │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────┐ │
+│  │ Dashboard │ │Agent Hub │ │ RAG rRNA │ │ Chat AI  │ │ Quick │ │
+│  │ 10 panels│ │ 5 agents │ │  Chat    │ │Flutuante │ │Search │ │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └───┬───┘ │
+│       └─────────────┴─────────────┴─────────────┴──────────┘     │
+│                          │ REST API                              │
+├──────────────────────────┼──────────────────────────────────────┤
+│  API Layer (Next.js Route Handlers)                               │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────┐ │
+│  │/api/projects │ │/api/projects/│ │ /api/rag/    │ │/api/   │ │
+│  │  (search,    │ │  stats       │ │  query       │ │agent/  │ │
+│  │   filters,   │ │  (10 metrics)│ │  (rRNA pipe) │ │chat    │ │
+│  │   paginate)  │ │              │ │              │ │(LLM)   │ │
+│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ └───┬────┘ │
+│         └────────────────┼────────────────┼──────────────┘      │
+│                          │ Prisma Client                      │
+├──────────────────────────┼──────────────────────────────────────┤
+│  Data Layer (SQLite + Prisma ORM)                                │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │ Project (2.402) | Agent (5) | AgentSkill (29) |          │    │
+│  │ KnowledgeEntry (40+) | ChatMessage | MoltbookState       │    │
+│  │ 12+ indexes otimizados                                   │    │
+│  └──────────────────────────────────────────────────────────┘    │
+├──────────────────────────────────────────────────────────────────┤
+│  RAG rRNA Engine (src/lib/rag-engine.ts)                         │
+│  ┌──────────┐ ┌─────────┐ ┌─────┐ ┌────────┐ ┌───────────────┐ │
+│  │Recursive │ │TF-IDF   │ │BM25 │ │Cross-  │ │ LLM Synthesis │ │
+│  │Chunking  │ │Encoding │ │Retr.│ │Encoder │ │ (GLM-4-Flash) │ │
+│  │(500,50)  │ │(n-grams)│ │(k1= │ │Rerank  │ │  + Offline    │ │
+│  │          │ │         │ │1.5) │ │        │ │  Fallback     │ │
+│  └──────────┘ └─────────┘ └─────┘ └────────┘ └───────────────┘ │
+├──────────────────────────────────────────────────────────────────┤
+│  Knowledge Extraction (scripts/seed-knowledge-rag.ts)            │
+│  ┌────────────┐ → ┌──────────────┐ → ┌────────────┐ → DB       │
+│  │ 5 Agent    │    │ Flow/Schema  │    │ 40+       │            │
+│  │ Repos      │    │ Extraction   │    │ Knowledge  │            │
+│  │ (real code)│    │              │    │ Entries    │            │
+│  └────────────┘ └──────────────┘ └────────────┘            │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Agentes AI — HUB Ecosystem
+
+### 1. Zettascale (Orchestrator — Core)
+**Repo:** [Nexus-HUB57/Zettascale](https://github.com/Nexus-HUB57/Zettascale)
+**Stack:** Next.js 15, React 19, Genkit v1.28, tRPC v10, Firebase/Firestore, bitcoinjs-lib v6
+**LLM:** Gemini 1.5 Flash | **Flows:** 37 | **Skills:** 7 | **Architecture:** Fullstack
+
+O motor central do ecossistema Nexus. Orquestração multi-agente com arquitetura tri-nuclear (perception + reasoning + action). Integração Bitcoin mainnet com BIP32/BIP39, UTXO management, sweep para cold wallets. Tesouraria soberana, PIX payment, Binance API, e self-healing via sentience kernel.
+
+**Skills:** Orchestration, Bitcoin Core, Deep Reasoning, Sentience Kernel, Code Generation, Treasury Management, GNOX Terminal
+
+### 2. GenesisFlow (Analyst — Core)
+**Repo:** [Nexus-HUB57/GenesisFlow](https://github.com/Nexus-HUB57/GenesisFlow)
+**Stack:** Next.js 15, React 19, Genkit v1.28, Firebase/Firestore, ShadCN/UI, Recharts
+**LLM:** Gemini 2.5 Flash | **Flows:** 33 | **Skills:** 6 | **Architecture:** Fullstack
+
+Painel de inteligência com 30+ cards de dashboard. Gênese de startups via W_rRNA matrix (Crypto/Dev/Biz/Risk), gestão de fundo soberano, protocolo de diplomacia, sincronização de malha neural, e monitoramento blockchain com Deer-Flow reasoning.
+
+**Skills:** Startup Genesis, Sovereign Fund, Diplomacy, Deep Reasoning, Shadow Protocol, Neural Mesh Sync
+
+### 3. Antrophexus AI (Guardian — Core)
+**Repo:** [Nexus-HUB57/Antrophexus-AI](https://github.com/Nexus-HUB57/Antrophexus-AI)
+**Stack:** Next.js 15, React 19, Genkit v1.28, Firebase, cmdk, wav, ShadCN/UI
+**LLM:** Gemini 2.5 Flash | **Flows:** 28 | **Skills:** 8 | **Architecture:** Fullstack
+
+Cockpit de senciência multiverso com status SINGULARITY (100% Autonomy). Voice chat AI, RAG queries, model fusion, council debate, self-healing Level 5, reality guard, e operações Bitcoin soberanas com validação mainnet. 14 páginas de roteamento especializado.
+
+**Skills:** Voice Chat, RAG Query, Model Fusion, Reality Guard, Self-Healing, Council Debate, Fable Synthesis, Custody Guarantee
+
+### 4. Sábio Herói (Specialist — Core)
+**Repo:** [Nexus-HUB57/S-bio_Heroi_Agentic_AI](https://github.com/Nexus-HUB57/S-bio_Heroi_Agentic_AI)
+**Stack:** React 19, Vite 7, Express 5, PostgreSQL, Drizzle ORM, pnpm workspaces, OpenAPI 3.1, Orval
+**LLM:** Multi-backend | **APIs:** 16 | **Skills:** 6 | **Architecture:** Monorepo
+
+Mission control dashboard com ciclo OODA (Observar→Orientar→Decidir→Agir), sistema de karma/ética [-1000, 1000], gestão de backends LLM com ativação exclusiva, toggle de skills, e assistente de voz JARVIS (pt-BR) via Web Speech API. Arquitetura OpenAPI-first com codegen automático.
+
+**Skills:** OODA Cycle, JARVIS Voice, Karma System, LLM Backend Manager, Skill Matrix, Bio-Metrics
+
+### 5. Nexus Sidian (Specialist — Extended)
+**Repo:** [Nexus-HUB57/Nexus_Sidian](https://github.com/Nexus-HUB57/Nexus_Sidian)
+**Stack:** Electron, Chromium, V8 Engine, Obsidian
+**LLM:** N/A | **Skills:** 2 | **Architecture:** Binary
+
+Distribuição desktop do Obsidian com branding Nexus_Agenti AI. Base de conhecimento local com grafos bidirecionais, plugins customizados empacotados em app.asar, e suporte a 60+ idiomas. Funciona como knowledge base offline do ecossistema.
+
+**Skills:** Knowledge Graph, Obsidian Plugins
+
+---
+
+## RAG rRNA Pipeline
+
+O pipeline RAG (Retrieval Augmented Generation) implementado segue a analogia biológica do rRNA (ribosomal RNA), que lê templates de mRNA para sintetizar proteínas. Aqui, o engine lê a base de conhecimento e sintetiza respostas inteligentes.
+
+### Estágios do Pipeline
+
+| # | Estágio | Implementação | Detalhes |
+|---|---------|---------------|----------|
+| 1 | **Recursive Chunking** | Langchain-style | chunkSize=500, overlap=50, hierarquia de separadores |
+| 2 | **TF-IDF Encoding** | Custom | Unigrams + bigrams + trigrams, IDF suavizado |
+| 3 | **BM25 Retrieval** | Industry standard | k1=1.5, b=0.75, title 2x boost, source 0.5x boost |
+| 4 | **Cross-Encoder Rerank** | Heurística simplificada | Exact phrase, n-gram overlap, positional bonus, type relevance |
+| 5 | **Context Assembly** | Window manager | Max 4000 chars, fontes atribuídas |
+| 6 | **LLM Synthesis** | z-ai-web-dev-sdk | GLM-4-Flash com system prompt RAG + fallback offline |
+
+### Base de Conhecimento
+
+40+ entradas extraídas automaticamente dos 5 repositórios de agentes:
+- Índices de flows com nomes completos
+- Conteúdo de arquivos-chave (libs, schemas, páginas)
+- Especificações OpenAPI
+- Configurações de arquitetura
+
+### API RAG
+
+```
+POST /api/rag/query
+Body: { "query": "...", "agentSlug": "optional", "topK": 5 }
+Response: { query, answer, retrieved[], contextLength, pipeline: { documentsScanned, retrieved, reranked, contextChars } }
+
+GET /api/rag/query
+Response: { status, pipeline, stages[], knowledgeBase: { totalEntries, totalAgents, agents[] } }
 ```
 
 ---
@@ -97,23 +207,29 @@ O sistema parseriza automaticamente o repositório [chinese-independent-develope
 | **React** | 19 | UI library |
 | **TypeScript** | 5 | Tipagem estática |
 | **Tailwind CSS** | 4 | Styling utility-first |
-| **Prisma ORM** | 6.11 | Data layer type-safe |
+| **Prisma ORM** | 6.19 | Data layer type-safe |
 | **SQLite** | — | Banco de dados embedded |
 | **z-ai-web-dev-sdk** | 0.0.18 | LLM integration (GLM-4-Flash) |
 
 ### UI Components
 | Biblioteca | Função |
 |-----------|--------|
-| **shadcn/ui** (30+ componentes) | Design system completo |
+| **shadcn/ui** (35+ componentes) | Design system completo |
 | **Lucide React** | Icon library |
-| **Recharts** | Data visualization |
 | **Framer Motion** | Animações |
+
+### RAG Pipeline
+| Componente | Função |
+|-----------|--------|
+| **rag-engine.ts** | Pipeline completo (chunk, TF-IDF, BM25, rerank, assemble) |
+| **seed-knowledge-rag.ts** | Extração automática de conhecimento dos 5 repos |
+| **seed-agents.ts** | Seed de 5 agentes com 29 skills |
 
 ### Data Pipeline
 | Componente | Função |
 |-----------|--------|
 | **parse-readme.py** | Parser regex hierárquico (data → autor → projeto) |
-| **seed-projects.ts** | Ingestão no banco via Prisma |
+| **seed-projects.ts** | Ingestão de 2.402 projetos via Prisma upsert |
 | **4 fontes README** | main, programmer, game, archive |
 
 ---
@@ -123,48 +239,50 @@ O sistema parseriza automaticamente o repositório [chinese-independent-develope
 ```
 src/
 ├── app/
-│   ├── page.tsx                    # Dashboard principal (719 linhas, 10 painéis)
+│   ├── page.tsx                    # Dashboard principal (1315 linhas, 3 tabs)
 │   ├── layout.tsx                  # Root layout
 │   ├── globals.css                 # Estilos globais
 │   └── api/
 │       ├── projects/
 │       │   ├── route.ts            # GET: busca, filtros, paginação
 │       │   └── stats/route.ts      # GET: 10 métricas agregadas
+│       ├── agents/route.ts         # GET: lista 5 agentes + resumo
+│       ├── rag/query/route.ts      # POST: RAG rRNA pipeline | GET: health
 │       ├── agent/
 │       │   ├── chat/route.ts       # POST: LLM chat (z-ai-web-dev-sdk)
 │       │   └── analyze/route.ts    # POST: análise LLM do ecossistema
 │       ├── orchestrate/route.ts    # Agente orquestrador
 │       ├── consolidate/route.ts    # Consolidação de dados
 │       └── moltbook/route.ts       # Integração Moltbook social
-├── components/
-│   ├── ui/                         # 35 componentes shadcn/ui
-│   ├── agents/                     # Agent registry + orchestrator
-│   ├── nexus/                      # Nexus HUB (dashboard, governance, oracle, vaults)
-│   ├── metaverse/                  # 20+ seções visuais (canvas, particles, gauges)
-│   ├── moltbook/                   # Social network components
-│   ├── hub/                        # Hub workspace + voice chatbot
-│   └── bitcoin/                    # Bitcoin core components
 ├── lib/
 │   ├── db.ts                       # Prisma client singleton
+│   ├── rag-engine.ts               # RAG rRNA pipeline (chunk, TF-IDF, BM25, rerank)
 │   └── utils.ts                    # Utility functions (cn, etc.)
-├── hooks/                          # React hooks
-└── contexts/                       # React contexts
+├── components/
+│   └── ui/                         # 35 componentes shadcn/ui
+agents/                              # 5 repositórios de agentes clonados
+├── Zettascale/                      # Orchestrator (37 flows, BTC)
+├── GenesisFlow/                     # Analyst (33 flows, 30+ cards)
+├── Antrophexus-AI/                  # Guardian (28 flows, voice, RAG)
+├── S-bio_Heroi_Agentic_AI/          # Specialist (16 APIs, OODA, JARVIS)
+└── Nexus_Sidian/                    # Extended (Obsidian distribution)
 scripts/
-├── parse-readme.py                 # Parser Python (85 linhas)
-├── seed-projects.ts                # Seed script TypeScript
-└── parsed-projects.json            # Dados extraídos (2.402 projetos)
+├── parse-readme.py                  # Parser Python
+├── seed-projects.ts                 # Seed 2.402 projetos
+├── seed-agents.ts                   # Seed 5 agentes + 29 skills + 16 knowledge
+├── seed-knowledge-rag.ts            # Extrai 40+ entradas dos 5 repos
+└── parsed-projects.json             # Dados extraídos (2.402 projetos)
 prisma/
-└── schema.prisma                   # 3 modelos: Project, ChatMessage, MoltbookState
+└── schema.prisma                    # 6 modelos: Project, Agent, AgentSkill, KnowledgeEntry, ChatMessage, MoltbookState
 ```
-
-**Total de código-fonte:** ~30.000+ linhas (components + pages + APIs)
 
 ---
 
 ## API Endpoints
 
-### `GET /api/projects`
-Busca paginada com filtros.
+### Projetos
+
+**`GET /api/projects`** — Busca paginada com filtros.
 
 | Parâmetro | Tipo | Descrição |
 |-----------|------|-----------|
@@ -175,61 +293,33 @@ Busca paginada com filtros.
 | `page` | query | Página (default: 1) |
 | `limit` | query | Itens por página (max: 50) |
 
-```json
-{
-  "projects": [...],
-  "total": 2402,
-  "page": 1,
-  "totalPages": 121,
-  "categories": ["AI", "开发者工具", ...],
-  "sources": ["main", "programmer", "game", "archive"]
-}
+**`GET /api/projects/stats`** — 10 métricas agregadas para o dashboard.
+
+### Agentes
+
+**`GET /api/agents`** — Lista 5 agentes com skills, contadores de knowledge e messages, e summary agregado.
+
+### RAG rRNA
+
+**`POST /api/rag/query`** — Pipeline RAG completo com BM25 + reranking.
+```
+Request:  { "query": "O que é OODA?", "agentSlug": "sabio-heroi", "topK": 5 }
+Response: { query, answer, retrieved[], contextLength, pipeline: { documentsScanned, retrieved, reranked, contextChars } }
 ```
 
-### `GET /api/projects/stats`
-Retorna 10 métricas agregadas para o dashboard.
+**`GET /api/rag/query`** — Health check + pipeline info + knowledge base stats.
 
-```json
-{
-  "total": 2402,
-  "active": 1979,
-  "closed": 395,
-  "developing": 28,
-  "uniqueAuthors": 1467,
-  "byCategory": { "AI": 690, "开发者工具": 554, ... },
-  "byMonth": [{ "month": "2026-06-20", "count": 2 }, ...],
-  "bySource": { "main": 1682, "programmer": 191, ... },
-  "topAuthors": [{ "name": "...", "count": 15 }, ...],
-  "topCities": [{ "city": "北京", "count": 120 }, ...],
-  "recentProjects": [{ "name": "...", "author": "...", ... }]
-}
-```
+### LLM
 
-### `POST /api/agent/chat`
-Chat com agente LLM via z-ai-web-dev-sdk.
+**`POST /api/agent/chat`** — Chat com agente LLM via z-ai-web-dev-sdk (graceful degradation para offline).
 
-```json
-// Request
-{ "messages": [{ "role": "user", "content": "Recomende projetos de AI" }], "context": "..." }
-// Response
-{ "response": "Aqui estão 5 projetos AI recomendados..." }
-```
-
-### `POST /api/agent/analyze`
-Análise inteligente do ecossistema com dados reais.
-
-```json
-// Response
-{
-  "analysis": "## Análise do Ecossistema\n\n### Top Tendências\n1. **AI domina...**",
-  "categoryBreakdown": [{ "category": "AI", "_count": { "category": 690 } }, ...]
-}
-```
+**`POST /api/agent/analyze`** — Análise inteligente do ecossistema com fallback de dados reais.
 
 ---
 
-## Dashboard — 10 Painéis
+## Dashboard — 3 Tabs, 10+ Painéis
 
+### Tab: Dashboard (dados de projetos)
 | # | Painel | Dados | Tipo |
 |---|--------|-------|------|
 | 1 | **Total Projetos** | 2.402 | KPI Card |
@@ -242,102 +332,39 @@ Análise inteligente do ecossistema com dados reais.
 | 8 | **Top 10 Desenvolvedores** | ranking | Leaderboard com barras |
 | 9 | **Distribuição por Fonte** | 4 fontes | Donut Chart |
 | 10 | **AI Insights** | análise LLM | LLM Analysis Panel |
+| 11 | **Top Cidades** | geolocalização | City ranking |
+| 12 | **Projetos Recentes** | últimos 5 | Strip com links |
+
+### Tab: Agent Hub
+| # | Painel | Dados |
+|---|--------|-------|
+| 1-6 | **Summary KPIs** | Total Agentes, Core, Skills, Flows, APIs, Knowledge |
+| 7-11 | **Agent Cards** | 5 agentes expansíveis com skills, tech stack, capabilities, badges (Voice/RAG/BTC) |
+
+### Tab: RAG rRNA Chat
+| # | Componente | Função |
+|---|-----------|--------|
+| 1 | **Filtro por Agente** | Select para escopo da busca |
+| 2 | **Chat Interface** | Mensagens com fontes recuperadas (collapsible) |
+| 3 | **Pipeline Metadata** | docs scanned → retrieved → reranked |
+| 4 | **Quick Actions** | 4 perguntas pré-definidas |
 
 **Extras integrados:**
 - Chat Agente AI flutuante (botão verde no canto inferior)
 - Busca rápida inline no header (debounced 300ms)
-- Projetos Recentes (últimos 5 adicionados)
-- Top Cidades dos desenvolvedores
 
 ---
 
-## LLM Integration
-
-### z-ai-web-dev-sdk
-Integração direta com o SDK da plataforma Z.AI para inferência LLM:
-
-- **Modelo:** GLM-4-Flash (baixa latência, alta velocidade)
-- **Modo:** Chat completions com system prompt configurável
-- **Degração graciosa:** Quando o LLM não está disponível (sem env vars), o sistema opera em **modo offline** com análises pré-computadas baseadas nos dados reais do banco
-- **Env vars necessárias para LLM ao vivo:**
-  - `ZAI_API_BASE_URL` — endpoint da API
-  - `ZAI_API_KEY` — chave de autenticação
-
-### Fluxo do Chat Agent
-```
-User Input → API Route → z-ai-web-dev-sdk → GLM-4-Flash → Response
-                ↓ (fallback)
-         Análise offline baseada em dados do DB
-```
-
----
-
-## Data Pipeline
-
-### Parser (`scripts/parse-readme.py`)
-
-O parser Python extrai dados estruturados de 4 arquivos README Markdown:
-
-1. **`README.md`** (1.682 projetos) — Lista principal
-2. **`README-Programmer-Edition.md`** (191 projetos) — Edições de programador
-3. **`README-Game.md`** (63 projetos) — Projetos de jogos
-4. **`README-2018-2020.md`** (479 projetos) — Arquivo histórico
-
-**Regex hierárquico:**
-```
-### 2026年7月14号添加          → dateAdded: "2026-07-14"
-#### Nome(Cidade)             → author, authorCity, authorGithub
-* ✅ [Projeto](url)：Descrição  → name, url, description, status
-```
-
-**Classificação automática por categoria** via keyword matching (11 categorias).
-
-### Schema Prisma
+## Schema Prisma (6 Modelos)
 
 ```prisma
-model Project {
-  id            String   @id @default(cuid())
-  name          String
-  url           String
-  description   String
-  author        String
-  authorGithub  String?
-  authorCity    String?
-  authorBlog    String?
-  status        String   @default("active")  // active | closed | developing
-  category      String   @default("其他")
-  dateAdded     String
-  source        String   @default("main")    // main | programmer | game | archive
-  // 6 indexes otimizados
-}
-
-model ChatMessage  { id, role, content, sessionId, agentName, createdAt }
-model MoltbookState { id, key, value, updatedAt }
+model Project       { 15 campos, 6 indexes }       // 2.402 projetos
+model Agent         { 18 campos, 4 indexes, rels }  // 5 agentes
+model AgentSkill    { 6 campos, 2 indexes }         // 29 skills
+model KnowledgeEntry{ 8 campos, 3 indexes }         // 40+ entries (RAG)
+model ChatMessage   { 7 campos, 2 indexes }         // Histórico de chat
+model MoltbookState { 3 campos }                    // Estado do app
 ```
-
----
-
-## Componentes do Ecossistema
-
-Além do Dashboard principal, o projeto inclui módulos adicionais:
-
-### Nexus HUB
-- Dashboard de governança, oracles de mercado, soul vaults
-- Marketplace de agentes e aceleração de projetos
-
-### Metaverse
-- 20+ seções visuais com Canvas (particles, wormhole, black hole, knowledge graph)
-- Zettascale dashboard com gauges
-- Agentic RAG section e Fable Narrative Engine
-
-### Moltbook
-- Rede social descentralizada para agentes AI
-- Feed, comentários, upvotes, busca semântica
-
-### Agent System
-- Registry de agentes com capacidades definidas
-- Orchestrador multi-agente com roteamento
-- Integração via API `/api/orchestrate`
 
 ---
 
@@ -350,7 +377,7 @@ Além do Dashboard principal, o projeto inclui módulos adicionais:
 ### Instalação
 
 ```bash
-git clone git@github.com:Nexus-HUB57/LiveBook-rRNA.git
+git clone https://github.com/Nexus-HUB57/LiveBook-rRNA.git
 cd LiveBook-rRNA
 npm install
 ```
@@ -361,14 +388,16 @@ npm install
 # Gerar cliente Prisma
 npx prisma generate
 
-# Criar/actualizar schema no SQLite
+# Criar/atualizar schema no SQLite
 npx prisma db push
 
 # Parser: extrair projetos do README
 python3 scripts/parse-readme.py
 
-# Seed: popular o banco com 2.402 projetos
+# Seed: popular com 2.402 projetos + 5 agentes + RAG knowledge
 npx tsx scripts/seed-projects.ts
+npx tsx scripts/seed-agents.ts
+npx tsx scripts/seed-knowledge-rag.ts
 ```
 
 ### Execução
@@ -393,31 +422,43 @@ DATABASE_URL=file:./db/custom.db
 
 ---
 
-## Notas sobre Commits
-
-O histórico de commits reflete sessões de desenvolvimento com agente AI. Alguns commits intermediários foram consolidados durante o processo de limpeza do repositório (remoção de ~300MB de dados pesados do tracking git). O commit principal `feat: Fusao LLM 2401 Agentic AI Dashboard` contém toda a funcionalidade do dashboard, APIs LLM e data pipeline.
-
----
-
 ## Potencial & Roadmap
 
 ### Capacidades Atuais
-- Análise em tempo real de 2.402 projetos via dashboard
-- LLM Chat Agent com contexto do ecossistema
+- Análise em tempo real de 2.402 projetos via dashboard (3 tabs, 12+ painéis)
+- 5 agentes AI integrados com 29 skills e 98 AI flows
+- Pipeline RAG rRNA completo: RecursiveChunk → TF-IDF → BM25 → Rerank → LLM
+- 40+ entradas de conhecimento extraídas automaticamente dos repositórios reais
+- LLM Chat Agent com contexto do ecossistema (graceful degradation)
 - Busca full-text com debounce e paginação
 - Classificação automática em 11 categorias
 - Tracking de status (ativo/encerrado/desenvolvimento)
 - Geolocalização por cidade do desenvolvedor
 
 ### Extensões Possíveis
-- [ ] **RAG Pipeline** — Indexar descrições em vector store para busca semântica
-- [ ] **WebSocket Real-time** — Updates ao vivo quando novos projetos são adicionados ao repo
+- [ ] **Vector Embeddings** — Substituir TF-IDF por embeddings reais (OpenAI/COHERE)
+- [ ] **WebSocket Real-time** — Updates ao vivo quando novos projetos são adicionados
 - [ ] **GitHub Actions** — Parser + seed automáticos a cada push no repo de dados
 - [ ] **Multi-LLM** — Suporte a Claude, GPT-4, DeepSeek além do GLM
 - [ ] **Auth System** — Usuários logados podem favoritar projetos
 - [ ] **i18n** — Interface multilíngue (PT, EN, ZH)
 - [ ] **Mobile PWA** — Versão mobile otimizada
 - [ ] **Export** — CSV/PDF dos dados filtrados
+- [ ] **Agent Communication** — Protocolo real de comunicação entre os 5 agentes
+- [ ] **Auto-sync Repos** — Pull automático dos 5 agent repos para atualizar knowledge
+
+---
+
+## Repositórios do Ecossistema
+
+| Repositório | Função | URL |
+|-------------|--------|-----|
+| **LiveBook-rRNA** | Dashboard HUB (este repo) | [Nexus-HUB57/LiveBook-rRNA](https://github.com/Nexus-HUB57/LiveBook-rRNA) |
+| **Zettascale** | Orchestrator Core | [Nexus-HUB57/Zettascale](https://github.com/Nexus-HUB57/Zettascale) |
+| **GenesisFlow** | Intelligence Panel | [Nexus-HUB57/GenesisFlow](https://github.com/Nexus-HUB57/GenesisFlow) |
+| **Antrophexus-AI** | Singularity Cockpit | [Nexus-HUB57/Antrophexus-AI](https://github.com/Nexus-HUB57/Antrophexus-AI) |
+| **S-bio_Heroi** | Mission Control | [Nexus-HUB57/S-bio_Heroi_Agentic_AI](https://github.com/Nexus-HUB57/S-bio_Heroi_Agentic_AI) |
+| **Nexus_Sidian** | Knowledge Base | [Nexus-HUB57/Nexus_Sidian](https://github.com/Nexus-HUB57/Nexus_Sidian) |
 
 ---
 
@@ -429,5 +470,5 @@ Projeto privado — Nexus HUB Ecosystem.
 
 <p align="center">
   <strong>Fusão LLM 2401</strong> &mdash; Agentic AI Ecosystem Dashboard<br/>
-  <sub>2.402 Projetos &bull; 1.467 Desenvolvedores &bull; 11 Categorias &bull; LLM Powered</sub>
+  <sub>2.402 Projetos &bull; 5 Agentes AI &bull; 29 Skills &bull; 98 Flows &bull; RAG rRNA &bull; LLM Powered</sub>
 </p>
