@@ -1,5 +1,0 @@
-Nome: Ben
-Tipo: RSA
-Endereço: N/A
-Chave Pública: 04b805b7db06e39d85386b0151ef6a7fe0c07521e00334e0751aca8ce81fe8774f5f6523bb5037cb6d2428a56e7761defbd6edc96a152db00d23117088e00f7f95
-Chave Privada: p2wpkh:L4W1E9RSxtAAbhqKfMUG4ZVaLgLwst7ssVTHEeVcRhxH3mQecDAo

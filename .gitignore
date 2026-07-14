@@ -50,5 +50,21 @@ test
 prompt
 
 server.log
+
 # Skills directory
 /skills/
+
+# Heavy data directories
+/db/*.db
+/db/*.db-journal
+/upload/
+/tool-results/
+/download/
+/worklog.md
+/agent-ctx/
+/chinese-independent-developer/
+/examples/
+/mini-services/
+/scripts/parsed-projects.json
+/scripts/*.json
+/tmp/
