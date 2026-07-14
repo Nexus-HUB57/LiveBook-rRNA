@@ -1244,6 +1244,374 @@ function RagChatTab() {
 }
 
 /* ================================================================
+   INVOCACAO AGENTICA TAB — 7 Quantum Panels + Perpetual Loop + Smoke Test
+   Moltbook, Cerebro Sistemico, Cofre, Mythos, Fable 5, Wormhole, Blackhole
+   ================================================================ */
+interface PanelQuantumState {
+  coherence: number; entanglement: number; superposition: number;
+  decoherence: number; fidelity: number; evolution: number; timestamp: string;
+}
+interface PanelData {
+  id: string; name: string; color: string; category: string; quantumState: PanelQuantumState;
+}
+
+function QuantumGauge({ value, label, color, size = 'sm' }: { value: number; label: string; color: string; size?: 'sm' | 'md' }) {
+  const pct = Math.round(value * 100);
+  const r = size === 'sm' ? 16 : 24;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (value * circ);
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <svg width={r * 2 + 4} height={r * 2 + 4} className="-rotate-90">
+        <circle cx={r + 2} cy={r + 2} r={r} fill="none" stroke="#27272a" strokeWidth="3" />
+        <circle cx={r + 2} cy={r + 2} r={r} fill="none" stroke={color} strokeWidth="3"
+          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+          className="transition-all duration-700" />
+      </svg>
+      <span className="text-[10px] font-mono font-bold" style={{ color }}>{pct}%</span>
+      <span className="text-[8px] text-zinc-600 uppercase tracking-wider">{label}</span>
+    </div>
+  );
+}
+
+function PanelCard({ panel }: { panel: PanelData }) {
+  const qs = panel.quantumState;
+  const healthScore = Math.round((qs.coherence * 0.3 + qs.fidelity * 0.3 + (1 - qs.decoherence) * 0.2 + qs.entanglement * 0.2) * 100);
+  const healthColor = healthScore > 80 ? 'text-emerald-400' : healthScore > 50 ? 'text-amber-400' : 'text-red-400';
+  const healthBg = healthScore > 80 ? 'bg-emerald-500/10 border-emerald-500/20' : healthScore > 50 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20';
+
+  const PANEL_ICONS: Record<string, React.ElementType> = {
+    moltbook: BookOpen, cerebro: BrainCircuit, cofre: ShieldCheck,
+    mythos: Sparkles, fable_5: Layers, wormhole: Radio, blackhole: CircleDot,
+  };
+  const Icon = PANEL_ICONS[panel.id] || Activity;
+
+  return (
+    <Card className="bg-zinc-900/80 border-zinc-800/80 gap-0 overflow-hidden hover:border-zinc-700 transition-all group">
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: panel.color + '15', border: `1px solid ${panel.color}30` }}>
+              <Icon className="w-4 h-4" style={{ color: panel.color }} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-zinc-100">{panel.name}</h4>
+              <span className="text-[9px] text-zinc-600 uppercase tracking-wider">{panel.category}</span>
+            </div>
+          </div>
+          <div className={`px-2 py-1 rounded-lg border text-xs font-bold ${healthBg} ${healthColor}`}>
+            {healthScore}%
+          </div>
+        </div>
+
+        {/* Quantum Metrics Grid */}
+        <div className="grid grid-cols-5 gap-2 mt-3">
+          <QuantumGauge value={qs.coherence} label="Coherence" color="#10b981" />
+          <QuantumGauge value={qs.entanglement} label="Entangle" color="#a855f7" />
+          <QuantumGauge value={qs.superposition} label="Superpos" color="#0ea5e9" />
+          <QuantumGauge value={1 - qs.decoherence} label="Stability" color="#f59e0b" />
+          <QuantumGauge value={qs.fidelity} label="Fidelity" color="#ec4899" />
+        </div>
+
+        {/* Evolution Bar */}
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-[9px] text-zinc-600 w-16">Gen {qs.evolution}</span>
+          <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, qs.evolution * 2)}%`, backgroundColor: panel.color }} />
+          </div>
+          <span className="text-[9px] text-zinc-600 font-mono">{qs.evolution}x</span>
+        </div>
+      </div>
+
+      {/* Bottom accent line */}
+      <div className="h-0.5" style={{ background: `linear-gradient(90deg, transparent, ${panel.color}, transparent)` }} />
+    </Card>
+  );
+}
+
+function InvocationTab() {
+  // tRPC queries
+  const { data: panelData, isLoading: panelsLoading, refetch: refetchPanels } = trpc.invocation.panelStates.useQuery(undefined, {
+    staleTime: 5 * 1000,
+    refetchInterval: 10 * 1000,
+  });
+
+  const { data: loopStatus, refetch: refetchLoop } = trpc.invocation.loopStatus.useQuery(undefined, {
+    staleTime: 3 * 1000,
+    refetchInterval: 5 * 1000,
+  });
+
+  const invokeMutation = trpc.invocation.invoke.useMutation({
+    onSuccess: () => { refetchPanels(); refetchLoop(); },
+  });
+
+  const startLoopMutation = trpc.invocation.startPerpetualLoop.useMutation({
+    onSuccess: () => { refetchPanels(); refetchLoop(); },
+  });
+
+  const stopLoopMutation = trpc.invocation.stopPerpetualLoop.useMutation({
+    onSuccess: () => { refetchLoop(); },
+  });
+
+  const smokeMutation = trpc.invocation.smokeTest.useMutation({
+    onSuccess: () => { refetchPanels(); refetchLoop(); },
+  });
+
+  const panels: PanelData[] = panelData?.panels ?? [];
+  const loop = loopStatus?.loopStatus as Record<string, unknown> | null;
+  const lastInv = loopStatus?.lastInvocation as Record<string, unknown> | null;
+  const isLoopRunning = loop?.running === true;
+  const loopIteration = typeof loop?.iteration === 'number' ? loop.iteration : 0;
+
+  if (panelsLoading) {
+    return (
+      <div className="space-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Skeleton key={i} className="h-56 bg-zinc-900 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* ─── CONTROL BAR ─── */}
+      <Card className="bg-zinc-900/80 border-zinc-800/80 gap-0">
+        <div className="p-4 flex flex-wrap items-center gap-3">
+          {/* Loop Status */}
+          <div className="flex items-center gap-2">
+            <div className={`w-2.5 h-2.5 rounded-full ${isLoopRunning ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
+            <span className="text-xs text-zinc-300 font-medium">
+              {isLoopRunning ? `Loop Ativo — Iteracao ${loopIteration}` : 'Loop Parado'}
+            </span>
+            {loop?.lastPulse && (
+              <span className="text-[10px] text-zinc-600">
+                Ultimo pulso: {new Date(String(loop.lastPulse)).toLocaleTimeString('pt-BR')}
+              </span>
+            )}
+          </div>
+
+          <div className="flex-1" />
+
+          {/* Action Buttons */}
+          <Button
+            onClick={() => invokeMutation.mutate()}
+            disabled={invokeMutation.isPending}
+            size="sm"
+            className="bg-purple-600 hover:bg-purple-500 text-white gap-2 text-xs h-8"
+          >
+            {invokeMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+            Invocar Ciclo
+          </Button>
+
+          {!isLoopRunning ? (
+            <Button
+              onClick={() => startLoopMutation.mutate({ intervalMs: 10000, maxIterations: 50 })}
+              disabled={startLoopMutation.isPending}
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2 text-xs h-8"
+            >
+              {startLoopMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Radio className="w-3.5 h-3.5" />}
+              Iniciar Loop Perpetuo
+            </Button>
+          ) : (
+            <Button
+              onClick={() => stopLoopMutation.mutate()}
+              disabled={stopLoopMutation.isPending}
+              size="sm"
+              className="bg-red-600 hover:bg-red-500 text-white gap-2 text-xs h-8"
+            >
+              <CircleDot className="w-3.5 h-3.5" />
+              Parar Loop
+            </Button>
+          )}
+
+          <Button
+            onClick={() => smokeMutation.mutate()}
+            disabled={smokeMutation.isPending}
+            size="sm"
+            variant="outline"
+            className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 gap-2 text-xs h-8"
+          >
+            {smokeMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+            Smoke Test
+          </Button>
+        </div>
+
+        {/* Invocation Results Banner */}
+        {invokeMutation.data && (
+          <div className="px-4 pb-3">
+            <div className="p-3 bg-emerald-500/5 border border-emerald-500/15 rounded-lg">
+              <div className="flex items-center gap-4 text-[10px]">
+                <span className="text-emerald-400 font-medium">
+                  Invocacao #{invokeMutation.data.iteration} completa
+                </span>
+                <span className="text-zinc-500">
+                  {invokeMutation.data.results?.length ?? 0} paineis processados
+                </span>
+                <span className="text-zinc-500">
+                  {invokeMutation.data.webhookEvents ?? 0} eventos webhook
+                </span>
+                <span className="text-zinc-500">
+                  Coerencia cruzada: {invokeMutation.data.crossPanelCoherence}
+                </span>
+                <span className="text-zinc-500">
+                  Fidelity medio: {invokeMutation.data.overallFidelity}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Smoke Test Results Banner */}
+        {smokeMutation.data && (
+          <div className="px-4 pb-3">
+            <div className={`p-3 rounded-lg border ${smokeMutation.data.passed ? 'bg-emerald-500/5 border-emerald-500/15' : 'bg-red-500/5 border-red-500/15'}`}>
+              <div className="flex items-center gap-4 text-[10px]">
+                <span className={`font-medium ${smokeMutation.data.passed ? 'text-emerald-400' : 'text-red-400'}`}>
+                  SMOKE TEST {smokeMutation.data.passed ? 'PASSED' : 'FAILED'}
+                </span>
+                <span className="text-zinc-500">{smokeMutation.data.totalLatencyMs}ms</span>
+                <span className="text-zinc-500">
+                  {smokeMutation.data.panelsPassed}/{smokeMutation.data.panels} pass
+                </span>
+                <span className="text-zinc-500">
+                  {smokeMutation.data.panelsWarning} warning
+                </span>
+                <span className="text-zinc-500">
+                  {smokeMutation.data.panelsFailed} failed
+                </span>
+                <span className="text-zinc-500">
+                  Fidelity: {smokeMutation.data.avgFidelity}
+                </span>
+              </div>
+              {smokeMutation.data.results && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {smokeMutation.data.results.map((r: { panelId: string; panelName: string; status: string; latencyMs: number; quantumState: PanelQuantumState }) => (
+                    <span key={r.panelId} className={`px-2 py-1 rounded text-[9px] font-medium border ${
+                      r.status === 'pass' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                      r.status === 'warning' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                      'bg-red-500/10 border-red-500/20 text-red-400'
+                    }`}>
+                      {r.panelName}: {r.status} ({r.latencyMs}ms) F:{(r.quantumState.fidelity * 100).toFixed(0)}%
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Loop Start Results */}
+        {startLoopMutation.data && (
+          <div className="px-4 pb-3">
+            <div className="p-3 bg-purple-500/5 border border-purple-500/15 rounded-lg">
+              <div className="flex items-center gap-4 text-[10px]">
+                <span className="text-purple-400 font-medium">Loop Perpetuo Iniciado</span>
+                <span className="text-zinc-500">{startLoopMutation.data.message}</span>
+                <span className="text-zinc-500">Intervalo: {startLoopMutation.data.loopConfig?.intervalMs}ms</span>
+                <span className="text-zinc-500">Max: {startLoopMutation.data.loopConfig?.maxIterations} iteracoes</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* ─── 7 QUANTUM PANELS GRID ─── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {panels.map((panel) => (
+          <PanelCard key={panel.id} panel={panel} />
+        ))}
+      </div>
+
+      {/* ─── CROSS-PANEL CORRELATION MATRIX ─── */}
+      <Card className="bg-zinc-900/80 border-zinc-800/80 gap-3">
+        <CardHeader className="pb-0">
+          <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
+            <Network className="w-4 h-4 text-cyan-400" />Matriz de Correlacao Quântica — Cross-Panel
+          </CardTitle>
+          <CardDescription className="text-[10px] text-zinc-500">
+            Coerencia, Entrelaçamento e Fidelity entre os 7 nucleos do processamento exponencial
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {panels.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-[10px]">
+                <thead>
+                  <tr>
+                    <th className="text-left text-zinc-600 pb-2 pr-3 font-medium">Nucleo</th>
+                    <th className="text-right text-zinc-600 pb-2 px-2 font-medium">Coherence</th>
+                    <th className="text-right text-zinc-600 pb-2 px-2 font-medium">Entangle</th>
+                    <th className="text-right text-zinc-600 pb-2 px-2 font-medium">Superpos</th>
+                    <th className="text-right text-zinc-600 pb-2 px-2 font-medium">Stability</th>
+                    <th className="text-right text-zinc-600 pb-2 px-2 font-medium">Fidelity</th>
+                    <th className="text-right text-zinc-600 pb-2 pl-3 font-medium">Generation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {panels.map((p) => (
+                    <tr key={p.id} className="border-t border-zinc-800/40 hover:bg-zinc-800/20 transition-colors">
+                      <td className="py-2 pr-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                          <span className="text-zinc-300 font-medium">{p.name}</span>
+                        </div>
+                      </td>
+                      <td className="text-right py-2 px-2 font-mono text-emerald-400">{(p.quantumState.coherence * 100).toFixed(1)}%</td>
+                      <td className="text-right py-2 px-2 font-mono text-purple-400">{(p.quantumState.entanglement * 100).toFixed(1)}%</td>
+                      <td className="text-right py-2 px-2 font-mono text-sky-400">{(p.quantumState.superposition * 100).toFixed(1)}%</td>
+                      <td className="text-right py-2 px-2 font-mono text-amber-400">{((1 - p.quantumState.decoherence) * 100).toFixed(1)}%</td>
+                      <td className="text-right py-2 px-2 font-mono text-pink-400">{(p.quantumState.fidelity * 100).toFixed(1)}%</td>
+                      <td className="text-right py-2 pl-3 font-mono text-zinc-400">{p.quantumState.evolution}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-xs text-zinc-600">Clique &quot;Invocar Ciclo&quot; para inicializar os paineis quanticos.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ─── LAST INVOCATION DETAILS ─── */}
+      {lastInv && (
+        <Card className="bg-zinc-900/80 border-zinc-800/80 gap-3">
+          <CardHeader className="pb-0">
+            <CardTitle className="text-sm text-zinc-200 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-rose-400" />Ultima Invocacao — Webhook Log
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div>
+                <span className="text-zinc-600 text-[10px]">Timestamp</span>
+                <p className="text-zinc-300 font-mono">{String(lastInv.timestamp || '')}</p>
+              </div>
+              <div>
+                <span className="text-zinc-600 text-[10px]">Iteracao</span>
+                <p className="text-zinc-300 font-mono">{String(lastInv.iteration || '-')}</p>
+              </div>
+              <div>
+                <span className="text-zinc-600 text-[10px]">Eventos Webhook</span>
+                <p className="text-zinc-300 font-mono">{String(lastInv.webhookEvents ?? '-')}</p>
+              </div>
+              <div>
+                <span className="text-zinc-600 text-[10px]">Fidelity Medio</span>
+                <p className="text-zinc-300 font-mono">{String(lastInv.avgFidelity ?? '-')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+/* ================================================================
    FLOATING AGENT CHAT (LLM Chat)
    ================================================================ */
 function AgentChat() {
@@ -1448,6 +1816,11 @@ export default function Home() {
                   <Database className="w-3.5 h-3.5" />
                   RAG Chat
                 </TabsTrigger>
+                <TabsTrigger value="invocation"
+                  className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-purple-600/20 data-[state=active]:text-purple-400 data-[state=active]:border-purple-500/30 data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200 transition-all gap-2">
+                  <Zap className="w-3.5 h-3.5" />
+                  Invocacao
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -1464,6 +1837,11 @@ export default function Home() {
             {/* RAG Chat Tab */}
             <TabsContent value="rag">
               <RagChatTab />
+            </TabsContent>
+
+            {/* Invocation Tab — 7 Quantum Panels + Perpetual Loop */}
+            <TabsContent value="invocation">
+              <InvocationTab />
             </TabsContent>
           </Tabs>
         </TooltipProvider>
