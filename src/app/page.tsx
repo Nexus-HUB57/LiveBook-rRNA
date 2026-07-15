@@ -6,13 +6,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import {
-  Zap, Bot, Database, LayoutDashboard, BrainCircuit, Cpu,
+  Zap, Bot, Database, LayoutDashboard, BrainCircuit, Cpu, Flame,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardTab, QuickSearch } from '@/components/dashboard-tab';
 import { AgentHubTab } from '@/components/agent-hub-tab';
 import { RagChatTab } from '@/components/rag-chat-tab';
 import { InvocationTab } from '@/components/invocation-tab';
+import { OrchestrationTab } from '@/components/orchestration-tab';
 import { AgentChat } from '@/components/agent-chat';
 
 /* ================================================================
@@ -23,6 +24,7 @@ const TABS = [
   { value: 'agents', label: 'Agent Hub', icon: Bot, activeColor: 'emerald' },
   { value: 'rag', label: 'RAG Chat', icon: Database, activeColor: 'emerald' },
   { value: 'invocation', label: 'Invocacao', icon: Zap, activeColor: 'purple' },
+  { value: 'orchestration', label: 'Orquestracao', icon: Flame, activeColor: 'emerald' },
 ] as const;
 
 /* ================================================================
@@ -82,10 +84,18 @@ export default function Home() {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.4 }}
                 >
-                  v2.0
+                  v3.0
+                </motion.span>
+                <motion.span
+                  className="text-[9px] font-medium bg-rose-500/15 text-rose-400 px-1.5 py-0.5 rounded-md border border-rose-500/20"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Auto-Cura
                 </motion.span>
               </h1>
-              <p className="text-[10px] text-zinc-500 mt-0.5">Agente Generativo Orquestrador Ativo &bull; Live Sync &bull; Quantum Panels</p>
+              <p className="text-[10px] text-zinc-500 mt-0.5">Protocolo Reativo Gerativo &bull; Auto-Cura &bull; Auto-Sabedoria &bull; Orquestracao Real</p>
             </div>
           </motion.div>
 
@@ -169,6 +179,11 @@ export default function Home() {
                     <InvocationTab />
                   </TabsContent>
                 )}
+                {activeTab === 'orchestration' && (
+                  <TabsContent value="orchestration" forceMount className="mt-0">
+                    <OrchestrationTab />
+                  </TabsContent>
+                )}
               </motion.div>
             </AnimatePresence>
           </Tabs>
@@ -182,7 +197,7 @@ export default function Home() {
             Fusão LLM 2401 — Agente Generativo Orquestrador Ativo
           </p>
           <p className="text-[10px] text-zinc-700 flex items-center gap-1.5">
-            <Cpu className="w-3 h-3" />tRPC Nativo &bull; Quantum Panels &bull; Live Sync &bull; {new Date().getFullYear()}
+            <Cpu className="w-3 h-3" />tRPC Nativo &bull; Auto-Cura &bull; Auto-Sabedoria &bull; Orquestracao Real &bull; {new Date().getFullYear()}
           </p>
         </div>
       </footer>

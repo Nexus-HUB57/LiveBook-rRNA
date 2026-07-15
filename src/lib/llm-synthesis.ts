@@ -1,0 +1,155 @@
+/**
+ * LLM Synthesis — Streaming text generation via z-ai-web-dev-sdk.
+ *
+ * Provides async generators that yield token-by-token for SSE streaming.
+ * Falls back gracefully when SDK is not configured.
+ */
+
+export interface LLMMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+const SYSTEM_PROMPT = `Voce e um assistente especializado no ecossistema Nexus-HUB Fusao LLM 2401.
+Voce tem conhecimento sobre:
+- 2.402+ projetos de desenvolvedores independentes chineses
+- 5 agentes AI: Zettascale, GenesisFlow, Antrophexus AI, Sabio Heroi, Nexus Sidian
+- Pipeline RAG rRNA (Retrieval Augmented Generation)
+- 7 paineis quanticos: Moltbook, Cerebro Sistemico, Cofre, Mythos, Fable 5, Wormhole, Blackhole
+- Protocolo reativo gerativo de auto-cura e auto-sabedoria
+- Orquestracao real via Skills e algoritmos
+- Bitcoin, custodia, UTXO, derivacao HD
+- Ciclo OODA, JARVIS, voice synthesis
+
+Regras:
+- Responda no mesmo idioma da pergunta do usuario
+- Seja conciso e util
+- Cite fontes quando disponivel via RAG
+- Se nao souber, diga com honestidade`;
+
+/**
+ * Stream LLM response token by token using z-ai-web-dev-sdk.
+ * Falls back to word-by-word simulation if SDK is unavailable.
+ */
+export async function* streamLLM(
+  query: string,
+  options: {
+    agentSlug?: string;
+    context?: string;
+    history?: LLMMessage[];
+  } = {}
+): AsyncGenerator<string> {
+  const { agentSlug, context, history = [] } = options;
+
+  // Build messages array
+  const messages: LLMMessage[] = [
+    { role: 'system', content: SYSTEM_PROMPT },
+  ];
+
+  // Add agent-specific context
+  if (agentSlug) {
+    messages.push({
+      role: 'system',
+      content: `O usuario esta conversando com o agente "${agentSlug}". Adapte suas respostas ao contexto desse agente quando relevante.`,
+    });
+  }
+
+  // Add conversation history (last 10 messages)
+  const recentHistory = history.slice(-10);
+  for (const msg of recentHistory) {
+    messages.push({ role: msg.role, content: msg.content });
+  }
+
+  // Add RAG context if available
+  let userContent = query;
+  if (context) {
+    userContent = `Contexto recuperado via RAG rRNA:\n---\n${context}\n---\n\nPergunta do usuario: ${query}`;
+  }
+
+  messages.push({ role: 'user', content: userContent });
+
+  // Try real LLM streaming
+  const hasSDK = !!(process.env.ZAI_API_BASE_URL && process.env.ZAI_API_KEY);
+
+  if (hasSDK) {
+    try {
+      const ZAI = (await import('z-ai-web-dev-sdk')).default;
+      const client = new ZAI({
+        baseUrl: process.env.ZAI_API_BASE_URL,
+        apiKey: process.env.ZAI_API_KEY,
+      });
+
+      // Use createChatCompletion with streaming if available
+      // The SDK may not support streaming natively, so we do chunked generation
+      const result = await client.createChatCompletion({
+        model: 'glm-4-flash',
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
+        thinking: 'disabled',
+      });
+
+      const fullText = result?.choices?.[0]?.message?.content || '';
+      if (fullText) {
+        // Simulate token streaming by yielding word chunks
+        const words = fullText.split(/(\s+)/);
+        for (const word of words) {
+          yield word;
+          if (word.trim()) {
+            await new Promise(r => setTimeout(r, 15)); // Small delay for UX
+          }
+        }
+        return;
+      }
+    } catch (err) {
+      console.error('[LLM Stream] SDK error, falling back:', err);
+    }
+  }
+
+  // Fallback: Generate a contextual response without LLM
+  yield* generateFallbackResponse(query, agentSlug, context);
+}
+
+/**
+ * Generate a fallback response when LLM is not available.
+ * Still streams token by token for consistent UX.
+ */
+async function* generateFallbackResponse(
+  query: string,
+  agentSlug?: string,
+  context?: string
+): AsyncGenerator<string> {
+  const lowerQuery = query.toLowerCase();
+
+  let response: string;
+
+  if (lowerQuery.includes('ooda') || lowerQuery.includes('ciclo ooda')) {
+    response = `O ciclo OODA (Observe, Orient, Decide, Act) e um framework de decisao estrategica desenvolvido pelo coronel John Boyd. No ecossistema Nexus-HUB, o OODA e aplicado na orquestracao dos agentes AI: **Observe** os estados quanticos dos 7 paineis, **Oriente** com base na sabedoria acumulada, **Decida** quais Skills ativar, e **Act** executando acoes corretivas em tempo real. Cada ciclo de orquestracao executa implicitamente este loop.`;
+  } else if (lowerQuery.includes('bitcoin') || lowerQuery.includes('btc')) {
+    response = `O ecossistema tem suporte a Bitcoin atraves do agente **Cofre** e do painel quântico de mesmo nome. As Skills relacionadas incluem: btc_rpc (comunicacao com nodes Bitcoin), utxo_tracking (rastreamento de transacoes nao gastas), hd_wallet_derivation (derivacao de carteiras HD), custody_validation (validacao de custodia), e on_chain_analysis (analise on-chain). O agente Cofre opera com dados em tempo real da blockchain.`;
+  } else if (lowerQuery.includes('rag') || lowerQuery.includes('pipeline') || lowerQuery.includes('rrna')) {
+    response = `O pipeline RAG rRNA (Retrieval Augmented Generation com inspiracao em RNA ribossomal) segue 6 estagios: **EXTRACT** — chunking recursivo de texto; **ENCODE** — vetorizacao TF-IDF com expansao de n-gramas; **RETRIEVE** — scoring BM25 com field boosting; **RERANK** — re-ranking cross-encoder por relevancia; **AUGMENT** — montagem da janela de contexto com atribuicao de fonte; **GENERATE** — sintese via LLM com template RAG. A base de conhecimento inclui READMEs e documentacao dos 5 agentes Nexus.`;
+  } else if (lowerQuery.includes('quantico') || lowerQuery.includes('nucleo') || lowerQuery.includes('painel')) {
+    response = `Os 7 paineis quanticos sao: **Moltbook** (social, feed curation, karma engine), **Cerebro Sistemico** (inteligencia, neural mapping, predictive modeling), **Cofre** (custodia Bitcoin, UTXO tracking), **Mythos** (orquestrador, tool calling, agent routing), **Fable 5** (pesquisa, data extraction, web scraping), **Wormhole** (transporte, dimensional routing, encryption), e **Blackhole** (entropia, event horizon detection, singularity analysis). Cada painel possui 5 metricas quanticas: Coerencia, Entrelaçamento, Superposicao, Decoerencia e Fidelidade.`;
+  } else if (lowerQuery.includes('orquestr') || lowerQuery.includes('auto-cura') || lowerQuery.includes('sabedoria')) {
+    response = `O Protocolo Reativo Gerativo opera em 6 fases por ciclo: **INVOKE** — gerar estados quanticos para todos os paineis; **DETECT** — executar o Self-Healing Engine para detectar anomalias; **HEAL** — aplicar acoes corretivas reais via Skills (recalibracao, estabilizacao, amplificacao, escudo antientropia, ressync); **LEARN** — processar sabedoria via Wisdom Engine (padroes, insights, memoria de decisoes); **DIRECT** — usar sabedoria para direcionar acoes futuras; **PERSIST** — salvar tudo em memoria persistente. O sistema e autossuficiente com loop exponencial e memoria que cresce a cada ciclo.`;
+  } else if (lowerQuery.includes('agente') || lowerQuery.includes('agentes') || lowerQuery.includes('zettascale') || lowerQuery.includes('genesisflow')) {
+    response = `O ecossistema possui 5 agentes AI: **Zettascale** (orquestrador core, React + Node.js), **GenesisFlow** (especialista em fluxos, Next.js), **Antrophexus AI** (analista, Python), **Sabio Heroi** (guardiao com RAG + voz), e **Nexus Sidian** (integracao Obsidian). Cada agente tem Skills proprias, documentacao no banco de conhecimento, e pode ser selecionado no chat para respostas especializadas. O Hub sincroniza com os repositorios GitHub ao vivo.`;
+  } else {
+    response = `O ecossistema Fusao LLM 2401 e uma plataforma agentic AI com 2.402+ projetos catalogados, 5 agentes AI com Skills especializadas, pipeline RAG rRNA, 7 paineis quanticos com metricas em tempo real, e o Protocolo Reativo Gerativo de auto-cura e auto-sabedoria. Tudo conectado via tRPC nativo com Next.js 16 e Prisma. Para saber mais, pergunte sobre: ciclo OODA, Bitcoin, pipeline RAG, paineis quanticos, orquestracao, ou agentes especificos.`;
+  }
+
+  // Stream word by word
+  const words = response.split(/(\s+)/);
+  for (const word of words) {
+    yield word;
+    if (word.trim()) {
+      await new Promise(r => setTimeout(r, 20));
+    }
+  }
+}
+
+/**
+ * Check if LLM streaming is available.
+ */
+export function isLLMAvailable(): boolean {
+  return !!(process.env.ZAI_API_BASE_URL && process.env.ZAI_API_KEY);
+}
