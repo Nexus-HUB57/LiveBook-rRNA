@@ -1,18 +1,17 @@
 /**
- * tRPC Root Router — Aggregates all sub-routers.
- * Single entry point for all tRPC procedures.
- * Routers: dashboard, agents, invocation, orchestration.
+ * tRPC Root Router — Colibri Orchestration Architecture
+ * Routers: dashboard, colibri, agents, orchestration
  */
 import { createTRPCRouter } from './trpc';
 import { dashboardRouter } from './routers/dashboard';
+import { colibriRouter } from './routers/colibri';
 import { agentsRouter } from './routers/agents';
-import { invocationRouter } from './routers/invocation';
 import { orchestrationRouter } from './routers/orchestration';
 
 export const appRouter = createTRPCRouter({
   dashboard: dashboardRouter,
+  colibri: colibriRouter,
   agents: agentsRouter,
-  invocation: invocationRouter,
   orchestration: orchestrationRouter,
 });
 

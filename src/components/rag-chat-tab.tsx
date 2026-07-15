@@ -1,247 +1,251 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import {
-  Collapsible, CollapsibleTrigger, CollapsibleContent,
-} from '@/components/ui/collapsible';
-import {
-  Bot, BrainCircuit, Database, Filter, Send, Loader2, ChevronRight,
+  MessageSquareText, ArrowUp, CircleStop, Trash2, Feather,
+  Zap, Gauge, Timer, Eye, Settings2, BrainCircuit,
+  Send, LoaderCircle, ChevronDown,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { trpc } from '@/lib/trpc';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
-/* ================================================================
-   TYPES
-   ================================================================ */
-interface RetrievedSource {
-  id?: string; title: string; source: string; agent: string;
-  agentSlug?: string; score: number; chunkType?: string;
-}
-interface RagResponse {
-  query: string; answer: string; retrieved: RetrievedSource[];
-  contextLength: number; pipeline?: {
-    documentsScanned: number; retrieved: number; reranked: number; contextChars: number;
-  };
-}
+interface ChatMsg { id: string; role: 'user' | 'assistant'; content: string; }
 
-/* ================================================================
-   RAG CHAT TAB
-   ================================================================ */
 export function RagChatTab() {
-  const { data: agentsData } = trpc.agents.list.useQuery(undefined, { staleTime: 60_000 });
-  const agents = agentsData?.agents ?? [];
-
-  const [messages, setMessages] = useState<Array<{
-    role: 'user' | 'assistant'; content: string;
-    retrieved?: RetrievedSource[]; contextLength?: number;
-    pipeline?: RagResponse['pipeline'];
-  }>>([]);
-  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<string>('all');
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [connected, setConnected] = useState(false);
+  const [metrics, setMetrics] = useState<{ tokens: number; tokPerSec: number | null; ttft: number | null; promptTokens: number; completionTokens: number }>({
+    tokens: 0, tokPerSec: null, ttft: null, promptTokens: 0, completionTokens: 0,
+  });
+  const [temperature, setTemperature] = useState(0.7);
+  const [maxTokens, setMaxTokens] = useState(1024);
+  const [showSettings, setShowSettings] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
+  // Check engine connection
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages]);
+    const check = async () => {
+      try {
+        const res = await fetch('/api/colibri/health');
+        const data = await res.json();
+        setConnected(data.status && data.status !== 'offline' && data.status !== 'error');
+      } catch { setConnected(false); }
+    };
+    check();
+    const t = setInterval(check, 10000);
+    return () => clearInterval(t);
+  }, []);
 
-  const sendQuery = useCallback(async (text?: string) => {
-    const query = text || input.trim();
-    if (!query || loading) return;
-    setMessages(prev => [...prev, { role: 'user', content: query }]);
-    setInput('');
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  const send = useCallback(async () => {
+    const content = draft.trim();
+    if (!content || loading) return;
+    const userMsg: ChatMsg = { id: crypto.randomUUID(), role: 'user', content };
+    const assistMsg: ChatMsg = { id: crypto.randomUUID(), role: 'assistant', content: '' };
+    setMessages(prev => [...prev, userMsg, assistMsg]);
+    setDraft('');
     setLoading(true);
-    try {
-      const body: { query: string; agentSlug?: string } = { query };
-      if (selectedAgent !== 'all') body.agentSlug = selectedAgent;
-      const res = await fetch('/api/rag/query', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-      });
-      const data: RagResponse = await res.json();
-      setMessages(prev => [...prev, {
-        role: 'assistant', content: data.answer || 'Sem resposta disponivel.',
-        retrieved: data.retrieved || [], contextLength: data.contextLength || 0, pipeline: data.pipeline,
-      }]);
-    } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Erro ao processar consulta. Tente novamente.' }]);
-    }
-    setLoading(false);
-  }, [input, loading, selectedAgent]);
+    setMetrics(prev => ({ ...prev, tokens: 0, tokPerSec: null, ttft: null }));
+    const t0 = performance.now();
+    let firstToken = true;
+    let count = 0;
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-  const quickActions = ['O que e OODA?', 'Como funciona o RAG?', 'Capacidades Bitcoin', 'Arquitetura Sabio Heroi'];
-  const agentOptions = [
-    { value: 'all', label: 'Todos os Agentes' },
-    ...agents.map(a => ({ value: a.slug, label: a.name })),
-  ];
+    try {
+      const res = await fetch('/api/colibri/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'glm-5.2-colibri',
+          messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
+          temperature,
+          max_completion_tokens: maxTokens,
+        }),
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`Engine: ${res.status}`);
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('Empty stream');
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const frames = buffer.split(/\r?\n\r?\n/);
+        buffer = frames.pop() || '';
+        for (const frame of frames) {
+          for (const line of frame.split(/\r?\n/).filter(l => l.startsWith('data:'))) {
+            const data = line.slice(5).trim();
+            if (data === '[DONE]') break;
+            try {
+              const event = JSON.parse(data);
+              const text = event.choices?.[0]?.delta?.content;
+              if (text) {
+                if (firstToken) { setMetrics(prev => ({ ...prev, ttft: performance.now() - t0 })); firstToken = false; }
+                count++;
+                setMessages(prev => prev.map(m => m.id === assistMsg.id ? { ...m, content: m.content + text } : m));
+                const elapsed = (performance.now() - t0) / 1000;
+                if (elapsed > 0.3) setMetrics(prev => ({ ...prev, tokens: count, tokPerSec: count / elapsed }));
+              }
+              if (event.usage) {
+                setMetrics(prev => ({
+                  ...prev,
+                  promptTokens: prev.promptTokens + (event.usage.prompt_tokens || 0),
+                  completionTokens: prev.completionTokens + (event.usage.completion_tokens || 0),
+                }));
+              }
+            } catch { /* skip */ }
+          }
+        }
+        if (done) break;
+      }
+      const finalElapsed = (performance.now() - t0) / 1000;
+      if (count > 0) setMetrics(prev => ({ ...prev, tokens: count, tokPerSec: count / finalElapsed }));
+    } catch (err) {
+      if (!(controller.signal.aborted)) {
+        setMessages(prev => prev.map(m => m.id === assistMsg.id ? { ...m, content: `Erro: ${err instanceof Error ? err.message : 'Falha'}` } : m));
+      }
+    } finally {
+      abortRef.current = null;
+      setLoading(false);
+    }
+  }, [draft, loading, messages, temperature, maxTokens]);
+
+  const totalTokens = metrics.promptTokens + metrics.completionTokens;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="flex flex-col h-[calc(100vh-180px)] min-h-[500px]"
-    >
-      <div className="flex items-center gap-3 mb-4 flex-shrink-0">
-        <span className="text-xs text-zinc-500 flex items-center gap-1.5">
-          <Filter className="w-3.5 h-3.5" />Filtrar por Agente:
-        </span>
-        <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-          <SelectTrigger className="w-[220px] bg-zinc-900 border-zinc-800 text-zinc-200 text-xs h-9 rounded-lg">
-            <SelectValue placeholder="Selecionar agente" />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-900 border-zinc-800">
-            {agentOptions.map(opt => (
-              <SelectItem key={opt.value} value={opt.value} className="text-xs text-zinc-200 focus:bg-zinc-800 focus:text-zinc-100">
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="max-w-3xl mx-auto space-y-4">
+      {/* Top bar */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <MessageSquareText className="w-4 h-4 text-cyan-400" />
+          <span className="text-sm font-bold text-zinc-200">Chat GLM-5.2</span>
+          <Badge className={cn("text-[10px]", connected ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-red-500/15 text-red-400 border-red-500/30")}>
+            {connected ? 'Conectado' : 'Offline'}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {loading && metrics.tokens > 0 && (
+            <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px]">
+              <Zap className="w-2.5 h-2.5 mr-1" /> {metrics.tokens} tokens
+            </Badge>
+          )}
+          {!loading && metrics.tokPerSec !== null && (
+            <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 text-[10px]">
+              <Gauge className="w-2.5 h-2.5 mr-1" /> {metrics.tokPerSec.toFixed(1)} tok/s
+            </Badge>
+          )}
+          {!loading && metrics.ttft !== null && (
+            <Badge className="bg-zinc-800 text-zinc-300 border-zinc-700 text-[10px]">
+              <Timer className="w-2.5 h-2.5 mr-1" /> TTFT {(metrics.ttft / 1000).toFixed(2)}s
+            </Badge>
+          )}
+          {totalTokens > 0 && (
+            <Badge className="bg-zinc-800 text-zinc-400 border-zinc-700 text-[10px]">
+              <BrainCircuit className="w-2.5 h-2.5 mr-1" /> {metrics.promptTokens}→{metrics.completionTokens}
+            </Badge>
+          )}
+          <div className="relative">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSettings(!showSettings)}>
+              <Settings2 className="w-3.5 h-3.5 text-zinc-500" />
+            </Button>
+            {showSettings && (
+              <Card className="absolute right-0 top-9 w-64 z-50 border-zinc-800 bg-zinc-900 p-3 space-y-3">
+                <div>
+                  <label className="text-[10px] text-zinc-500 font-bold uppercase">Temperature: {temperature.toFixed(1)}</label>
+                  <input type="range" min="0" max="2" step="0.1" value={temperature} onChange={e => setTemperature(Number(e.target.value))}
+                    className="w-full mt-1 accent-emerald-500" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-zinc-500 font-bold uppercase">Max Tokens</label>
+                  <input type="number" min={1} max={4096} value={maxTokens} onChange={e => setMaxTokens(Math.min(4096, Math.max(1, Number(e.target.value))))}
+                    className="w-full h-8 mt-1 px-2 text-[11px] bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200" />
+                </div>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
 
-      <Card className="flex-1 bg-zinc-900/80 border-zinc-800/80 flex flex-col overflow-hidden gap-0">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && (
-            <motion.div
-              className="flex flex-col items-center justify-center h-full text-center py-12"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <motion.div
-                className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4"
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <BrainCircuit className="w-7 h-7 text-emerald-400" />
+      {/* Messages */}
+      <Card className="border-zinc-800/60 bg-zinc-900/30 min-h-[400px] max-h-[60vh] flex flex-col">
+        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+          {!messages.length ? (
+            <div className="text-center py-16">
+              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}
+                className="w-16 h-16 rounded-full border border-cyan-500/20 bg-cyan-500/5 flex items-center justify-center mx-auto mb-4">
+                <Feather className="w-7 h-7 text-cyan-400" />
               </motion.div>
-              <h3 className="text-sm font-semibold text-zinc-200 mb-1">RAG rRNA — Pergunte ao Ecossistema</h3>
-              <p className="text-xs text-zinc-500 max-w-md">
-                Pipeline: RecursiveChunk → TF-IDF → BM25 → Cross-Encoder Rerank → LLM
+              <h2 className="text-xl text-zinc-300 font-light mb-2">Chat com GLM-5.2</h2>
+              <p className="text-[12px] text-zinc-600 max-w-md mx-auto mb-6">
+                Conecte ao motor Colibri para ter conversas diretamente com o modelo GLM-5.2 744B MoE. Nada sai do seu hardware.
               </p>
-            </motion.div>
+              <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
+                {['Explique MoE routing', 'Escreva codigo C otimizado', 'Analise complexidade de algoritmos'].map(s => (
+                  <button key={s} onClick={() => setDraft(s)}
+                    className="text-[11px] text-zinc-500 border border-zinc-700/50 rounded-xl px-3 py-3 hover:border-cyan-500/30 hover:text-zinc-300 transition-all text-left">
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <motion.div key={msg.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                className={cn('flex gap-3', msg.role === 'user' && 'justify-end')}>
+                {msg.role === 'assistant' && (
+                  <div className="w-8 h-8 rounded-xl border border-cyan-500/20 bg-cyan-500/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Feather className="w-4 h-4 text-cyan-400" />
+                  </div>
+                )}
+                <div className={cn('max-w-[80%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed whitespace-pre-wrap',
+                  msg.role === 'user' ? 'bg-zinc-800 text-zinc-300 rounded-br-md' : 'bg-zinc-800/40 border border-zinc-700/30 text-zinc-200 rounded-bl-md'
+                )}>
+                  {msg.content || (
+                    <span className="inline-flex gap-1.5 pt-1">
+                      <i className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                      <i className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse [animation-delay:150ms]" />
+                      <i className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse [animation-delay:300ms]" />
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+            ))
           )}
-
-          <AnimatePresence>
-            {messages.map((msg, i) => (
-              <motion.div
-                key={i}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="max-w-[85%] md:max-w-[70%]">
-                  {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-1.5 mb-1.5 text-emerald-400 text-[10px] font-medium pl-1">
-                      <Bot className="w-3 h-3" />RAG rRNA Agent
-                      {msg.contextLength !== undefined && msg.contextLength > 0 && (
-                        <span className="text-zinc-600 ml-2">{msg.contextLength} chars</span>
-                      )}
-                    </div>
-                  )}
-                  <div className={`rounded-xl px-4 py-2.5 text-xs leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-emerald-600/90 text-white rounded-br-sm'
-                      : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-zinc-700/50'
-                  }`}>
-                    {msg.content}
-                  </div>
-
-                  {msg.retrieved && msg.retrieved.length > 0 && (
-                    <Collapsible className="mt-2">
-                      <CollapsibleTrigger className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-emerald-400 transition-colors pl-1 py-1">
-                        <ChevronRight className="w-3 h-3 transition-transform [[data-state=open]>&]:rotate-90" />
-                        <Database className="w-3 h-3" />
-                        {msg.retrieved.length} fonte{msg.retrieved.length > 1 ? 's' : ''}
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="mt-1.5 space-y-1 pl-1">
-                          {msg.retrieved.map((src, j) => (
-                            <div key={j} className="flex items-center gap-2 text-[10px] p-2 rounded-lg bg-zinc-800/50 border border-zinc-800">
-                              <span className="w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-mono text-[9px] font-bold flex-shrink-0">{j + 1}</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-zinc-300 font-medium truncate">{src.title}</div>
-                                <div className="text-zinc-600 truncate">{src.source}</div>
-                              </div>
-                              <Badge variant="outline" className="text-[8px] px-1.5 py-0 border-zinc-700 text-zinc-500 flex-shrink-0">{src.agent}</Badge>
-                              <Badge variant="outline" className="text-[8px] px-1.5 py-0 border-amber-500/30 text-amber-400 flex-shrink-0">{src.score}</Badge>
-                            </div>
-                          ))}
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {loading && (
-              <motion.div
-                className="flex justify-start"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <div className="bg-zinc-800 rounded-xl rounded-bl-sm px-4 py-2.5 border border-zinc-700/50">
-                  <div className="flex items-center gap-2 text-xs text-zinc-400">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
-                    Buscando no conhecimento...
-                  </div>
-                  <div className="mt-2 space-y-1.5">
-                    <Skeleton className="h-2 w-48 bg-zinc-700" />
-                    <Skeleton className="h-2 w-36 bg-zinc-700" />
-                    <Skeleton className="h-2 w-40 bg-zinc-700" />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {messages.length === 0 && (
-          <div className="px-4 py-2 border-t border-zinc-800/60 flex gap-2 flex-wrap flex-shrink-0">
-            {quickActions.map(action => (
-              <motion.button
-                key={action}
-                onClick={() => sendQuery(action)}
-                className="px-3 py-1.5 rounded-lg text-[11px] text-zinc-400 border border-zinc-800 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                {action}
-              </motion.button>
-            ))}
-          </div>
-        )}
-
-        <div className="p-3 border-t border-zinc-800/60 flex-shrink-0">
-          <div className="flex gap-2">
-            <Input value={input} onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendQuery()}
-              placeholder="Pergunte sobre OODA, RAG, Bitcoin, arquitetura dos agentes..."
-              className="flex-1 bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600 rounded-lg h-10 text-xs" />
-            <motion.div whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => sendQuery()} disabled={loading || !input.trim()}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-4 h-10 gap-2">
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                <span className="hidden sm:inline text-xs">Consultar</span>
-              </Button>
-            </motion.div>
-          </div>
-        </div>
+          <div ref={bottomRef} />
+        </CardContent>
       </Card>
-    </motion.div>
+
+      {/* Composer */}
+      <div className="flex gap-2 items-end">
+        <Textarea value={draft} onChange={e => setDraft(e.target.value)}
+          placeholder={connected ? "Escreva sua mensagem..." : "Conecte ao motor Colibri..."}
+          className="min-h-[52px] max-h-[150px] resize-none bg-zinc-900/60 border-zinc-800/60 text-[13px] text-zinc-200 placeholder:text-zinc-600 rounded-xl"
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}
+          disabled={!connected}
+        />
+        {loading ? (
+          <Button size="icon" variant="destructive" className="h-[52px] w-[52px] rounded-xl flex-shrink-0" onClick={() => abortRef.current?.abort()}>
+            <CircleStop className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button size="icon" className="h-[52px] w-[52px] rounded-xl flex-shrink-0 bg-cyan-600 hover:bg-cyan-500 text-white" disabled={!draft.trim() || !connected} onClick={() => void send()}>
+            <Send className="w-4 h-4" />
+          </Button>
+        )}
+        <Button size="icon" variant="ghost" className="h-[52px] w-[52px] rounded-xl flex-shrink-0" onClick={() => { setMessages([]); setMetrics({ tokens: 0, tokPerSec: null, ttft: null, promptTokens: 0, completionTokens: 0 }); }} disabled={!messages.length}>
+          <Trash2 className="w-3.5 h-3.5 text-zinc-500" />
+        </Button>
+      </div>
+    </div>
   );
 }

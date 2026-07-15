@@ -146,3 +146,52 @@ model MoltbookState {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+// ─── COLIBRI ORCHESTRATION ───
+
+model ColibriConnection {
+  id        String   @id @default(cuid())
+  name      String   @default("Local Colibri")
+  baseUrl   String   @default("http://127.0.0.1:8000/v1")
+  connected Boolean  @default(false)
+  lastPing  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrchestrationCycle {
+  id          String   @id @default(cuid())
+  cycleNumber Int
+  phase       String   // invoke | detect | heal | learn | direct | persist
+  status      String   @default("running") // running | completed | failed
+  duration    Int      @default(0)
+  anomalies   Int      @default(0)
+  healed      Int      @default(0)
+  wisdomGain  Float    @default(0)
+  metadata    String   @default("{}")
+  createdAt   DateTime @default(now())
+}
+
+model HealingEvent {
+  id          String   @id @default(cuid())
+  cycleId     String?
+  panelId     String
+  anomalyType String
+  severity    String   // critical | warning | info
+  action      String
+  result      String   // success | partial | failed
+  beforeState String   @default("{}")
+  afterState  String   @default("{}")
+  createdAt   DateTime @default(now())
+}
+
+model WisdomEntry {
+  id          String   @id @default(cuid())
+  pattern     String
+  context     String
+  frequency   Int      @default(1)
+  weight      Float    @default(1.0)
+  lastApplied DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

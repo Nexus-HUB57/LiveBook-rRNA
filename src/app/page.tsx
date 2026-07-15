@@ -6,7 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import {
   Zap, Bot, Database, LayoutDashboard, BrainCircuit, Cpu, Flame,
-  Globe, Dna, Users, Landmark, Atom,
+  Globe, Dna, Users, Landmark, Atom, Feather, MessageSquareText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardTab, QuickSearch } from '@/components/dashboard-tab';
@@ -14,7 +14,6 @@ import { AgentHubTab } from '@/components/agent-hub-tab';
 import { RagChatTab } from '@/components/rag-chat-tab';
 import { InvocationTab } from '@/components/invocation-tab';
 import { OrchestrationTab } from '@/components/orchestration-tab';
-import { AgentChat } from '@/components/agent-chat';
 import MetaversoTab from '@/components/metaverso-tab';
 import RecuperacaoTab from '@/components/recuperacao-tab';
 import MoltbookTab from '@/components/moltbook-tab';
@@ -22,17 +21,16 @@ import GovernanceTab from '@/components/governance-tab';
 import RrnaSystemsTab from '@/components/rrna-systems-tab';
 
 /* ================================================================
-   TAB CONFIG — ALL PANELS
+   TAB CONFIG — COLIBRI ORCHESTRATION ARCHITECTURE
    ================================================================ */
 const TABS = [
-  // Core Fusion
-  { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#10b981' },
-  { value: 'agents', label: 'Agent Hub', icon: Bot, color: '#10b981' },
-  { value: 'rag', label: 'RAG Chat', icon: Database, color: '#10b981' },
+  // Core Colibri
+  { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#4ed6a5' },
+  { value: 'agents', label: 'Agent Hub', icon: Bot, color: '#4ed6a5' },
+  { value: 'chat', label: 'Chat GLM-5.2', icon: MessageSquareText, color: '#4ed6a5' },
   { value: 'invocation', label: 'Invocacao', icon: Zap, color: '#a855f7' },
   { value: 'orchestration', label: 'Orquestracao', icon: Flame, color: '#f97316' },
-  // Separator
-  // Metaverso & rRNA
+  // Extended
   { value: 'metaverso', label: 'Metaverso', icon: Globe, color: '#a855f7' },
   { value: 'recuperacao', label: 'Recuperacao', icon: Dna, color: '#06d6a0' },
   { value: 'rrna', label: 'rRNA Systems', icon: Atom, color: '#e040a0' },
@@ -44,27 +42,25 @@ const TABS = [
 type TabValue = typeof TABS[number]['value'];
 
 /* ================================================================
-   MAIN PAGE — FUSÃO LLM 2401 COMPLETE DASHBOARD
+   MAIN PAGE — COLIBRI ORCHESTRATION ARCHITECTURE
    ================================================================ */
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabValue>('dashboard');
-
-  const isEcosystemTab = activeTab === 'metaverso' || activeTab === 'moltbook';
   const currentTab = TABS.find(t => t.value === activeTab);
-  const accentColor = currentTab?.color ?? '#10b981';
+  const accentColor = currentTab?.color ?? '#4ed6a5';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#09090b] text-zinc-100">
+    <div className="min-h-screen flex flex-col bg-[#080b0d] text-zinc-100">
       {/* Custom Scrollbar */}
       <style>{`
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #202a2f; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
       `}</style>
 
       {/* ═══ HEADER ═══ */}
-      <header className="sticky top-0 z-40 border-b border-zinc-800/60 bg-[#09090b]/85 backdrop-blur-2xl">
+      <header className="sticky top-0 z-40 border-b border-zinc-800/40 bg-[#080b0d]/90 backdrop-blur-2xl">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
           <motion.div
             className="flex items-center gap-3 flex-shrink-0"
@@ -82,26 +78,23 @@ export default function Home() {
               whileHover={{ rotate: 8, scale: 1.05 }}
               transition={{ type: 'spring', stiffness: 300 }}
             >
-              <BrainCircuit className="w-4.5 h-4.5" style={{ color: accentColor }} />
+              <Feather className="w-4.5 h-4.5" style={{ color: accentColor }} />
             </motion.div>
             <div className="hidden sm:block">
               <h1 className="text-sm font-bold text-zinc-100 leading-none tracking-tight flex items-center gap-2 flex-wrap">
-                Fusão LLM 2401
+                Colibri Orchestration
                 <span className="text-[9px] font-medium bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-md border border-emerald-500/20">
-                  Agentic AI
+                  GLM-5.2
                 </span>
                 <span className="text-[9px] font-medium bg-purple-500/15 text-purple-400 px-1.5 py-0.5 rounded-md border border-purple-500/20">
                   tRPC
                 </span>
-                <span className="text-[9px] font-medium bg-amber-500/15 text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">
-                  v3.0
-                </span>
-                <span className="text-[9px] font-medium bg-rose-500/15 text-rose-400 px-1.5 py-0.5 rounded-md border border-rose-500/20">
+                <span className="text-[9px] font-medium bg-orange-500/15 text-orange-400 px-1.5 py-0.5 rounded-md border border-orange-500/20">
                   Auto-Cura
                 </span>
               </h1>
               <p className="text-[10px] text-zinc-500 mt-0.5">
-                Protocolo Reativo Gerativo &bull; Auto-Cura &bull; Auto-Sabedoria &bull; Orquestracao Real
+                Orquestracao Reativa &bull; Self-Healing &bull; Wisdom Engine &bull; Expert Cortex
               </p>
             </div>
           </motion.div>
@@ -127,9 +120,9 @@ export default function Home() {
         </div>
 
         {/* ═══ TAB NAVIGATION BAR ═══ */}
-        <div className="border-t border-zinc-800/40">
+        <div className="border-t border-zinc-800/30">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
-            <nav className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+            <nav className="flex items-center gap-1 overflow-x-auto py-2" style={{ scrollbarWidth: 'none' }}>
               {TABS.map((tab) => {
                 const isActive = activeTab === tab.value;
                 return (
@@ -172,11 +165,11 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.15 }}
-              className={isEcosystemTab ? '' : 'max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-6'}
+              className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-6"
             >
               {activeTab === 'dashboard' && <DashboardTab />}
               {activeTab === 'agents' && <AgentHubTab />}
-              {activeTab === 'rag' && <RagChatTab />}
+              {activeTab === 'chat' && <RagChatTab />}
               {activeTab === 'invocation' && <InvocationTab />}
               {activeTab === 'orchestration' && <OrchestrationTab />}
               {activeTab === 'metaverso' && <MetaversoTab />}
@@ -190,19 +183,16 @@ export default function Home() {
       </main>
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="border-t border-zinc-800/40 bg-[#09090b] mt-auto">
+      <footer className="border-t border-zinc-800/30 bg-[#080b0d] mt-auto">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[10px] text-zinc-600">
-            Fusão LLM 2401 — Agente Generativo Orquestrador Ativo
+            Colibri Orchestration — Arquitetura Reativa com Auto-Cura e Sabedoria Exponencial
           </p>
           <p className="text-[10px] text-zinc-700 flex items-center gap-1.5">
-            <Cpu className="w-3 h-3" />tRPC Nativo &bull; Auto-Cura &bull; Auto-Sabedoria &bull; Orquestracao Real &bull; {new Date().getFullYear()}
+            <Cpu className="w-3 h-3" />GLM-5.2 744B MoE &bull; tRPC &bull; Self-Healing &bull; Wisdom Engine &bull; {new Date().getFullYear()}
           </p>
         </div>
       </footer>
-
-      {/* ═══ FLOATING AGENT CHAT ═══ */}
-      <AgentChat />
 
       {/* ═══ SONNER TOASTER ═══ */}
       <Toaster
