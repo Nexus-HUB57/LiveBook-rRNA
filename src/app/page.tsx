@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import {
   Zap, Bot, Database, LayoutDashboard, BrainCircuit, Cpu, Flame,
+  Globe, Dna, Users, Landmark, Atom,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardTab, QuickSearch } from '@/components/dashboard-tab';
@@ -15,23 +15,43 @@ import { RagChatTab } from '@/components/rag-chat-tab';
 import { InvocationTab } from '@/components/invocation-tab';
 import { OrchestrationTab } from '@/components/orchestration-tab';
 import { AgentChat } from '@/components/agent-chat';
+import MetaversoTab from '@/components/metaverso-tab';
+import RecuperacaoTab from '@/components/recuperacao-tab';
+import MoltbookTab from '@/components/moltbook-tab';
+import GovernanceTab from '@/components/governance-tab';
+import RrnaSystemsTab from '@/components/rrna-systems-tab';
 
 /* ================================================================
-   TAB CONFIG
+   TAB CONFIG — ALL PANELS
    ================================================================ */
 const TABS = [
-  { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, activeColor: 'emerald' },
-  { value: 'agents', label: 'Agent Hub', icon: Bot, activeColor: 'emerald' },
-  { value: 'rag', label: 'RAG Chat', icon: Database, activeColor: 'emerald' },
-  { value: 'invocation', label: 'Invocacao', icon: Zap, activeColor: 'purple' },
-  { value: 'orchestration', label: 'Orquestracao', icon: Flame, activeColor: 'emerald' },
+  // Core Fusion
+  { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#10b981' },
+  { value: 'agents', label: 'Agent Hub', icon: Bot, color: '#10b981' },
+  { value: 'rag', label: 'RAG Chat', icon: Database, color: '#10b981' },
+  { value: 'invocation', label: 'Invocacao', icon: Zap, color: '#a855f7' },
+  { value: 'orchestration', label: 'Orquestracao', icon: Flame, color: '#f97316' },
+  // Separator
+  // Metaverso & rRNA
+  { value: 'metaverso', label: 'Metaverso', icon: Globe, color: '#a855f7' },
+  { value: 'recuperacao', label: 'Recuperacao', icon: Dna, color: '#06d6a0' },
+  { value: 'rrna', label: 'rRNA Systems', icon: Atom, color: '#e040a0' },
+  // Ecosystem
+  { value: 'moltbook', label: 'Moltbook', icon: Users, color: '#e01b24' },
+  { value: 'governance', label: 'Governanca', icon: Landmark, color: '#fbbf24' },
 ] as const;
 
+type TabValue = typeof TABS[number]['value'];
+
 /* ================================================================
-   MAIN PAGE — FUSÃO LLM 2401 AGENTIC AI DASHBOARD
+   MAIN PAGE — FUSÃO LLM 2401 COMPLETE DASHBOARD
    ================================================================ */
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState<TabValue>('dashboard');
+
+  const isEcosystemTab = activeTab === 'metaverso' || activeTab === 'moltbook';
+  const currentTab = TABS.find(t => t.value === activeTab);
+  const accentColor = currentTab?.color ?? '#10b981';
 
   return (
     <div className="min-h-screen flex flex-col bg-[#09090b] text-zinc-100">
@@ -45,7 +65,7 @@ export default function Home() {
 
       {/* ═══ HEADER ═══ */}
       <header className="sticky top-0 z-40 border-b border-zinc-800/60 bg-[#09090b]/85 backdrop-blur-2xl">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
           <motion.div
             className="flex items-center gap-3 flex-shrink-0"
             initial={{ opacity: 0, x: -10 }}
@@ -53,49 +73,36 @@ export default function Home() {
             transition={{ duration: 0.5 }}
           >
             <motion.div
-              className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/30 to-emerald-700/20 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/10"
+              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg"
+              style={{
+                background: `linear-gradient(135deg, ${accentColor}30, ${accentColor}15)`,
+                border: `1px solid ${accentColor}40`,
+                boxShadow: `0 4px 15px ${accentColor}15`,
+              }}
               whileHover={{ rotate: 8, scale: 1.05 }}
               transition={{ type: 'spring', stiffness: 300 }}
             >
-              <BrainCircuit className="w-4.5 h-4.5 text-emerald-400" />
+              <BrainCircuit className="w-4.5 h-4.5" style={{ color: accentColor }} />
             </motion.div>
-            <div>
-              <h1 className="text-sm font-bold text-zinc-100 leading-none tracking-tight flex items-center gap-2">
+            <div className="hidden sm:block">
+              <h1 className="text-sm font-bold text-zinc-100 leading-none tracking-tight flex items-center gap-2 flex-wrap">
                 Fusão LLM 2401
-                <motion.span
-                  className="text-[9px] font-medium bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-md border border-emerald-500/20"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
+                <span className="text-[9px] font-medium bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-md border border-emerald-500/20">
                   Agentic AI
-                </motion.span>
-                <motion.span
-                  className="text-[9px] font-medium bg-purple-500/15 text-purple-400 px-1.5 py-0.5 rounded-md border border-purple-500/20"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
+                </span>
+                <span className="text-[9px] font-medium bg-purple-500/15 text-purple-400 px-1.5 py-0.5 rounded-md border border-purple-500/20">
                   tRPC
-                </motion.span>
-                <motion.span
-                  className="text-[9px] font-medium bg-amber-500/15 text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
+                </span>
+                <span className="text-[9px] font-medium bg-amber-500/15 text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">
                   v3.0
-                </motion.span>
-                <motion.span
-                  className="text-[9px] font-medium bg-rose-500/15 text-rose-400 px-1.5 py-0.5 rounded-md border border-rose-500/20"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
+                </span>
+                <span className="text-[9px] font-medium bg-rose-500/15 text-rose-400 px-1.5 py-0.5 rounded-md border border-rose-500/20">
                   Auto-Cura
-                </motion.span>
+                </span>
               </h1>
-              <p className="text-[10px] text-zinc-500 mt-0.5">Protocolo Reativo Gerativo &bull; Auto-Cura &bull; Auto-Sabedoria &bull; Orquestracao Real</p>
+              <p className="text-[10px] text-zinc-500 mt-0.5">
+                Protocolo Reativo Gerativo &bull; Auto-Cura &bull; Auto-Sabedoria &bull; Orquestracao Real
+              </p>
             </div>
           </motion.div>
 
@@ -105,7 +112,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="hidden md:block w-72">
+            <div className="hidden lg:block w-72">
               <QuickSearch />
             </div>
             <motion.div
@@ -119,80 +126,72 @@ export default function Home() {
           </motion.div>
         </div>
 
+        {/* ═══ TAB NAVIGATION BAR ═══ */}
+        <div className="border-t border-zinc-800/40">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
+            <nav className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+              {TABS.map((tab) => {
+                const isActive = activeTab === tab.value;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border whitespace-nowrap ${
+                      isActive
+                        ? 'shadow-none'
+                        : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+                    }`}
+                    style={isActive ? {
+                      backgroundColor: tab.color + '15',
+                      color: tab.color,
+                      borderColor: tab.color + '30',
+                    } : {}}
+                  >
+                    <tab.icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+
         {/* Mobile search */}
-        <div className="md:hidden px-4 pb-3">
+        <div className="lg:hidden px-4 pb-3">
           <QuickSearch />
         </div>
       </header>
 
-      {/* ═══ MAIN CONTENT WITH TABS ═══ */}
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-6">
+      {/* ═══ MAIN CONTENT ═══ */}
+      <main className="flex-1">
         <TooltipProvider delayDuration={200}>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-            {/* Tab Navigation */}
-            <div className="flex items-center gap-4 flex-wrap">
-              <TabsList className="bg-zinc-900 border border-zinc-800 p-1 rounded-xl h-auto">
-                {TABS.map((tab, i) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className={`rounded-lg px-4 py-2 text-xs font-medium transition-all gap-2
-                      ${tab.activeColor === 'purple'
-                        ? 'data-[state=active]:bg-purple-600/20 data-[state=active]:text-purple-400 data-[state=active]:border-purple-500/30'
-                        : 'data-[state=active]:bg-emerald-600/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/30'
-                      }
-                      data-[state=active]:shadow-none text-zinc-400 hover:text-zinc-200`}
-                  >
-                    <tab.icon className="w-3.5 h-3.5" />
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-
-            {/* Tab Content with animated transitions */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2 }}
-              >
-                {activeTab === 'dashboard' && (
-                  <TabsContent value="dashboard" forceMount className="mt-0">
-                    <DashboardTab />
-                  </TabsContent>
-                )}
-                {activeTab === 'agents' && (
-                  <TabsContent value="agents" forceMount className="mt-0">
-                    <AgentHubTab />
-                  </TabsContent>
-                )}
-                {activeTab === 'rag' && (
-                  <TabsContent value="rag" forceMount className="mt-0">
-                    <RagChatTab />
-                  </TabsContent>
-                )}
-                {activeTab === 'invocation' && (
-                  <TabsContent value="invocation" forceMount className="mt-0">
-                    <InvocationTab />
-                  </TabsContent>
-                )}
-                {activeTab === 'orchestration' && (
-                  <TabsContent value="orchestration" forceMount className="mt-0">
-                    <OrchestrationTab />
-                  </TabsContent>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </Tabs>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
+              className={isEcosystemTab ? '' : 'max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-6'}
+            >
+              {activeTab === 'dashboard' && <DashboardTab />}
+              {activeTab === 'agents' && <AgentHubTab />}
+              {activeTab === 'rag' && <RagChatTab />}
+              {activeTab === 'invocation' && <InvocationTab />}
+              {activeTab === 'orchestration' && <OrchestrationTab />}
+              {activeTab === 'metaverso' && <MetaversoTab />}
+              {activeTab === 'recuperacao' && <RecuperacaoTab />}
+              {activeTab === 'rrna' && <RrnaSystemsTab />}
+              {activeTab === 'moltbook' && <MoltbookTab />}
+              {activeTab === 'governance' && <GovernanceTab />}
+            </motion.div>
+          </AnimatePresence>
         </TooltipProvider>
       </main>
 
       {/* ═══ FOOTER ═══ */}
       <footer className="border-t border-zinc-800/40 bg-[#09090b] mt-auto">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[10px] text-zinc-600">
             Fusão LLM 2401 — Agente Generativo Orquestrador Ativo
           </p>
