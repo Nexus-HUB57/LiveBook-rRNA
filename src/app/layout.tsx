@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 import { TRPCProvider } from "@/providers/trpc-provider";
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -46,7 +45,6 @@ export default function RootLayout({
         style={{ fontFamily: "'IBM Plex Mono', monospace" }}
       >
         <TRPCProvider>{children}</TRPCProvider>
-        <Toaster />
       </body>
     </html>
   );
