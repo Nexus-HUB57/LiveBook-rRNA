@@ -1,5 +1,5 @@
 /**
- * tRPC Root Router — Colibri Orchestration Architecture
+ * tRPC Root Router — CHIMERA Multi-Agent Fusion Engine
  * Routers: dashboard, colibri, agents, orchestration
  */
 import { createTRPCRouter } from './trpc';

@@ -13,10 +13,10 @@ const PHASE_INFO: Record<string, { label: string; color: string; description: st
   dormant: {
     label: 'Dormente',
     color: '#555577',
-    description: 'Organismo aguardando ativacao. Subsistemas independentes. Clique em "Iniciar Fusao" para despertar o rRNA.',
+    description: 'Organismo aguardando ativacao. Subsistemas independentes. Clique em "Iniciar CHIMERA" para despertar o rRNA.',
   },
   fusing: {
-    label: 'Fusao em Curso',
+    label: 'Fusao CHIMERA em Curso',
     color: '#fbbf24',
     description: 'rRNA Simbiose Deterministica sincronizando subsistemas. Entrelacamento quantico propagando estados. Homeostase regulando...',
   },
@@ -125,7 +125,7 @@ export default function AgenticFusionSection() {
             viewport={{ once: true }}
           >
             <Dna className="w-3 h-3" />
-            Fusao Agentica — rRNA Simbiose Deterministica
+            Fusao CHIMERA Agentica — rRNA Simbiose Deterministica
           </motion.span>
           <motion.h2
             className="text-3xl sm:text-4xl md:text-5xl font-bold"
@@ -203,7 +203,7 @@ export default function AgenticFusionSection() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4" style={{ color: phaseInfo.color }} />
-                  <span className="text-sm font-semibold text-white">Controle de Fusao</span>
+                  <span className="text-sm font-semibold text-white">Controle CHIMERA</span>
                 </div>
                 {isAlive && (
                   <motion.button
@@ -235,7 +235,7 @@ export default function AgenticFusionSection() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <Dna className="w-4 h-4" />
-                    Iniciar Fusao Agentica
+                    Iniciar Fusao CHIMERA
                   </motion.button>
                 )}
               </AnimatePresence>
@@ -244,7 +244,7 @@ export default function AgenticFusionSection() {
               {(fusionPhase === 'fusing' || fusionPhase === 'symbiotic') && (
                 <div className="mt-3">
                   <div className="flex justify-between text-[10px] text-[#8888aa] mb-1.5">
-                    <span>Progresso da Fusao</span>
+                    <span>Progresso da Fusao CHIMERA</span>
                     <span>{fusionProgress.toFixed(0)}%</span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-[#1a1a3e] overflow-hidden">
@@ -454,7 +454,7 @@ export default function AgenticFusionSection() {
             >
               {events.length === 0 ? (
                 <div className="text-[#555577] text-center py-8">
-                  Aguardando fusao agentica...
+                  Aguardando fusao CHIMERA...
                 </div>
               ) : (
                 events.map((event) => (

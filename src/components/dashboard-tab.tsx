@@ -48,7 +48,7 @@ function EngineStatusCard({ health, connected, onRefresh }: {
         <div className="flex items-center justify-between">
           <CardTitle className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
             <Activity className="w-3.5 h-3.5 text-emerald-400" />
-            Motor Colibri
+            Motor CHIMERA
           </CardTitle>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRefresh}>
             <RefreshCw className={cn("w-3.5 h-3.5 text-zinc-500", connected && "text-emerald-400")} />
@@ -291,7 +291,7 @@ function ExpertCortexCard({ connected }: { connected: boolean }) {
               onMouseLeave={() => setTip(null)}
             />
           ) : (
-            <p className="text-[11px] text-zinc-600">Conecte ao motor Colibri para ver o cortex de experts.</p>
+            <p className="text-[11px] text-zinc-600">Conecte ao motor CHIMERA para ver o cortex de experts.</p>
           )}
         </div>
         {tip && data && (
@@ -398,7 +398,7 @@ function InlineChat({ connected }: { connected: boolean }) {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
             <MessageSquareText className="w-3.5 h-3.5 text-cyan-400" />
-            Chat Colibri
+            Chat CHIMERA
           </CardTitle>
           <div className="flex gap-2 flex-wrap">
             {loading && metrics.tokens > 0 && (
@@ -430,7 +430,7 @@ function InlineChat({ connected }: { connected: boolean }) {
                 <Feather className="w-6 h-6 text-emerald-400" />
               </div>
               <h3 className="text-lg text-zinc-300 font-light mb-1">Ask the giant.</h3>
-              <p className="text-[11px] text-zinc-600">Conecte ao motor Colibri e converse diretamente com GLM-5.2.</p>
+              <p className="text-[11px] text-zinc-600">Conecte ao motor CHIMERA e converse diretamente com GLM-5.2.</p>
               <div className="flex gap-2 mt-4 justify-center flex-wrap">
                 {['Explique expert routing', 'Compare RAM e VRAM caching', 'Escreva um benchmark em C'].map((s) => (
                   <button key={s} onClick={() => setDraft(s)}
@@ -506,7 +506,7 @@ function ConnectionCard({ connected, onConnect, loading }: {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-            <Server className="w-3.5 h-3.5 text-cyan-400" /> Conexão Colibri Engine
+            <Server className="w-3.5 h-3.5 text-cyan-400" /> Conexao CHIMERA Engine
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge className={cn("text-[10px]",
@@ -546,7 +546,7 @@ function ConnectionCard({ connected, onConnect, loading }: {
               </div>
             </label>
             <p className="text-[9px] text-zinc-600">
-              O endpoint deve apontar para o servidor Colibri (./coli serve). Porta padrão: 8000.
+              O endpoint deve apontar para o servidor CHIMERA/Colibri (./coli serve). Porta padrao: 8000.
               A conexão é usada para health check, chat streaming e expert cortex.
             </p>
             <div className="flex gap-2 text-[9px] text-zinc-600">

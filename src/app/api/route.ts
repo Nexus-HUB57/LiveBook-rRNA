@@ -11,9 +11,9 @@ export async function GET() {
 
   return NextResponse.json({
     status: "online",
-    service: "Fusão LLM 2401 — Agente Generativo Orquestrador Ativo",
-    version: "4.0",
-    trpc: "v11.18 — 3 routers, 13 procedures",
+    service: "CHIMERA — Multi-Agent Fusion Engine",
+    version: "5.0",
+    trpc: "v11 — 4 routers, 20+ procedures",
     database: {
       projects: projectCount,
       agents: agentCount,

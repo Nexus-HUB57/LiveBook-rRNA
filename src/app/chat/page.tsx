@@ -1,7 +1,7 @@
 import { ChatInterface } from '@/components/chat/chat-interface';
 
 export const metadata = {
-  title: 'Chat com Agentes | Fusao LLM 2401',
+  title: 'Chat com Agentes | CHIMERA',
   description: 'Chat streaming com RAG rRNA e agentes AI do ecossistema Nexus.',
 };
 

@@ -1,5 +1,5 @@
 /**
- * tRPC Server Setup — Fusão LLM 2401
+ * tRPC Server Setup — CHIMERA Multi-Agent Fusion Engine
  * Native tRPC for type-safe, resolutivo client-server communication.
  */
 import { initTRPC, TRPCError } from '@trpc/server';

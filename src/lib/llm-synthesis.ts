@@ -10,13 +10,14 @@ export interface LLMMessage {
   content: string;
 }
 
-const SYSTEM_PROMPT = `Voce e um assistente especializado no ecossistema Nexus-HUB Fusao LLM 2401.
+const SYSTEM_PROMPT = `Voce e um assistente especializado no ecossistema CHIMERA — Multi-Agent Fusion Engine.
 Voce tem conhecimento sobre:
 - 2.402+ projetos de desenvolvedores independentes chineses
 - 5 agentes AI: Zettascale, GenesisFlow, Antrophexus AI, Sabio Heroi, Nexus Sidian
+- Motor Colibri com GLM-5.2 744B MoE (19k experts em 3 tiers)
 - Pipeline RAG rRNA (Retrieval Augmented Generation)
-- 7 paineis quanticos: Moltbook, Cerebro Sistemico, Cofre, Mythos, Fable 5, Wormhole, Blackhole
-- Protocolo reativo gerativo de auto-cura e auto-sabedoria
+- Protocolo de auto-cura reativo de 6 fases (INVOKE → DETECT → HEAL → LEARN → DIRECT → PERSIST)
+- Expert Cortex: visualizacao de roteamento de experts em tempo real
 - Orquestracao real via Skills e algoritmos
 - Bitcoin, custodia, UTXO, derivacao HD
 - Ciclo OODA, JARVIS, voice synthesis
@@ -134,7 +135,7 @@ async function* generateFallbackResponse(
   } else if (lowerQuery.includes('agente') || lowerQuery.includes('agentes') || lowerQuery.includes('zettascale') || lowerQuery.includes('genesisflow')) {
     response = `O ecossistema possui 5 agentes AI: **Zettascale** (orquestrador core, React + Node.js), **GenesisFlow** (especialista em fluxos, Next.js), **Antrophexus AI** (analista, Python), **Sabio Heroi** (guardiao com RAG + voz), e **Nexus Sidian** (integracao Obsidian). Cada agente tem Skills proprias, documentacao no banco de conhecimento, e pode ser selecionado no chat para respostas especializadas. O Hub sincroniza com os repositorios GitHub ao vivo.`;
   } else {
-    response = `O ecossistema Fusao LLM 2401 e uma plataforma agentic AI com 2.402+ projetos catalogados, 5 agentes AI com Skills especializadas, pipeline RAG rRNA, 7 paineis quanticos com metricas em tempo real, e o Protocolo Reativo Gerativo de auto-cura e auto-sabedoria. Tudo conectado via tRPC nativo com Next.js 16 e Prisma. Para saber mais, pergunte sobre: ciclo OODA, Bitcoin, pipeline RAG, paineis quanticos, orquestracao, ou agentes especificos.`;
+    response = `O ecossistema CHIMERA e uma plataforma Multi-Agent Fusion Engine com GLM-5.2 744B MoE, 19k experts em 3 tiers (VRAM/RAM/Disk), auto-cura reativa de 6 fases, Expert Cortex em tempo real, 5 agentes AI com Skills especializadas, pipeline RAG rRNA, e Protocolo Reativo Gerativo de auto-cura e auto-sabedoria. Tudo conectado via tRPC v11 com Next.js 16 e Prisma. Para saber mais, pergunte sobre: expert routing, auto-cura, Bitcoin, pipeline RAG, orquestracao, ou agentes especificos.`;
   }
 
   // Stream word by word

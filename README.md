@@ -1,12 +1,12 @@
-# Fusao LLM 2401 — Colibri Orchestration Architecture
+# CHIMERA — Multi-Agent Fusion Engine
 
-> **Colibri Orchestration Architecture** — Dashboard de ecossistema agentic com engine Colibri (GLM-5.2 744B MoE), auto-cura reativa generativa de 6 fases, visualizacao Expert Cortex com 19k experts em 3 tiers (VRAM/RAM/Disk), streaming SSE nativo, tRPC v11, Prisma 6 + SQLite, e 5 AI Agents com Live GitHub Sync.
+> **CHIMERA** — A criatura mitologica que e fusao de multiplos seres. No codigo, MoE (Mixture of Experts) com 19k experts + 5 AI Agents fundidos numa entidade orquestrada com auto-cura regenerativa. Dashboard de ecossistema agentic com engine Colibri (GLM-5.2 744B MoE), auto-cura reativa de 6 fases, Expert Cortex visualization, streaming SSE nativo, tRPC v11, Prisma 6 + SQLite, e 5 AI Agents com Live GitHub Sync.
 
 ---
 
 ## Visao Geral
 
-O **Fusao LLM 2401** evoluiu de um ecossistema de agentes para uma **arquitetura de orquestracao completa** sobre o motor Colibri — um engine de inferencia LLM em C otimizado para GLM-5.2 744B (Mixture of Experts). O sistema combina dashboard em tempo real com 10 painéis, pipeline de auto-cura reativa de 6 fases, visualizacao de heatmap de 19k experts, chat streaming nativo SSE, e um hub de 5 agentes AI especializados com sync ao vivo do GitHub.
+O **CHIMERA** evoluiu de um ecossistema de agentes para uma **Multi-Agent Fusion Engine** completa sobre o motor Colibri — um engine de inferencia LLM em C otimizado para GLM-5.2 744B (Mixture of Experts). O sistema combina dashboard em tempo real com 10 paineis, pipeline de auto-cura reativa de 6 fases, visualizacao de heatmap de 19k experts, chat streaming nativo SSE, e um hub de 5 agentes AI especializados com sync ao vivo do GitHub.
 
 O motor Colibri implementa um sistema de 3 tiers para cache de experts: **VRAM** (mais rapido, capacidade limitada), **RAM** (intermediario), e **Disco** (fallback). Cada expert e roteado dinamicamente com base em frequencia de uso, e o dashboard visualiza esse roteamento em tempo real atraves do Expert Cortex — um canvas com pixels coloridos por tier e brilho por frequencia de ativacao.
 
@@ -72,7 +72,7 @@ Cada ciclo percorre as 6 fases sequencialmente. Anomalias detectadas geram `Heal
 ## Estrutura do Projeto
 
 ```
-fusao-llm-2401/
+chimera/
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx                    # Entry principal — 10 tabs
@@ -188,7 +188,7 @@ Headers de performance passados: `x-colibri-queue-wait-ms` (tempo de fila), `x-r
 - **KnowledgeEntry** — Chunks de conhecimento para RAG
 - **ChatSession** / **ChatSessionMessage** — Chat com persistencia
 
-### Colibri Orchestration
+### CHIMERA Orchestration
 - **ColibriConnection** — Registro de conexoes ao motor
 - **OrchestrationCycle** — Ciclos completos das 6 fases
 - **HealingEvent** — Eventos de cura com severidade e resultado

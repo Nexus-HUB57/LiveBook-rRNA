@@ -21,7 +21,7 @@ import GovernanceTab from '@/components/governance-tab';
 import RrnaSystemsTab from '@/components/rrna-systems-tab';
 
 /* ================================================================
-   TAB CONFIG — COLIBRI ORCHESTRATION ARCHITECTURE
+   TAB CONFIG — CHIMERA MULTI-AGENT FUSION ENGINE
    ================================================================ */
 const TABS = [
   // Core Colibri
@@ -42,7 +42,7 @@ const TABS = [
 type TabValue = typeof TABS[number]['value'];
 
 /* ================================================================
-   MAIN PAGE — COLIBRI ORCHESTRATION ARCHITECTURE
+   MAIN PAGE — CHIMERA MULTI-AGENT FUSION ENGINE
    ================================================================ */
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabValue>('dashboard');
@@ -82,19 +82,22 @@ export default function Home() {
             </motion.div>
             <div className="hidden sm:block">
               <h1 className="text-sm font-bold text-zinc-100 leading-none tracking-tight flex items-center gap-2 flex-wrap">
-                Colibri Orchestration
+                CHIMERA
                 <span className="text-[9px] font-medium bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-md border border-emerald-500/20">
-                  GLM-5.2
+                  GLM-5.2 744B
                 </span>
                 <span className="text-[9px] font-medium bg-purple-500/15 text-purple-400 px-1.5 py-0.5 rounded-md border border-purple-500/20">
-                  tRPC
+                  tRPC v11
                 </span>
                 <span className="text-[9px] font-medium bg-orange-500/15 text-orange-400 px-1.5 py-0.5 rounded-md border border-orange-500/20">
                   Auto-Cura
                 </span>
+                <span className="text-[9px] font-medium bg-cyan-500/15 text-cyan-400 px-1.5 py-0.5 rounded-md border border-cyan-500/20">
+                  19k Experts
+                </span>
               </h1>
               <p className="text-[10px] text-zinc-500 mt-0.5">
-                Orquestracao Reativa &bull; Self-Healing &bull; Wisdom Engine &bull; Expert Cortex
+                Multi-Agent Fusion &bull; Self-Healing &bull; Wisdom Engine &bull; Expert Cortex
               </p>
             </div>
           </motion.div>
@@ -186,7 +189,7 @@ export default function Home() {
       <footer className="border-t border-zinc-800/30 bg-[#080b0d] mt-auto">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[10px] text-zinc-600">
-            Colibri Orchestration — Arquitetura Reativa com Auto-Cura e Sabedoria Exponencial
+            CHIMERA — Multi-Agent Fusion Engine &bull; Auto-Cura Reativa &bull; Sabedoria Exponencial
           </p>
           <p className="text-[10px] text-zinc-700 flex items-center gap-1.5">
             <Cpu className="w-3 h-3" />GLM-5.2 744B MoE &bull; tRPC &bull; Self-Healing &bull; Wisdom Engine &bull; {new Date().getFullYear()}

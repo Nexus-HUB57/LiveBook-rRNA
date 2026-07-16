@@ -10,25 +10,27 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fusao LLM 2401 — Agente Generativo Orquestrador Ativo",
+  title: "CHIMERA — Multi-Agent Fusion Engine",
   description:
-    "Ecosystem Dashboard com 2,402 projetos indie, 5 AI Agents, RAG rRNA pipeline, tRPC Nativo. Agente Generativo Orquestrador Ativo — resolutivo, vivo, em producao.",
+    "CHIMERA Orchestration Engine — GLM-5.2 744B MoE, auto-cura reativa 6 fases, Expert Cortex 19k experts, 5 AI Agents, tRPC v11, streaming SSE nativo.",
   keywords: [
-    "ai agents",
-    "ecosystem dashboard",
+    "chimera",
+    "multi-agent fusion",
+    "colibri engine",
+    "GLM-5.2",
+    "self-healing",
+    "expert cortex",
     "tRPC",
-    "RAG rRNA",
     "agentic AI",
-    "fusao llm",
     "nexus hub",
   ],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "Fusao LLM 2401 — Agente Generativo Orquestrador Ativo",
+    title: "CHIMERA — Multi-Agent Fusion Engine",
     description:
-      "Agente Generativo Orquestrador Ativo com Chatbot Devs Full-Stack, tRPC Nativo, RAG rRNA pipeline. Producao em Ambiente Real ao Vivo.",
+      "Multi-Agent Fusion Engine com Colibri (GLM-5.2 744B MoE), auto-cura reativa, Expert Cortex, tRPC v11, 5 AI Agents. Producao ao vivo.",
     type: "website",
   },
 };
