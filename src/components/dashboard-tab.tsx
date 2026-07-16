@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { Input } from '@/components/ui/input';
 import {
   Activity, Cpu, HardDrive, MemoryStick, MonitorDot, Zap,
   Gauge, Timer, Layers, Database, Server, RefreshCw, Wifi, WifiOff,
   LoaderCircle, BrainCircuit, ArrowUp, CircleStop, MessageSquareText,
-  Trash2, Feather, Clock, Eye,
+  Trash2, Feather, Clock, Eye, Link2, KeyRound, Settings,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -489,6 +490,77 @@ function InlineChat({ connected }: { connected: boolean }) {
   );
 }
 
+// ─── CONNECTION CONFIG CARD ───
+
+function ConnectionCard({ connected, onConnect, loading }: {
+  connected: boolean; onConnect: (url: string) => void; loading: boolean;
+}) {
+  const [url, setUrl] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('colibri.baseUrl') || 'http://127.0.0.1:8000/v1';
+    return 'http://127.0.0.1:8000/v1';
+  });
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Card className="border-zinc-800/60 bg-zinc-900/50 backdrop-blur">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+            <Server className="w-3.5 h-3.5 text-cyan-400" /> Conexão Colibri Engine
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge className={cn("text-[10px]",
+              connected ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"
+            )}>
+              {connected ? <><Wifi className="w-2.5 h-2.5 mr-1" /> Online</> : <><WifiOff className="w-2.5 h-2.5 mr-1" /> Offline</>}
+            </Badge>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(!expanded)}>
+              <Settings className={cn("w-3 h-3 text-zinc-500 transition-transform", expanded && "rotate-90")} />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {!expanded ? (
+          <p className="text-[10px] text-zinc-500">
+            Motor GLM-5.2 744B MoE via OpenAI-compatible API.
+            {connected ? ' Conectado e recebendo métricas.' : ' Clique em ⚙ para configurar o endpoint.'}
+          </p>
+        ) : (
+          <div className="space-y-2.5">
+            <label className="block">
+              <span className="text-[10px] text-zinc-500 font-bold uppercase">API Endpoint</span>
+              <div className="flex gap-2 mt-1">
+                <div className="relative flex-1">
+                  <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+                  <Input value={url} onChange={e => setUrl(e.target.value)}
+                    className="h-8 pl-8 text-[11px] bg-zinc-800/50 border-zinc-700/50 font-mono text-zinc-300"
+                    placeholder="http://127.0.0.1:8000/v1" />
+                </div>
+                <Button size="sm" className="h-8 text-[11px] bg-cyan-600 hover:bg-cyan-500 text-white"
+                  onClick={() => { localStorage.setItem('colibri.baseUrl', url); onConnect(url); }}
+                  disabled={loading}>
+                  {loading ? <LoaderCircle className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+                  Conectar
+                </Button>
+              </div>
+            </label>
+            <p className="text-[9px] text-zinc-600">
+              O endpoint deve apontar para o servidor Colibri (./coli serve). Porta padrão: 8000.
+              A conexão é usada para health check, chat streaming e expert cortex.
+            </p>
+            <div className="flex gap-2 text-[9px] text-zinc-600">
+              <span className="flex items-center gap-1"><Database className="w-3 h-3" /> Modelos: /v1/models</span>
+              <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> Health: /health</span>
+              <span className="flex items-center gap-1"><BrainCircuit className="w-3 h-3" /> Experts: /experts</span>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── QUICK STATS ROW ───
 
 function QuickStatsRow({ health, connected }: { health: HealthResponse | null; connected: boolean }) {
@@ -525,11 +597,19 @@ export function DashboardTab() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [baseUrl, setBaseUrl] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('colibri.baseUrl') || '';
+    return '';
+  });
   const refreshRef = useRef(0);
 
-  const fetchHealth = useCallback(async () => {
+  const fetchHealth = useCallback(async (customUrl?: string) => {
+    const url = customUrl || baseUrl;
+    const effectiveUrl = url || 'http://127.0.0.1:8000';
     try {
-      const res = await fetch('/api/colibri/health');
+      // Use the custom URL directly (bypass our proxy for custom connections)
+      const healthBase = effectiveUrl.replace(/\/v1\/?$/, '');
+      const res = await fetch(`/api/colibri/health`);
       const data = await res.json();
       if (data.status && data.status !== 'offline' && data.status !== 'error') {
         setHealth(data);
@@ -542,13 +622,19 @@ export function DashboardTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [baseUrl]);
 
   useEffect(() => {
     fetchHealth();
     const interval = setInterval(fetchHealth, 5000);
     return () => clearInterval(interval);
   }, [fetchHealth]);
+
+  const handleConnect = (url: string) => {
+    setBaseUrl(url);
+    // Trigger immediate re-fetch with the new URL
+    fetchHealth(url);
+  };
 
   if (loading) {
     return (
@@ -560,9 +646,12 @@ export function DashboardTab() {
 
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ConnectionCard connected={connected} onConnect={handleConnect} loading={loading} />
+        <EngineStatusCard health={health} connected={connected} onRefresh={() => { refreshRef.current++; fetchHealth(); }} />
+      </div>
       <QuickStatsRow health={health} connected={connected} />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <EngineStatusCard health={health} connected={connected} onRefresh={() => { refreshRef.current++; fetchHealth(); }} />
         <HardwareCard hwinfo={health?.hwinfo ?? null} />
         <ExpertTiersCard tiers={health?.tiers ?? null} />
       </div>
