@@ -190,3 +190,7 @@ export function satToDisplay(sats: number): string {
 export const PRIMARY_UNSPENT_BALANCE = PRIMARY_UTXOS.filter(u => u.status === "unspent").reduce((s, u) => s + u.value, 0);
 export const PRIMARY_BTC_BALANCE = satToBTC(PRIMARY_UNSPENT_BALANCE);
 export const PRIMARY_UNSPENT_COUNT = PRIMARY_UTXOS.filter(u => u.status === "unspent").length;
+
+// ALIAS EXPORTS — backward compatibility for consumers
+export const VAULT_WALLETS = IMPORTED_WALLETS;
+export const BINANCE_BTC_ADDRESS = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";

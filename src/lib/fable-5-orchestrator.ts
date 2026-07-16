@@ -345,6 +345,19 @@ export async function cleanupSandboxes(maxAgeMs: number = 3600000): Promise<numb
   return result.count;
 }
 
+// ─── queryAgentWithTools — alias consumed by /api/fable/agent-query ───
+export async function queryAgentWithTools(
+  prompt: string,
+  options: { allowedTools?: string[]; maxIterations?: number } = {},
+) {
+  const result = await spawnRecursiveAgent(
+    prompt,
+    undefined,
+    (options.allowedTools || []).join(', '),
+  );
+  return result;
+}
+
 // ─── Mapper ──────────────────────────────────────────────
 function mapTaskToDTO(task: any): FableTaskDTO {
   return {
