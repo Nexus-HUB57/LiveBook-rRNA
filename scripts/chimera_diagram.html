@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1200px;
+  height: 800px;
+  background: #0a0f0d;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  color: #e0ece4;
+  padding: 30px;
+}
+.diagram {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 16px;
+  height: 100%;
+}
+.box {
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: rgba(0, 255, 136, 0.04);
+}
+.box-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #00ff88;
+  margin-bottom: 8px;
+}
+.box-items {
+  font-size: 10px;
+  color: #a0b8a8;
+  line-height: 1.6;
+}
+.box-items span {
+  display: inline-block;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.15);
+  border-radius: 4px;
+  padding: 2px 7px;
+  margin: 2px 3px 2px 0;
+  font-size: 9.5px;
+  color: #c0d8c8;
+}
+.hero-box {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 18px;
+  border-color: rgba(0, 255, 136, 0.5);
+  background: linear-gradient(135deg, rgba(0,255,136,0.06), rgba(34,211,238,0.04));
+}
+.hero-box h1 {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: #00ff88;
+  margin-bottom: 4px;
+}
+.hero-box p {
+  font-size: 11px;
+  color: #6db89a;
+  letter-spacing: 2px;
+}
+.colibri-box {
+  grid-column: 1 / 2;
+  grid-row: 2 / 4;
+  border-color: rgba(34, 211, 238, 0.35);
+  background: rgba(34, 211, 238, 0.04);
+}
+.colibri-box .box-title { color: #22d3ee; }
+.colibri-box .box-items span {
+  background: rgba(34, 211, 238, 0.08);
+  border-color: rgba(34, 211, 238, 0.15);
+  color: #b0e0f0;
+}
+.agent-box {
+  grid-column: 2 / 3;
+  border-color: rgba(168, 85, 247, 0.3);
+  background: rgba(168, 85, 247, 0.03);
+}
+.agent-box .box-title { color: #a855f7; }
+.agent-box .box-items span {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.15);
+  color: #d0b8f0;
+}
+.heal-box {
+  grid-column: 3 / 4;
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.03);
+}
+.heal-box .box-title { color: #fbbf24; }
+.heal-box .box-items span {
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.15);
+  color: #f0dca0;
+}
+.btc-box {
+  grid-column: 2 / 3;
+  border-color: rgba(249, 115, 22, 0.3);
+  background: rgba(249, 115, 22, 0.03);
+}
+.btc-box .box-title { color: #f97316; }
+.btc-box .box-items span {
+  background: rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.15);
+  color: #f0d0a8;
+}
+.rag-box {
+  grid-column: 3 / 4;
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.03);
+}
+.rag-box .box-title { color: #3b82f6; }
+.rag-box .box-items span {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.15);
+  color: #a8c8f0;
+}
+.metrics {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  border-color: rgba(0, 255, 136, 0.2);
+  background: rgba(0, 255, 136, 0.02);
+}
+.metric {
+  text-align: center;
+}
+.metric-val {
+  font-size: 22px;
+  font-weight: 900;
+  color: #00ff88;
+}
+.metric-label {
+  font-size: 9px;
+  color: #6db89a;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+</style>
+</head>
+<body>
+<div class="diagram">
+  <div class="hero-box">
+    <h1>CHIMERA</h1>
+    <p>Multi-Agent Fusion Engine &mdash; Arquitetura do Ecossistema</p>
+  </div>
+
+  <div class="colibri-box">
+    <div class="box-title">Motor Colibri GLM-5.2</div>
+    <div class="box-items">
+      <span>744B MoE</span>
+      <span>21.504 Experts</span>
+      <span>~40B Ativos/Token</span>
+      <span>3-Tier Cache</span>
+      <span>MLA Attention</span>
+      <span>MTP Speculative</span>
+      <span>C Puro (Zero Deps)</span>
+      <span>VRAM + RAM + NVMe</span>
+      <span>KV-Cache 57x Menor</span>
+      <span>SSE Streaming</span>
+      <span>Tauri + Rust Desktop</span>
+    </div>
+  </div>
+
+  <div class="agent-box">
+    <div class="box-title">5 Agentes AI (Fusao)</div>
+    <div class="box-items">
+      <span>Zettascale (Core)</span>
+      <span>GenesisFlow (Core)</span>
+      <span>Antrophexus (Extended)</span>
+      <span>Sabio Heroi (Extended)</span>
+      <span>Nexus Sidian (Extended)</span>
+      <span>103+ AI Flows</span>
+      <span>Fable 5 OS</span>
+      <span>Karma System</span>
+      <span>Event Bus (13 tipos)</span>
+      <span>GitHub Live Sync</span>
+    </div>
+  </div>
+
+  <div class="heal-box">
+    <div class="box-title">Self-Healing (6 Fases)</div>
+    <div class="box-items">
+      <span>INVOKE</span>
+      <span>DETECT</span>
+      <span>HEAL</span>
+      <span>LEARN</span>
+      <span>DIRECT</span>
+      <span>PERSIST</span>
+      <span>5 Metricas Quanticas</span>
+      <span>6 Algoritmos de Cura</span>
+      <span>Wisdom Engine</span>
+      <span>7 Painéis Quanticos</span>
+      <span>Loop Perpetuo</span>
+    </div>
+  </div>
+
+  <div class="btc-box">
+    <div class="box-title">Bitcoin / Web3</div>
+    <div class="box-items">
+      <span>BIP32/BIP39 HD</span>
+      <span>PSBT v2 (955 linhas)</span>
+      <span>ECDSA Pura</span>
+      <span>AES-256-GCM</span>
+      <span>Multi-Vault</span>
+      <span>mempool.space API</span>
+      <span>UTXO Consolidation</span>
+      <span>P2PKH Address</span>
+    </div>
+  </div>
+
+  <div class="rag-box">
+    <div class="box-title">RAG rRNA + Chat</div>
+    <div class="box-items">
+      <span>6 Estagios Biologicos</span>
+      <span>EXTRACT (Chunking)</span>
+      <span>ENCODE (TF-IDF)</span>
+      <span>RETRIEVE (BM25)</span>
+      <span>RERANK (Cross-Encoder)</span>
+      <span>AUGMENT (Context)</span>
+      <span>GENERATE (LLM)</span>
+      <span>SSE Streaming</span>
+      <span>Knowledge Base</span>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-val">744B</div><div class="metric-label">Parametros MoE</div></div>
+    <div class="metric"><div class="metric-val">21.504</div><div class="metric-label">Experts Ativos</div></div>
+    <div class="metric"><div class="metric-val">5</div><div class="metric-label">Agentes Fusionados</div></div>
+    <div class="metric"><div class="metric-val">103+</div><div class="metric-label">AI Flows</div></div>
+    <div class="metric"><div class="metric-val">6</div><div class="metric-label">Fases Self-Healing</div></div>
+    <div class="metric-val">46+</div><div class="metric-label">Componentes UI</div></div>
+  </div>
+</div>
+</body>
+</html>
