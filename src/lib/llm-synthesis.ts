@@ -75,10 +75,7 @@ export async function* streamLLM(
   if (hasSDK) {
     try {
       const ZAI = (await import('z-ai-web-dev-sdk')).default;
-      const client = new ZAI({
-        baseUrl: process.env.ZAI_API_BASE_URL,
-        apiKey: process.env.ZAI_API_KEY,
-      });
+      const client = await ZAI.create() as any;
 
       // Use createChatCompletion with streaming if available
       // The SDK may not support streaming natively, so we do chunked generation

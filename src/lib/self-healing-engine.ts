@@ -35,7 +35,7 @@ export interface HealingAction {
   id: string;
   panelId: string;
   skill: string;
-  action: string;       // 'recalibrate' | 'stabilize' | 'reboot' | ' amplify' | 'shield' | 'resync'
+  action: string;       // 'recalibrate' | 'stabilize' | 'reboot' | 'amplify' | 'shield' | 'resync'
   params: Record<string, number>;
   appliedAt: string;
   result: 'success' | 'partial' | 'failed';
@@ -338,24 +338,28 @@ export async function runHealingCycle(
       });
 
       // Persist healed state to DB
-      const stateKey = `quantum_${report.panelId}`;
-      await db.moltbookState.upsert({
-        where: { key: stateKey },
-        update: {
-          value: JSON.stringify({
-            ...currentState,
-            timestamp: new Date().toISOString(),
-          }),
-          updatedAt: new Date(),
-        },
-        create: {
-          key: stateKey,
-          value: JSON.stringify({
-            ...currentState,
-            timestamp: new Date().toISOString(),
-          }),
-        },
-      });
+      try {
+        const stateKey = `quantum_${report.panelId}`;
+        await db.moltbookState.upsert({
+          where: { key: stateKey },
+          update: {
+            value: JSON.stringify({
+              ...currentState,
+              timestamp: new Date().toISOString(),
+            }),
+            updatedAt: new Date(),
+          },
+          create: {
+            key: stateKey,
+            value: JSON.stringify({
+              ...currentState,
+              timestamp: new Date().toISOString(),
+            }),
+          },
+        });
+      } catch (dbErr) {
+        console.error(`[SelfHealing] DB persist failed for ${report.panelId}:`, dbErr);
+      }
 
       // Update local reference for subsequent actions
       panelStates[report.panelId] = currentState;

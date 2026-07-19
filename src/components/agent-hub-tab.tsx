@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Bot, Cpu, Database, Globe, Shield, Sparkles, Zap, Eye, Mic,
-  Plus, Search, Filter, MoreVertical,
+  Search, RefreshCw,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Agent {
@@ -17,9 +18,10 @@ interface Agent {
   capabilities: string[]; llmModel: string | null;
   hasVoice: boolean; hasRag: boolean; hasBtc: boolean;
   apiCount: number; flowCount: number; version: string;
+  _count?: { skills: number; knowledge: number; messages: number };
 }
 
-const MOCK_AGENTS: Agent[] = [
+const FALLBACK_AGENTS: Agent[] = [
   {
     id: '1', name: 'Mythos Orchestrator', slug: 'mythos', description: 'Agente orquestrador principal. Coordena todos os outros agentes via tool calling, agent routing e synthesis.',
     status: 'active', agentType: 'orchestrator', tier: 'core',
@@ -73,26 +75,48 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
 };
 
 export function AgentHubTab() {
+  const [agents, setAgents] = useState<Agent[]>(FALLBACK_AGENTS);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  const [loading, setLoading] = useState(false);
 
-  const filtered = MOCK_AGENTS.filter(a => {
+  const loadAgents = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/agents');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setAgents(data.map((a: Record<string, unknown>) => ({
+            ...a,
+            capabilities: typeof a.capabilities === 'string' ? JSON.parse(a.capabilities) : (a.capabilities || []),
+            techStack: typeof a.techStack === 'string' ? JSON.parse(a.techStack) : (a.techStack || []),
+          })));
+        }
+      }
+    } catch { /* use fallback */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadAgents(); }, []);
+
+  const filtered = agents.filter(a => {
     const matchSearch = a.name.toLowerCase().includes(search.toLowerCase()) || a.description.toLowerCase().includes(search.toLowerCase());
     const matchType = filterType === 'all' || a.agentType === filterType;
     return matchSearch && matchType;
   });
 
-  const typeCounts = MOCK_AGENTS.reduce((acc, a) => { acc[a.agentType] = (acc[a.agentType] || 0) + 1; return acc; }, {} as Record<string, number>);
+  const typeCounts = agents.reduce((acc, a) => { acc[a.agentType] = (acc[a.agentType] || 0) + 1; return acc; }, {} as Record<string, number>);
 
   return (
     <div className="space-y-5">
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total', value: MOCK_AGENTS.length, icon: Bot, color: 'text-emerald-400' },
-          { label: 'Ativos', value: MOCK_AGENTS.filter(a => a.status === 'active').length, icon: Zap, color: 'text-green-400' },
-          { label: 'Core', value: MOCK_AGENTS.filter(a => a.tier === 'core').length, icon: Database, color: 'text-purple-400' },
-          { label: 'APIs', value: MOCK_AGENTS.reduce((s, a) => s + a.apiCount, 0), icon: Globe, color: 'text-blue-400' },
+          { label: 'Total', value: agents.length, icon: Bot, color: 'text-emerald-400' },
+          { label: 'Ativos', value: agents.filter(a => a.status === 'active').length, icon: Zap, color: 'text-green-400' },
+          { label: 'Core', value: agents.filter(a => a.tier === 'core').length, icon: Database, color: 'text-purple-400' },
+          { label: 'APIs', value: agents.reduce((s, a) => s + a.apiCount, 0), icon: Globe, color: 'text-blue-400' },
         ].map(s => (
           <div key={s.label} className="bg-zinc-900/50 border border-zinc-800/60 rounded-xl p-3.5 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
@@ -116,7 +140,7 @@ export function AgentHubTab() {
         <div className="flex gap-1.5">
           <button onClick={() => setFilterType('all')}
             className={cn("px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all", filterType === 'all' ? 'bg-zinc-100 text-zinc-900 border-zinc-300' : 'bg-zinc-900/50 border-zinc-800/60 text-zinc-500 hover:text-zinc-300')}>
-            Todos ({MOCK_AGENTS.length})
+            Todos ({agents.length})
           </button>
           {Object.entries(typeCounts).map(([type, count]) => {
             const cfg = TYPE_CONFIG[type];
@@ -129,6 +153,9 @@ export function AgentHubTab() {
             );
           })}
         </div>
+        <Button size="sm" variant="ghost" className="h-8 text-[10px] text-zinc-500 hover:text-zinc-300" onClick={loadAgents} disabled={loading}>
+          <RefreshCw className={cn("w-3 h-3 mr-1", loading && "animate-spin")} />
+        </Button>
       </div>
 
       {/* Agent Grid */}
@@ -177,6 +204,14 @@ export function AgentHubTab() {
                       {agent.hasBtc && <span className="text-amber-400">BTC</span>}
                       {agent.llmModel && <span className="ml-auto text-zinc-500 font-mono">{agent.llmModel}</span>}
                     </div>
+                    {/* Live counts from API */}
+                    {agent._count && (
+                      <div className="flex items-center gap-2 text-[9px] text-zinc-600 pt-1 border-t border-zinc-800/30">
+                        <span>{agent._count.skills} skills</span>
+                        <span>{agent._count.knowledge} knowledge</span>
+                        <span>{agent._count.messages} msgs</span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -186,8 +221,4 @@ export function AgentHubTab() {
       </div>
     </div>
   );
-}
-
-function cn(...classes: (string | boolean | undefined | null)[]) {
-  return classes.filter(Boolean).join(' ');
 }

@@ -8,10 +8,7 @@ async function llmChat(messages: Array<{ role: string; content: string }>, syste
       return "O Agente AI esta configurado mas o servico LLM nao esta disponivel neste ambiente. Os dados do dashboard (2.402 projetos, analises e metricas) continuam funcionando normalmente.";
     }
     const ZAI = (await import("z-ai-web-dev-sdk")).default;
-    const client = new ZAI({
-      baseUrl: process.env.ZAI_API_BASE_URL,
-      apiKey: process.env.ZAI_API_KEY,
-    });
+    const client = await ZAI.create() as any;
     const allMessages = [
       { role: "system", content: systemPrompt || "You are a helpful AI assistant." },
       ...messages,

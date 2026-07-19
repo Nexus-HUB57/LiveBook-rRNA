@@ -195,3 +195,60 @@ model WisdomEntry {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ─── BITCOIN VAULTS ───
+
+model Vault {
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  xpub          String         // Extended public key (watch-only)
+  fingerprint   String?
+  derivationPath String         @default("m/44'/0'/0'")
+  nextReceivingIndex Int       @default(0)
+  nextChangeIndex   Int       @default(0)
+  balanceSat    Int            @default(0)
+  addressCount  Int            @default(0)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  addresses     VaultAddress[]
+  transactions  VaultTransaction[]
+
+  @@index([isActive])
+}
+
+model VaultAddress {
+  id           String   @id @default(cuid())
+  vaultId      String
+  vault        Vault    @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  address      String   @unique
+  derivationIndex Int
+  isChange     Boolean  @default(false)
+  balanceSat   Int      @default(0)
+  txCount      Int      @default(0)
+  label        String?
+  createdAt    DateTime @default(now())
+
+  @@index([vaultId])
+  @@index([address])
+}
+
+model VaultTransaction {
+  id           String   @id @default(cuid())
+  vaultId      String
+  vault        Vault    @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  txid         String
+  type         String   // 'send' | 'receive' | 'consolidate' | 'custody'
+  amountSat    Int
+  feeSat       Int      @default(0)
+  confirmations Int     @default(0)
+  status       String   @default("pending")
+  metadata     String   @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@index([vaultId])
+  @@index([txid])
+  @@index([status])
+}

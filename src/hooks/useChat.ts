@@ -140,11 +140,8 @@ export function useChat(initialSessionId?: string) {
             if (data.error) {
               throw new Error(data.error);
             }
-          } catch (parseErr) {
-            // Ignore malformed lines
-            if ((parseErr as Error).message !== data?.error) {
-              // Not a data.error, just a parse issue
-            }
+          } catch {
+            // Ignore malformed lines — JSON parse errors are expected for incomplete chunks
           }
         }
       }

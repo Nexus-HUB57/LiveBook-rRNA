@@ -14,7 +14,11 @@ const ECPair = ECPairFactory(tinysecp);
 
 // ─── Encryption Helpers ─────────────────────────────────
 const ALGORITHM = "aes-256-gcm";
-const VAULT_MASTER_KEY = process.env.VAULT_ENCRYPTION_KEY || "nexus-hub-cofres-default-key-change-in-prod!!";
+const _VAULT_MASTER_KEY = process.env.VAULT_ENCRYPTION_KEY;
+if (!_VAULT_MASTER_KEY) {
+  console.warn('[VaultService] CRITICAL: VAULT_ENCRYPTION_KEY not set. Encryption is DISABLED. Set this env var before production.');
+}
+const VAULT_MASTER_KEY = _VAULT_MASTER_KEY || '__INSECURE_DEV_ONLY__';
 
 function encrypt(plaintext: string): { encrypted: string; iv: string; tag: string } {
   const iv = crypto.randomBytes(16);

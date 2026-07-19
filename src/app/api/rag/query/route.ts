@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { rragPipeline, recursiveChunk } from "@/lib/rag-engine";
+import { ragPipeline, recursiveChunk } from "@/lib/rag-engine";
 
 export async function POST(req: NextRequest) {
   try {
@@ -66,10 +66,7 @@ export async function POST(req: NextRequest) {
       if (process.env.ZAI_API_BASE_URL && process.env.ZAI_API_KEY) {
         try {
           const ZAI = (await import("z-ai-web-dev-sdk")).default;
-          const client = new ZAI({
-            baseUrl: process.env.ZAI_API_BASE_URL,
-            apiKey: process.env.ZAI_API_KEY,
-          });
+          const client = await ZAI.create() as any;
           const result = await client.createChatCompletion({
             model: "glm-4-flash",
             messages: [
@@ -98,7 +95,7 @@ Se o contexto nao cobrir a pergunta, diga que a informacao nao esta disponivel n
     };
 
     // 4. RUN RAG rRNA PIPELINE
-    const result = await rragPipeline(query, documents, {
+    const result = await ragPipeline(query, documents, {
       topK: k,
       llmGenerator,
     });

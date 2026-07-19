@@ -45,7 +45,7 @@ export async function POST(req: Request) {
             reward: a.reward,
             validated: a.validated,
           })),
-          sigmaApplied: round.sigmaApplied,
+          sigmaApplied: (round as unknown as Record<string, unknown>)?.sigmaApplied ?? false,
           epsilon: round.epsilon,
           anchoredBlock: round.anchoredBlock,
           anchorTxHash: round.anchorTxHash,

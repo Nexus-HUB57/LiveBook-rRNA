@@ -1,5 +1,9 @@
 // Bitcoin Core Data — Validated against blockchain.info mainnet
 // Last validated: 2026-07-10
+//
+// SECURITY: xprv, seed, and WIF keys are NEVER stored in client code.
+// They are loaded from server-side environment variables or vault DB.
+// This module only contains WATCH-ONLY data (addresses, xpub, UTXOs).
 
 export interface UTXO {
   txid: string;
@@ -20,8 +24,8 @@ export interface WalletAddress {
 
 export interface HDWallet {
   xpub: string;
-  xprv: string;
-  seed: string;
+  xprv: string;       // Only populated server-side, never exposed to client
+  seed: string;        // Only populated server-side, never exposed to client
   seedValid: boolean;
   derivationPath: string;
   receivingPubkeys: string[];
@@ -40,7 +44,7 @@ export interface ValidationResult {
 
 // ============================================================
 // PRIMARY ADDRESS — Watch-Only / Imported (not derivable from HD wallet)
-// Validated: P2PKH format ✅ | 33 UTXOs unspent on mainnet ✅
+// Validated: P2PKH format | 33 UTXOs unspent on mainnet
 // ============================================================
 export const PRIMARY_ADDRESS = "1Ku6BVnRDuwcSyssUBkJBVVWoUGDWudC6p";
 
@@ -86,15 +90,12 @@ export const PRIMARY_UTXOS: UTXO[] = [
 ];
 
 // ============================================================
-// HD WALLET — xprv/xpub validated: same tree (ident, pubkey, chain_code match)
-// Seed: non-standard BIP39 (generates valid seed but mnemonic.check() = false)
-// Pubkeys: validated at derivation path m/0/i from xpub ✅
-// Primary address: NOT derivable from this HD wallet (imported/watch-only)
+// HD WALLET — xpub only on client. xprv/seed loaded server-side.
 // ============================================================
 export const HD_WALLET: HDWallet = {
   xpub: "xpub661MyMwAqRbcH3qZAL2neui6Rh894yMwDKCDpar3ErCRA2PYTxq6n2HET2yM4eXkptg2FTBHxQVFzVhBzhNocaxtahKXAaobGkzPKAjJhWA",
-  xprv: "xprv9s21ZrQH143K4Zm64JVnHmmMsfHefWe5r6Gd2CSRgWfSHE4PvRWrEDxkbnBVh9hT9r2PWbYQZo4iBNg7EiG517AgdhGcJvn49futQHVH7sC",
-  seed: "marriage steel million dress original father clock come flush ostrich kangaroo method abuse",
+  xprv: "",           // NEVER in client code — loaded from env/vault on server
+  seed: "",            // NEVER in client code — loaded from env/vault on server
   seedValid: false,
   derivationPath: "m/0/i",
   receivingPubkeys: [

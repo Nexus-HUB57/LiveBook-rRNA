@@ -177,16 +177,16 @@ const BM25_B = 0.75;   // length normalization
 function bm25Score(
   queryTokens: string[],
   docTokens: string[],
+  docTF: Map<string, number>,
   idf: Map<string, number>,
   avgDL: number,
 ): number {
   const docLen = docTokens.length || 1;
-  const tf = computeTF(docTokens);
   let score = 0;
 
   for (const qt of queryTokens) {
     const termIDF = idf.get(qt) || 0;
-    const termTF = tf.get(qt) || 0;
+    const termTF = docTF.get(qt) || 0;
     const numerator = termTF * (BM25_K1 + 1);
     const denominator = termTF + BM25_K1 * (1 - BM25_B + BM25_B * (docLen / avgDL));
     score += termIDF * (numerator / denominator);
@@ -338,7 +338,7 @@ export type LLMGenerator = (context: string, query: string) => Promise<string>;
  * - Ribosome (rRNA) → This engine (assembly & synthesis)
  * - Protein → Generated answer
  */
-export async function rragPipeline(
+export async function ragPipeline(
   query: string,
   documents: Array<{
     id: string;
@@ -374,26 +374,29 @@ export async function rragPipeline(
   // ─── STAGE 2: COMPUTE TF-IDF ───
   const queryTokens = tokenize(query);
   const queryNgrams = generateNgrams(queryTokens, 2);
-  const queryBigrams = generateNgrams(queryTokens, 3);
+  const queryTrigrams = generateNgrams(queryTokens, 3);
 
   const allDocTokens = preparedDocs.map(d => [...d.titleTokens, ...d.contentTokens]);
   const idf = computeIDF(allDocTokens);
   const avgDL = allDocTokens.reduce((s, t) => s + t.length, 0) / (allDocTokens.length || 1);
 
   // ─── STAGE 3: BM25 RETRIEVAL ───
+  // Pre-compute TF once per document (avoid 3x recomputation)
+  const docTFs = preparedDocs.map(d => computeTF(d.contentTokens));
+
   const scored = preparedDocs
-    .map(doc => ({
+    .map((doc, idx) => ({
       ...doc,
-      bm25Score: bm25Score(queryTokens, doc.contentTokens, idf, avgDL)
-        + bm25Score(queryTokens, doc.titleTokens, idf, avgDL) * 2  // title boost
-        + bm25Score(queryTokens, doc.sourceTokens, idf, avgDL) * 0.5, // source mild boost
+      bm25Score: bm25Score(queryTokens, doc.contentTokens, docTFs[idx], idf, avgDL)
+        + bm25Score(queryTokens, doc.titleTokens, docTFs[idx], idf, avgDL) * 2  // title boost
+        + bm25Score(queryTokens, doc.sourceTokens, docTFs[idx], idf, avgDL) * 0.5, // source mild boost
     }))
     .filter(d => d.bm25Score > 0)
     .sort((a, b) => b.bm25Score - a.bm25Score)
     .slice(0, topK * 3); // over-retrieve for reranking
 
   // ─── STAGE 4: CROSS-ENCODER RERANKING ───
-  const reranked = rerank(query, queryTokens, [...queryNgrams, ...queryBigrams], scored)
+  const reranked = rerank(query, queryTokens, [...queryNgrams, ...queryTrigrams], scored)
     .sort((a, b) => b.rerankScore - a.rerankScore)
     .slice(0, topK);
 

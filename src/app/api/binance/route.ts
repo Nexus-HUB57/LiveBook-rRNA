@@ -15,16 +15,18 @@ function sign(params: Record<string, string>): string {
   return crypto.createHmac("sha256", API_SECRET).update(query).digest("hex");
 }
 
+interface BinanceResult { error: boolean; data?: any; status: number; body: string }
+
 async function binanceRequest(
   endpoint: string,
   params: Record<string, string> = {}
-) {
+): Promise<BinanceResult> {
   const timestamp = String(Date.now());
-  const allParams = { ...params, timestamp, recvWindow: "15000" };
+  const allParams: Record<string, string> = { ...params, timestamp, recvWindow: "15000" };
   allParams.signature = sign(allParams);
 
   if (!API_KEY || !API_SECRET) {
-    return NextResponse.json({ error: 'Binance API credentials not configured' }, { status: 503 });
+    return { error: true, status: 503, body: 'Binance API credentials not configured' } as BinanceResult;
   }
   const url = `${BASE_URL}${endpoint}?${new URLSearchParams(allParams).toString()}`;
   const res = await fetch(url, {
@@ -41,7 +43,7 @@ async function binanceRequest(
   }
 
   try {
-    return { error: false, data: await res.json() };
+    return { error: false, data: await res.json(), status: res.status, body: '' };
   } catch {
     return { error: true, status: res.status, body: "Invalid JSON" };
   }

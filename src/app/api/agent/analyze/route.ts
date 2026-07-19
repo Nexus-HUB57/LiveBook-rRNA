@@ -22,10 +22,7 @@ async function llmAnalyze(messages: Array<{ role: string; content: string }>): P
 - Cidades como Pequim e Xangai concentram a maior parte dos desenvolvedores`;
     }
     const ZAI = (await import("z-ai-web-dev-sdk")).default;
-    const client = new ZAI({
-      baseUrl: process.env.ZAI_API_BASE_URL,
-      apiKey: process.env.ZAI_API_KEY,
-    });
+    const client = await ZAI.create() as any;
     const result = await client.createChatCompletion({
       model: "glm-4-flash",
       messages,
