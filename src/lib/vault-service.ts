@@ -14,11 +14,10 @@ const ECPair = ECPairFactory(tinysecp);
 
 // ─── Encryption Helpers ─────────────────────────────────
 const ALGORITHM = "aes-256-gcm";
-const _VAULT_MASTER_KEY = process.env.VAULT_ENCRYPTION_KEY;
-if (!_VAULT_MASTER_KEY) {
-  console.warn('[VaultService] CRITICAL: VAULT_ENCRYPTION_KEY not set. Encryption is DISABLED. Set this env var before production.');
+const VAULT_MASTER_KEY = process.env.VAULT_ENCRYPTION_KEY;
+if (!VAULT_MASTER_KEY) {
+  throw new Error('[VaultService] FATAL: VAULT_ENCRYPTION_KEY env var is required. Vault encryption cannot operate without it.');
 }
-const VAULT_MASTER_KEY = _VAULT_MASTER_KEY || '__INSECURE_DEV_ONLY__';
 
 function encrypt(plaintext: string): { encrypted: string; iv: string; tag: string } {
   const iv = crypto.randomBytes(16);

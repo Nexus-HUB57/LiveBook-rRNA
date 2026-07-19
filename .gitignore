@@ -60,6 +60,9 @@ server.log
 /upload/
 /tool-results/
 /download/
+
+# External agent projects (not part of this deploy — 235MB+)
+/agents/
 /worklog.md
 /agent-ctx/
 /examples/

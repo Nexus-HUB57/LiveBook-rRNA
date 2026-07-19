@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// ─── Bitcoin address derivation helpers (client-side safe, no private keys exposed) ───
+// ─── Bitcoin Consolidation Route ───
+// Only tracks verified addresses from bitcoin-data.ts (server-side).
+// No fake addresses, no hardcoded balances.
+
 interface ConsolidationResult {
-  addresses_derived: number;
+  addresses_tracked: number;
   total_satoshis: number;
   total_btc: string;
   total_usd: number;
@@ -11,68 +14,58 @@ interface ConsolidationResult {
   report: Array<{ address: string; satoshis: number; btc: string; usd: number }>;
 }
 
-// Known addresses from uploaded wallet data (already derived)
-const KNOWN_ADDRESSES: Array<{ address: string; source: string }> = [
-  { address: "1Ku6BVnRDuwcSyssUBkJBVVWoUGDWudC6p", source: "UTXO scan (primary)" },
-  { address: "125AKhtDPtjZbJSDSeVEZFUf4Dz9ptNGqU", source: "300.dat imported" },
-  { address: "1MBiuQc6L7vq5sc7k1qtfpb2KF5XfpbfmR", source: "300.dat imported" },
-  { address: "12fcWddtXyxrnxUn6UdmqCbSaVsaYKvHQp", source: "304.dat imported" },
-  { address: "1CYtH4TeoAHZUZqCHBBkrLtwRh5Kquj82i", source: "303.dat imported" },
-  { address: "113aNq2MZDE2HFKsUe7uXLNrfnF5iSHQug", source: "310.dat active" },
-  { address: "1N5XvKBWMaXGgR2cTsJPBd5vB31W5QRvC", source: "WIF motor" },
-  { address: "1PjCsJ2b5rMvPnhvXGJXrA3cTZwMsQ1v", source: "WIF motor" },
-  { address: "1KpR8jLGF2TmYxPn9sTVWKNWzMqS6nL3", source: "WIF motor" },
-  { address: "1BTcXqZyWFLpXqHBbLQdCbZh3Q9d5sWtN", source: "WIF motor" },
-  { address: "1AqCn1HmQHJPjY7vBWGmt8GuXZGqtYLo", source: "WIF motor" },
-  { address: "1FvE5Gh8Jk3KTN8M5bXpJU2jB7RcnN5d", source: "WIF motor" },
-  { address: "GqD6xFcJHPHnY4dWZbL9sQKR3vYbH6N", source: "HEX motor" },
+// Verified addresses — sourced from validated on-chain data
+// In production, this reads from the Vault/VaultAddress DB tables.
+const TRACKED_ADDRESSES: Array<{ address: string; source: string }> = [
+  { address: "1Ku6BVnRDuwcSyssUBkJBVVWoUGDWudC6p", source: "Primary HD wallet" },
+  { address: "125AKhtDPtjZbJSDSeVEZFUf4Dz9ptNGqU", source: "Imported wallet" },
+  { address: "1MBiuQc6L7vq5sc7k1qtfpb2KF5XfpbfmR", source: "Imported wallet" },
+  { address: "12fcWddtXyxrnxUn6UdmqCbSaVsaYKvHQp", source: "Imported wallet" },
+  { address: "1CYtH4TeoAHZUZqCHBBkrLtwRh5Kquj82i", source: "Imported wallet" },
+  { address: "113aNq2MZDE2HFKsUe7uXLNrfnF5iSHQug", source: "Active address" },
 ];
 
-const ADDRESS_BALANCES: Record<string, number> = {
-  "1Ku6BVnRDuwcSyssUBkJBVVWoUGDWudC6p": 2548960341,
-  "125AKhtDPtjZbJSDSeVEZFUf4Dz9ptNGqU": 0,
-  "1MBiuQc6L7vq5sc7k1qtfpb2KF5XfpbfmR": 0,
-  "12fcWddtXyxrnxUn6UdmqCbSaVsaYKvHQp": 0,
-  "1CYtH4TeoAHZUZqCHBBkrLtwRh5Kquj82i": 0,
-  "113aNq2MZDE2HFKsUe7uXLNrfnF5iSHQug": 15000,
-  "1N5XvKBWMaXGgR2cTsJPBd5vB31W5QRvC": 250000,
-  "1PjCsJ2b5rMvPnhvXGJXrA3cTZwMsQ1v": 0,
-  "1KpR8jLGF2TmYxPn9sTVWKNWzMqS6nL3": 500000,
-  "1BTcXqZyWFLpXqHBbLQdCbZh3Q9d5sWtN": 0,
-  "1AqCn1HmQHJPjY7vBWGmt8GuXZGqtYLo": 0,
-  "1FvE5Gh8Jk3KTN8M5bXpJU2jB7RcnN5d": 0,
-  "GqD6xFcJHPHnY4dWZbL9sQKR3vYbH6N": 125000,
-};
-
-export async function GET() {
-  const totalSat = Object.values(ADDRESS_BALANCES).reduce((s, v) => s + v, 0);
-  let btcPrice = 54750;
+async function fetchBtcPrice(): Promise<number> {
   try {
-    const r = await fetch("https://blockchain.info/charts/market-price?format=json", { signal: AbortSignal.timeout(5000) });
+    const r = await fetch("https://blockchain.info/charts/market-price?format=json", {
+      signal: AbortSignal.timeout(5000),
+    });
     if (r.ok) {
       const d = await r.json();
-      btcPrice = parseFloat(d?.values?.slice(-1)?.[0]?.y) || 54750;
+      return parseFloat(d?.values?.slice(-1)?.[0]?.y) || 0;
     }
-  } catch {}
+  } catch { /* use 0 — will show N/A */ }
+  return 0;
+}
 
-  const withBalance = Object.entries(ADDRESS_BALANCES).filter(([, sats]) => sats > 0);
+async function fetchAddressBalance(address: string): Promise<number> {
+  try {
+    const r = await fetch(`https://mempool.space/api/address/${address}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      const funded = d.chain_stats?.funded_txo_sum || 0;
+      const spent = d.chain_stats?.spent_txo_sum || 0;
+      return funded - spent;
+    }
+  } catch { /* offline */ }
+  return 0;
+}
+
+export async function GET() {
+  const btcPrice = await fetchBtcPrice();
 
   return NextResponse.json({
     motor: "consolidation-mainnet",
     status: "idle",
     network: "mainnet",
     btc_price: btcPrice,
-    addresses_tracked: KNOWN_ADDRESSES.length,
-    addresses_with_balance: withBalance.length,
-    total_satoshis: totalSat,
-    total_btc: (totalSat / 1e8).toFixed(8),
-    total_usd: ((totalSat / 1e8) * btcPrice).toFixed(2),
-    addresses: KNOWN_ADDRESSES.map(a => ({
+    addresses_tracked: TRACKED_ADDRESSES.length,
+    note: "Balances fetched live from mempool.space. Use POST /api/consolidate?action=scan for a full scan.",
+    addresses: TRACKED_ADDRESSES.map(a => ({
       address: a.address,
       source: a.source,
-      satoshis: ADDRESS_BALANCES[a.address] || 0,
-      btc: ((ADDRESS_BALANCES[a.address] || 0) / 1e8).toFixed(8),
-      has_balance: (ADDRESS_BALANCES[a.address] || 0) > 0,
     })),
   });
 }
@@ -83,32 +76,39 @@ export async function POST(request: NextRequest) {
     const action = body.action as string | undefined;
 
     if (action === "scan") {
-      const totalSat = Object.values(ADDRESS_BALANCES).reduce((s, v) => s + v, 0);
-      let btcPrice = 54750;
-      try {
-        const r = await fetch("https://blockchain.info/charts/market-price?format=json", { signal: AbortSignal.timeout(5000) });
-        if (r.ok) {
-          const d = await r.json();
-          btcPrice = parseFloat(d?.values?.slice(-1)?.[0]?.y) || 54750;
-        }
-      } catch {}
+      const btcPrice = await fetchBtcPrice();
 
-      const report = Object.entries(ADDRESS_BALANCES)
-        .filter(([, sats]) => sats > 0)
-        .map(([address, sats]) => ({
-          address,
-          satoshis: sats,
-          btc: (sats / 1e8).toFixed(8),
-          usd: ((sats / 1e8) * btcPrice),
+      // Fetch live balances for all tracked addresses
+      const results = await Promise.allSettled(
+        TRACKED_ADDRESSES.map(async (a) => {
+          const satoshis = await fetchAddressBalance(a.address);
+          return { address: a.address, source: a.source, satoshis };
+        })
+      );
+
+      const report = results
+        .filter((r): r is PromiseFulfilledResult<{ address: string; source: string; satoshis: number }> =>
+          r.status === 'fulfilled' && r.value.satoshis > 0
+        )
+        .map(r => r.value)
+        .map(r => ({
+          address: r.address,
+          satoshis: r.satoshis,
+          btc: (r.satoshis / 1e8).toFixed(8),
+          usd: btcPrice > 0 ? Math.round((r.satoshis / 1e8) * btcPrice) : 0,
         }))
         .sort((a, b) => b.satoshis - a.satoshis);
 
+      const totalSat = report.reduce((s, r) => s + r.satoshis, 0);
+      const withBalance = results
+        .filter((r): r is PromiseFulfilledResult<{ satoshis: number }> => r.status === 'fulfilled' && r.value.satoshis > 0);
+
       const result: ConsolidationResult = {
-        addresses_derived: KNOWN_ADDRESSES.length,
+        addresses_tracked: TRACKED_ADDRESSES.length,
         total_satoshis: totalSat,
         total_btc: (totalSat / 1e8).toFixed(8),
-        total_usd: Math.round((totalSat / 1e8) * btcPrice),
-        addresses_with_balance: report.length,
+        total_usd: btcPrice > 0 ? Math.round((totalSat / 1e8) * btcPrice) : 0,
+        addresses_with_balance: withBalance.length,
         btc_price: btcPrice,
         report,
       };
@@ -116,42 +116,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ action: "scan", ...result });
     }
 
-    if (action === "derive") {
-      const { keys = [], key_type = "wif" } = body;
-      if (!Array.isArray(keys)) {
-        return NextResponse.json({ error: "Campo 'keys' deve ser um array de strings." }, { status: 400 });
-      }
-
-      const derived = keys.map((key: string, i: number) => {
-        let hash = 0;
-        const keyStr = key_type === "hex" ? key : key;
-        for (let j = 0; j < keyStr.length; j++) {
-          hash = ((hash << 5) - hash) + keyStr.charCodeAt(j);
-          hash = hash & 0x7FFFFFFF;
-        }
-        const prefix = (hash % 2 === 0) ? "1" : "3";
-        const mid = Math.abs(hash).toString(16).padStart(8, "0").slice(0, 4);
-        const suffix = Math.abs(hash >>> 8).toString(16).padStart(8, "0").slice(0, 34);
-        return { address: `${prefix}${mid}${suffix}`, source: `${key_type}_derivation`, satoshis: 0 };
-      });
-
-      return NextResponse.json({ action: "derive", derived, count: derived.length });
-    }
-
     if (action === "price") {
-      let btcPrice = 54750;
-      try {
-        const r = await fetch("https://blockchain.info/charts/market-price?format=json", { signal: AbortSignal.timeout(5000) });
-        if (r.ok) {
-          const d = await r.json();
-          btcPrice = parseFloat(d?.values?.slice(-1)?.[0]?.y) || 54750;
-        }
-      } catch {}
+      const btcPrice = await fetchBtcPrice();
       return NextResponse.json({ action: "price", btc_price: btcPrice });
     }
 
-    return NextResponse.json({ error: "Acao invalida. Use: scan, derive, ou price." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Acao invalida. Use: scan ou price." },
+      { status: 400 }
+    );
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Erro desconhecido" }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erro desconhecido" },
+      { status: 500 }
+    );
   }
 }

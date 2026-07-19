@@ -120,7 +120,7 @@ em 30 UTXOs não gastos, HD wallet BIP32 ativa com 20+ chaves derivadas.`,
     try {
       const response = await zai.chat.completions.create({
         model: "glm-4-flash",
-        messages: messages as Array<{ role: string; content: string }>,
+        messages: messages as Array<{ role: "system" | "user" | "assistant"; content: string }>,
         max_tokens: 4096,
         tools: ORCHESTRATOR_TOOLS,
       });

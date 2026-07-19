@@ -2,18 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   reactStrictMode: true,
   experimental: {
     serverActions: {
       bodySizeLimit: '4mb',
     },
   },
-  eslint: {
-    ignoreDuringBuilds: ["**/hd-wallet/**", "**/scripts/**", "**/upload/**"],
-    ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills"],
+  typescript: {
+    ignoreBuildErrors: true, // P4-3: Vault/hd-wallet routes need schema-aligned refactor (tracked as tech debt)
   },
 };
 
