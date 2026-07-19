@@ -6,8 +6,8 @@ import crypto from "crypto";
 // Credentials in .env.local (server-only, never sent to client)
 // ============================================================
 
-const API_KEY = process.env.BINANCE_API_KEY!;
-const API_SECRET = process.env.BINANCE_API_SECRET!;
+const API_KEY = process.env.BINANCE_API_KEY ?? '';
+const API_SECRET = process.env.BINANCE_API_SECRET ?? '';
 const BASE_URL = "https://api.binance.com";
 
 function sign(params: Record<string, string>): string {
@@ -23,6 +23,9 @@ async function binanceRequest(
   const allParams = { ...params, timestamp, recvWindow: "15000" };
   allParams.signature = sign(allParams);
 
+  if (!API_KEY || !API_SECRET) {
+    return NextResponse.json({ error: 'Binance API credentials not configured' }, { status: 503 });
+  }
   const url = `${BASE_URL}${endpoint}?${new URLSearchParams(allParams).toString()}`;
   const res = await fetch(url, {
     method: "GET",
