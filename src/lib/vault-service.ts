@@ -14,14 +14,16 @@ const ECPair = ECPairFactory(tinysecp);
 
 // ─── Encryption Helpers ─────────────────────────────────
 const ALGORITHM = "aes-256-gcm";
-const VAULT_MASTER_KEY = process.env.VAULT_ENCRYPTION_KEY;
-if (!VAULT_MASTER_KEY) {
-  throw new Error('[VaultService] FATAL: VAULT_ENCRYPTION_KEY env var is required. Vault encryption cannot operate without it.');
+
+function getVaultKey(): string {
+  const key = process.env.VAULT_ENCRYPTION_KEY;
+  if (!key) throw new Error('[VaultService] FATAL: VAULT_ENCRYPTION_KEY env var is required.');
+  return key;
 }
 
 function encrypt(plaintext: string): { encrypted: string; iv: string; tag: string } {
   const iv = crypto.randomBytes(16);
-  const key = crypto.scryptSync(VAULT_MASTER_KEY, "nexus-salt", 32);
+  const key = crypto.scryptSync(getVaultKey(), "nexus-salt", 32);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
   let encrypted = cipher.update(plaintext, "utf8", "hex");
   encrypted += cipher.final("hex");
@@ -30,7 +32,7 @@ function encrypt(plaintext: string): { encrypted: string; iv: string; tag: strin
 }
 
 function decrypt(encryptedHex: string, ivHex: string, tagHex: string): string {
-  const key = crypto.scryptSync(VAULT_MASTER_KEY, "nexus-salt", 32);
+  const key = crypto.scryptSync(getVaultKey(), "nexus-salt", 32);
   const decipher = crypto.createDecipheriv(ALGORITHM, key, Buffer.from(ivHex, "hex"));
   decipher.setAuthTag(Buffer.from(tagHex, "hex"));
   let decrypted = decipher.update(encryptedHex, "hex", "utf8");

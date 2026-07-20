@@ -5,7 +5,9 @@
 // This is an in-memory Map — keys are lost on server restart.
 // ============================================================
 
-import type { VaultWallet } from "@/components/bitcoin/bitcoin-data";
+import type { WalletAddress } from "@/components/bitcoin/bitcoin-data";
+
+type VaultWallet = WalletAddress & { privateKey?: string };
 
 const dynamicVault = new Map<string, VaultWallet>();
 

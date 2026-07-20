@@ -51,14 +51,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080b0d] text-zinc-100">
-      {/* Custom Scrollbar */}
-      <style>{`
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #202a2f; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
-      `}</style>
-
       {/* ═══ HEADER ═══ */}
       <header className="sticky top-0 z-40 border-b border-zinc-800/40 bg-[#080b0d]/90 backdrop-blur-2xl">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">

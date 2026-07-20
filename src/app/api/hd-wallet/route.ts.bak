@@ -1,6 +1,0 @@
-      try {
-        // BIP44 path
-        const hdPath = `m/44'/0'/0/${i}`;
-        const bip44 = localDeriveChild(process.env.HD_WALLET_XPRV || '', hdPath);
-        hdAddresses.push({ label: `HD m/44'/0'/0/${i}`, address: bip44.address, type: "hd_bip44" });
-      } catch { /* skip */ }}

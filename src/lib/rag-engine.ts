@@ -374,29 +374,30 @@ export async function ragPipeline(
   // ─── STAGE 2: COMPUTE TF-IDF ───
   const queryTokens = tokenize(query);
   const queryNgrams = generateNgrams(queryTokens, 2);
-  const queryTrigrams = generateNgrams(queryTokens, 3);
 
   const allDocTokens = preparedDocs.map(d => [...d.titleTokens, ...d.contentTokens]);
   const idf = computeIDF(allDocTokens);
   const avgDL = allDocTokens.reduce((s, t) => s + t.length, 0) / (allDocTokens.length || 1);
 
   // ─── STAGE 3: BM25 RETRIEVAL ───
-  // Pre-compute TF once per document (avoid 3x recomputation)
-  const docTFs = preparedDocs.map(d => computeTF(d.contentTokens));
+  // Pre-compute TF per field (content, title, source) — each needs its own TF map
+  const contentTFs = preparedDocs.map(d => computeTF(d.contentTokens));
+  const titleTFs = preparedDocs.map(d => computeTF(d.titleTokens));
+  const sourceTFs = preparedDocs.map(d => computeTF(d.sourceTokens));
 
   const scored = preparedDocs
     .map((doc, idx) => ({
       ...doc,
-      bm25Score: bm25Score(queryTokens, doc.contentTokens, docTFs[idx], idf, avgDL)
-        + bm25Score(queryTokens, doc.titleTokens, docTFs[idx], idf, avgDL) * 2  // title boost
-        + bm25Score(queryTokens, doc.sourceTokens, docTFs[idx], idf, avgDL) * 0.5, // source mild boost
+      bm25Score: bm25Score(queryTokens, doc.contentTokens, contentTFs[idx], idf, avgDL)
+        + bm25Score(queryTokens, doc.titleTokens, titleTFs[idx], idf, avgDL) * 2  // title boost
+        + bm25Score(queryTokens, doc.sourceTokens, sourceTFs[idx], idf, avgDL) * 0.5, // source mild boost
     }))
     .filter(d => d.bm25Score > 0)
     .sort((a, b) => b.bm25Score - a.bm25Score)
     .slice(0, topK * 3); // over-retrieve for reranking
 
   // ─── STAGE 4: CROSS-ENCODER RERANKING ───
-  const reranked = rerank(query, queryTokens, [...queryNgrams, ...queryTrigrams], scored)
+  const reranked = rerank(query, queryTokens, queryNgrams, scored)
     .sort((a, b) => b.rerankScore - a.rerankScore)
     .slice(0, topK);
 

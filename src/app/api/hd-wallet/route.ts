@@ -37,7 +37,7 @@ interface DerivedAddress {
 /**
  * Derive a single child from the master xprv
  */
-function deriveChild(masterXprv: string, path: string): HDNode {
+function deriveChildPath(masterXprv: string, path: string): HDNode {
   let node = HDKey.fromExtendedKey(masterXprv);
   const parts = path.split("/").filter(Boolean);
   for (const part of parts) {
@@ -72,7 +72,7 @@ function deriveAddressRange(masterXprv: string, branch: string, start: number, c
   for (let i = start; i < start + count; i++) {
     const path = `m/44'/0'/0'/${branch}/${i}`;
     try {
-      const node = deriveChild(masterXprv, path);
+      const node = deriveChildPath(masterXprv, path);
       addresses.push({
         index: i,
         path,
@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
     const vaultAddresses = sampleVaults.map(w => w.address);
     const vaultBalances = await fetchMultiBalance(vaultAddresses);
 
-    const totalVault = 0;
+    let totalVault = 0;
     const vaultsWithBalance: Array<{ name: string; address: string; balance: number }> = [];
     for (const w of sampleVaults) {
       const info = vaultBalances.get(w.address);

@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -45,37 +43,38 @@
 
 :root {
   --radius: 0.5rem;
-  --background: #1a1a1b;
-  --foreground: #ffffff;
-  --card: #272729;
-  --card-foreground: #ffffff;
-  --popover: #272729;
-  --popover-foreground: #ffffff;
-  --primary: #e01b24;
-  --primary-foreground: #ffffff;
-  --secondary: #343536;
-  --secondary-foreground: #ffffff;
-  --muted: #272729;
-  --muted-foreground: #888888;
-  --accent: #e01b24;
-  --accent-foreground: #ffffff;
-  --destructive: #e01b24;
-  --border: #343536;
-  --input: #343536;
-  --ring: #e01b24;
-  --chart-1: #e01b24;
-  --chart-2: #ff6b35;
+  /* CHIMERA Dark Premium Palette */
+  --background: #080b0d;
+  --foreground: #f4f4f5;
+  --card: #111318;
+  --card-foreground: #f4f4f5;
+  --popover: #111318;
+  --popover-foreground: #f4f4f5;
+  --primary: #00ff88;
+  --primary-foreground: #080b0d;
+  --secondary: #1c1f26;
+  --secondary-foreground: #f4f4f5;
+  --muted: #111318;
+  --muted-foreground: #71717a;
+  --accent: #00ff88;
+  --accent-foreground: #080b0d;
+  --destructive: #ef4444;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #00ff88;
+  --chart-1: #00ff88;
+  --chart-2: #22d3ee;
   --chart-3: #fbbf24;
-  --chart-4: #06d6a0;
-  --chart-5: #a855f7;
-  --sidebar: #1a1a1b;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #e01b24;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #272729;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #343536;
-  --sidebar-ring: #e01b24;
+  --chart-4: #a855f7;
+  --chart-5: #f97316;
+  --sidebar: #080b0d;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #00ff88;
+  --sidebar-primary-foreground: #080b0d;
+  --sidebar-accent: #111318;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #00ff88;
 }
 
 @layer base {
@@ -83,7 +82,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-[#1a1a1b] text-foreground;
+    @apply bg-[#080b0d] text-foreground;
     overflow-x: hidden;
   }
 }
@@ -143,72 +142,7 @@
   animation: slide-in-left 0.3s ease-out forwards;
 }
 
-/* Vote button hover */
-.vote-btn {
-  transition: all 0.15s ease;
-}
-.vote-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-.vote-up-active {
-  color: #ff6b35;
-}
-.vote-down-active {
-  color: #6366f1;
-}
-
-/* Post card hover */
-.post-card {
-  transition: border-color 0.2s ease;
-}
-.post-card:hover {
-  border-color: #555555;
-}
-
-/* Tab active indicator */
-.tab-active {
-  color: #ffffff;
-  border-bottom: 2px solid #e01b24;
-}
-
-/* Hot indicator glow */
-@keyframes hot-glow {
-  0%, 100% { text-shadow: 0 0 4px rgba(224, 27, 36, 0.5); }
-  50% { text-shadow: 0 0 12px rgba(224, 27, 36, 0.8); }
-}
-.hot-glow {
-  animation: hot-glow 2s ease-in-out infinite;
-}
-
-/* Trending number animation */
-@keyframes count-up {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-count {
-  animation: count-up 0.4s ease-out;
-}
-
-/* Banner gradient */
-.banner-gradient {
-  background: linear-gradient(to right, #e01b24, #ff6b35);
-}
-
-/* Agent verified badge */
-.verified-badge {
-  color: #06d6a0;
-}
-
-/* MoltBook link style */
-.molt-link {
-  color: #888888;
-  transition: color 0.15s ease;
-}
-.molt-link:hover {
-  color: #ffffff;
-}
-
-/* Number font */
+/* Tabular numbers for metrics */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }

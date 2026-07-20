@@ -7,7 +7,6 @@
 import * as crypto from "crypto";
 import * as secp256k1 from "@noble/secp256k1";
 import { BINANCE_BTC_ADDRESS, type UTXO } from "@/components/bitcoin/bitcoin-data";
-import type { VaultWallet } from "@/components/bitcoin/bitcoin-data";
 
 // ---------- CONSTANTS ----------
 export const CUSTODY_ADDRESS = BINANCE_BTC_ADDRESS;
