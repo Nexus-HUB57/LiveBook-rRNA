@@ -6,7 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import {
   Zap, Bot, Database, LayoutDashboard, BrainCircuit, Cpu, Flame,
-  Globe, Dna, Users, Landmark, Atom, Feather, MessageSquareText,
+  Globe, Dna, Users, Landmark, Atom, Feather, MessageSquareText, Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardTab, QuickSearch } from '@/components/dashboard-tab';
@@ -19,6 +19,7 @@ import RecuperacaoTab from '@/components/recuperacao-tab';
 import MoltbookTab from '@/components/moltbook-tab';
 import GovernanceTab from '@/components/governance-tab';
 import RrnaSystemsTab from '@/components/rrna-systems-tab';
+import FableMethodTab from '@/components/fable-method-tab';
 
 /* ================================================================
    TAB CONFIG — CHIMERA MULTI-AGENT FUSION ENGINE
@@ -34,6 +35,7 @@ const TABS = [
   { value: 'metaverso', label: 'Metaverso', icon: Globe, color: '#a855f7' },
   { value: 'recuperacao', label: 'Recuperacao', icon: Dna, color: '#06d6a0' },
   { value: 'rrna', label: 'rRNA Systems', icon: Atom, color: '#e040a0' },
+  { value: 'fable-method', label: 'Fable Method', icon: Sparkles, color: '#00ff88' },
   // Ecosystem
   { value: 'moltbook', label: 'Moltbook', icon: Users, color: '#e01b24' },
   { value: 'governance', label: 'Governanca', icon: Landmark, color: '#fbbf24' },
@@ -170,6 +172,7 @@ export default function Home() {
               {activeTab === 'metaverso' && <MetaversoTab />}
               {activeTab === 'recuperacao' && <RecuperacaoTab />}
               {activeTab === 'rrna' && <RrnaSystemsTab />}
+              {activeTab === 'fable-method' && <FableMethodTab />}
               {activeTab === 'moltbook' && <MoltbookTab />}
               {activeTab === 'governance' && <GovernanceTab />}
             </motion.div>
