@@ -236,7 +236,7 @@ export default function FableMethodTab() {
               onChange={e => setTask(e.target.value)}
               placeholder={
                 selectedSkill === 'fable-domain'
-                  ? 'Nome do setor (ex: chimera-dashboard, bitcoin-vault, rag-rrna)'
+                  ? 'Setor (chimera-dashboard, bitcoin-vault, rag-rrna, fable-orchestrator, colibri-routing)'
                   : 'Descreva a tarefa...'
               }
               className="bg-zinc-800/40 border-zinc-700/40 text-[13px] text-zinc-200 placeholder:text-zinc-600"
@@ -342,6 +342,20 @@ export default function FableMethodTab() {
                       </div>
                     )
                   ))}
+                  {/* Judge checks detail */}
+                  {result.verdict && (
+                    <div className="mt-3 p-3 bg-zinc-800/30 rounded-lg border border-zinc-800/40">
+                      <p className="text-[10px] font-bold text-zinc-400 mb-2">Judge Checks (8)</p>
+                      <div className="space-y-1">
+                        {['Think phase executed','Act phase produced results','Prove phase verified output','Evidence quality','No skipped phases','Reasonable execution time','Plan-to-evidence traceability','No failed plan steps'].map((name, ci) => (
+                          <div key={ci} className="flex items-center gap-2">
+                            <span className={result.verdict === 'VERIFIED' ? 'text-emerald-400' : ci < 4 ? 'text-emerald-400' : 'text-red-400'}>{result.verdict === 'VERIFIED' || ci < 4 ? '✓' : '✗'}</span>
+                            <span className="text-[10px] text-zinc-500">{name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

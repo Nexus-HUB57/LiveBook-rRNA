@@ -439,6 +439,26 @@ async function runJudge(work: MethodContext): Promise<JudgeReport> {
     detail: `Duracao: ${(duration / 1000).toFixed(1)}s`,
   });
 
+  // Check 7: Plan step traceability — each done step should link to evidence
+  const doneStepsWithEvidence = completedSteps.filter(s => s.evidenceIds.length > 0).length;
+  checks.push({
+    name: 'Plan-to-evidence traceability',
+    passed: completedSteps.length === 0 || doneStepsWithEvidence > 0,
+    detail: completedSteps.length > 0
+      ? `${doneStepsWithEvidence}/${completedSteps.length} passos ligados a evidencias`
+      : 'Nenhum passo concluido para rastrear',
+  });
+
+  // Check 8: No failed steps (all done)
+  const failedSteps = work.plan.filter(s => s.status === 'failed');
+  checks.push({
+    name: 'No failed plan steps',
+    passed: failedSteps.length === 0,
+    detail: failedSteps.length > 0
+      ? `${failedSteps.length} passo(s) falharam: ${failedSteps.map(s => s.action.slice(0, 40)).join(', ')}`
+      : 'Todos os passos executados com sucesso',
+  });
+
   // Calculate verdict
   const passedCount = checks.filter(c => c.passed).length;
   const score = Math.round((passedCount / checks.length) * 100);
@@ -581,6 +601,69 @@ const BUILT_IN_ADAPTERS: Record<string, DomainAdapter> = {
       { id: 'rag-smoke-1', name: 'RAG pipeline runs', command: 'node -e "const {ragPipeline} = require(\"./src/lib/rag-engine.ts\"); ragPipeline(\"test\", [{id:\"1\",title:\"T\",content:\"C\",source:\"S\",chunkType:\"test\"}])"', expectedExitCode: 0 },
     ],
     createdAt: '2026-07-20T00:00:00Z',
+  },
+  'fable-orchestrator': {
+    sector: 'fable-orchestrator',
+    description: 'Fable 5 OS — Orquestrador de subagentes com LLM, auto-correcao, karma tracking e sandbox management',
+    conventions: [
+      'Subagentes gerados via LLM com system prompt FABLE_5_SYSTEM',
+      'Auto-correcao ate maxCorrections (default 3) com CORRECTION_SYSTEM prompt',
+      'Tasks persistidas em Prisma via fableTask + fableExecution tables',
+      'Karma gerado proporcional ao trabalho real (duracao * steps)',
+      'Sandbox IDs unicos por execucao em /tmp/fable_sandbox_',
+      'Capabilities: code-gen, analysis, refactor, test-gen, doc-gen',
+    ],
+    trapFixtures: [
+      {
+        id: 'orch-trap-1',
+        name: 'Infinite correction loop',
+        description: 'Auto-correcao deve parar apos maxCorrections',
+        input: 'Task que sempre falha na execucao',
+        expectedBehavior: 'Parar apos maxCorrections e marcar como failed',
+        commonFailure: 'Esquecer de verificar correctionCount >= maxCorrections',
+        difficulty: 'medium',
+      },
+      {
+        id: 'orch-trap-2',
+        name: 'Sandbox cleanup',
+        description: 'Sandboxes devem ser marcados inactive apos conclusao',
+        input: 'Task completa mas sandbox permanece active',
+        expectedBehavior: 'Sempre setar active=false no final',
+        commonFailure: 'Retornar antes de fazer cleanup do sandbox',
+        difficulty: 'easy',
+      },
+    ],
+    smokeTests: [
+      { id: 'orch-smoke-1', name: 'Spawn subagent', command: 'curl -s -X POST http://localhost:3000/api/fable/spawn -H "Content-Type: application/json" -d \'{"task":"echo hello","capability":"code-gen"}\'', expectedExitCode: 0, expectedPattern: 'taskId' },
+    ],
+    createdAt: '2026-07-22T00:00:00Z',
+  },
+  'colibri-routing': {
+    sector: 'colibri-routing',
+    description: 'Colibri LLM Router — Expert atlas com tier-based model selection, multi-model orchestration e benchmarking',
+    conventions: [
+      'Modelos organizados em tiers (local, cloud, hybrid)',
+      'Expert atlas mapeia tasks ao melhor modelo disponivel',
+      'Route coupling report detecta dependencias entre models',
+      'Benchmarking com GLM 5.2 como referencia principal',
+      'Health check via /api/colibri/health',
+      'Orchestration via /api/colibri/orchestrate com fallback chain',
+    ],
+    trapFixtures: [
+      {
+        id: 'colibri-trap-1',
+        name: 'Model availability check',
+        description: 'Router deve verificar disponibilidade antes de rotear',
+        input: 'Modelo selecionado mas servidor fora do ar',
+        expectedBehavior: 'Fallback para proximo modelo na cadeia',
+        commonFailure: 'Tentar usar modelo indisponivel sem fallback',
+        difficulty: 'hard',
+      },
+    ],
+    smokeTests: [
+      { id: 'colibri-smoke-1', name: 'Health check', command: 'curl -s http://localhost:3000/api/colibri/health', expectedExitCode: 0, expectedPattern: 'status' },
+    ],
+    createdAt: '2026-07-22T00:00:00Z',
   },
 };
 
