@@ -1,8 +1,9 @@
 /**
- * LLM Synthesis — Streaming text generation via z-ai-web-dev-sdk.
+ * LLM Synthesis — Streaming text generation via 9router bridge.
  *
  * Provides async generators that yield token-by-token for SSE streaming.
- * Falls back gracefully when SDK is not configured.
+ * Routes through 100+ providers with automatic fallback.
+ * Falls back gracefully when no provider is available.
  */
 
 export interface LLMMessage {
@@ -29,8 +30,9 @@ Regras:
 - Se nao souber, diga com honestidade`;
 
 /**
- * Stream LLM response token by token using z-ai-web-dev-sdk.
- * Falls back to word-by-word simulation if SDK is unavailable.
+ * Stream LLM response token by token via 9router bridge.
+ * Routes through GLM → DeepSeek → Groq with auto-fallback.
+ * Falls back to word-by-word simulation if no provider is available.
  */
 export async function* streamLLM(
   query: string,
@@ -38,9 +40,10 @@ export async function* streamLLM(
     agentSlug?: string;
     context?: string;
     history?: LLMMessage[];
+    provider?: string;
   } = {}
 ): AsyncGenerator<string> {
-  const { agentSlug, context, history = [] } = options;
+  const { agentSlug, context, history = [], provider } = options;
 
   // Build messages array
   const messages: LLMMessage[] = [
@@ -69,37 +72,33 @@ export async function* streamLLM(
 
   messages.push({ role: 'user', content: userContent });
 
-  // Try real LLM streaming
-  const hasSDK = !!(process.env.ZAI_API_BASE_URL && process.env.ZAI_API_KEY);
+  // Try 9router bridge streaming
+  try {
+    const { streamChat } = await import('@/lib/9router-bridge');
+    const chunkGenerator = streamChat({
+      provider: provider || 'glm',
+      messages: messages as any,
+      stream: true,
+      maxTokens: 2048,
+      fallbackChain: provider
+        ? [provider, 'glm', 'deepseek', 'groq']
+        : ['glm', 'deepseek', 'groq', 'openai'],
+      timeoutMs: 30000,
+      metadata: { source: 'llm-synthesis', agent: agentSlug || '' },
+    });
 
-  if (hasSDK) {
-    try {
-      const ZAI = (await import('z-ai-web-dev-sdk')).default;
-      const client = await ZAI.create() as any;
-
-      // Use createChatCompletion with streaming if available
-      // The SDK may not support streaming natively, so we do chunked generation
-      const result = await client.createChatCompletion({
-        model: 'glm-4-flash',
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-        thinking: 'disabled',
-      });
-
-      const fullText = result?.choices?.[0]?.message?.content || '';
-      if (fullText) {
-        // Simulate token streaming by yielding word chunks
-        const words = fullText.split(/(\s+)/);
-        for (const word of words) {
-          yield word;
-          if (word.trim()) {
-            await new Promise(r => setTimeout(r, 15)); // Small delay for UX
-          }
-        }
-        return;
+    let hasContent = false;
+    for await (const chunk of chunkGenerator) {
+      if (chunk.token) {
+        hasContent = true;
+        yield chunk.token;
       }
-    } catch (err) {
-      console.error('[LLM Stream] SDK error, falling back:', err);
+      if (chunk.done) break;
+      if (chunk.error) break;
     }
+    if (hasContent) return;
+  } catch (err) {
+    console.error('[LLM Stream] 9router error, falling back:', err);
   }
 
   // Fallback: Generate a contextual response without LLM
@@ -146,8 +145,9 @@ async function* generateFallbackResponse(
 }
 
 /**
- * Check if LLM streaming is available.
+ * Check if LLM streaming is available via 9router bridge.
  */
 export function isLLMAvailable(): boolean {
-  return !!(process.env.ZAI_API_BASE_URL && process.env.ZAI_API_KEY);
+  // 9router bridge is always available — it has ZAI SDK as final fallback
+  return true;
 }

@@ -61,37 +61,36 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. LLM Generator (with graceful degradation)
+    // 3. LLM Generator via 9router bridge (with graceful degradation)
     const llmGenerator = async (context: string, q: string): Promise<string> => {
-      if (process.env.ZAI_API_BASE_URL && process.env.ZAI_API_KEY) {
-        try {
-          const ZAI = (await import("z-ai-web-dev-sdk")).default;
-          const client = await ZAI.create() as any;
-          const result = await client.createChatCompletion({
-            model: "glm-4-flash",
-            messages: [
-              {
-                role: "system",
-                content: `Voce e o rRNA Agent — um assistente RAG especializado no ecossistema Nexus HUB com 5 agentes AI.
+      try {
+        const { routeChat } = await import("@/lib/9router-bridge");
+        const result = await routeChat({
+          provider: 'glm',
+          fallbackChain: ['glm', 'deepseek', 'groq'],
+          messages: [
+            {
+              role: 'system',
+              content: `Voce e o rRNA Agent — um assistente RAG especializado no ecossistema Nexus HUB com 5 agentes AI.
 Responda SEMPRE em Portugues brasileiro.
 Use APENAS o contexto fornecido. Cite fontes como [1], [2].
 Seja conciso, tecnico e preciso.
 Se o contexto nao cobrir a pergunta, diga que a informacao nao esta disponivel na base.`,
-              },
-              {
-                role: "user",
-                content: `Contexto RAG rRNA:\n\n${context}\n\n---\n\nPergunta: ${q}`,
-              },
-            ],
-            thinking: "disabled",
-          });
-          return result?.choices?.[0]?.message?.content || "";
-        } catch (err) {
-          console.error("[RAG rRNA] LLM Error:", err);
-          throw err; // fallback to offline
-        }
+            },
+            {
+              role: 'user',
+              content: `Contexto RAG rRNA:\n\n${context}\n\n---\n\nPergunta: ${q}`,
+            },
+          ],
+          maxTokens: 2048,
+          timeoutMs: 20000,
+          metadata: { source: 'rag-rrna' },
+        });
+        return result.content || '';
+      } catch (err) {
+        console.error('[RAG rRNA] LLM Error:', err);
+        throw err;
       }
-      throw new Error("LLM not configured");
     };
 
     // 4. RUN RAG rRNA PIPELINE
@@ -126,7 +125,7 @@ export async function GET() {
         "BM25 Retrieval (k1=1.5, b=0.75, title 2x boost)",
         "Cross-Encoder Reranking (phrase + n-gram + positional)",
         "Context Assembly (max 4000 chars)",
-        "LLM Synthesis (GLM-4-Flash with fallback)",
+        "LLM Synthesis (9router bridge: GLM → DeepSeek → Groq)",
       ],
       knowledgeBase: {
         totalEntries,
