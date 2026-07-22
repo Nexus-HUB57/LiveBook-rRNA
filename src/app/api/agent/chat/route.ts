@@ -1,26 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { routeChat } from "@/lib/9router-bridge";
 
-// LLM chat with graceful degradation — no crash if SDK is unconfigured
+// LLM chat via 9router bridge with automatic fallback across 100+ providers
 async function llmChat(messages: Array<{ role: string; content: string }>, systemPrompt?: string): Promise<string> {
   try {
-    // Check if SDK env vars are available before importing
-    if (!process.env.ZAI_API_BASE_URL && !process.env.ZAI_API_KEY) {
-      return "O Agente AI esta configurado mas o servico LLM nao esta disponivel neste ambiente. Os dados do dashboard (2.402 projetos, analises e metricas) continuam funcionando normalmente.";
-    }
-    const ZAI = (await import("z-ai-web-dev-sdk")).default;
-    const client = await ZAI.create() as any;
     const allMessages = [
       { role: "system", content: systemPrompt || "You are a helpful AI assistant." },
       ...messages,
     ];
-    const result = await client.createChatCompletion({
-      model: "glm-4-flash",
-      messages: allMessages,
-      thinking: "disabled",
+    const result = await routeChat({
+      provider: 'glm',
+      fallbackChain: ['glm', 'deepseek', 'groq', 'openai'],
+      messages: allMessages as any,
+      maxTokens: 2048,
+      timeoutMs: 25000,
+      metadata: { source: 'agent-chat' },
     });
-    return result?.choices?.[0]?.message?.content || "Sem resposta do LLM.";
+    return result.content || "Sem resposta do LLM.";
   } catch (err) {
-    console.error("[LLM Chat Error]", err);
+    console.error('[LLM Chat Error]', err);
     return "Agente AI temporariamente indisponivel. O servico LLM nao pode ser alcancado neste ambiente. Tente novamente mais tarde.";
   }
 }

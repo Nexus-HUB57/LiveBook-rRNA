@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import { db } from "@/lib/db";
-import ZAI from "z-ai-web-dev-sdk";
+import { routeChat } from "@/lib/9router-bridge";
 
 // ─── Types ───────────────────────────────────────────────
 export type TaskStatus = "pending" | "spawning" | "executing" | "completed" | "failed" | "timeout";
@@ -107,17 +107,19 @@ async function generateSolution(
     userPrompt = `Tarefa: ${taskDescription}\n\nGere uma solução completa e funcional.`;
   }
 
-  const zai = await ZAI.create();
-  const response = await zai.chat.completions.create({
-    model: "glm-4-flash",
+  const result = await routeChat({
+    provider: 'glm',
+    fallbackChain: ['glm', 'deepseek', 'groq'],
     messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
     ],
-    max_tokens: 4096,
+    maxTokens: 4096,
+    timeoutMs: 30000,
+    metadata: { source: 'fable-5-orchestrator', capability, isCorrection: String(isCorrection) },
   });
 
-  const code = response.choices?.[0]?.message?.content || "// [Erro] Resposta vazia do subagente";
+  const code = result.content || "// [Erro] Resposta vazia do subagente";
   return { code, durationMs: Date.now() - startTime };
 }
 

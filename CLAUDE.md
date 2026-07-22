@@ -1,4 +1,29 @@
-# CLAUDE.md — CHIMERA Fable Method Integration
+# CLAUDE.md — CHIMERA Ecosystem
+
+## Architecture Overview
+
+CHIMERA is a Multi-Agent Fusion Engine powered by the **9router bridge** — an in-process routing layer that orchestrates LLM calls across 100+ AI providers with automatic fallback chains and protocol translation.
+
+### 9router Bridge Layer
+
+All LLM calls go through `src/lib/9router-bridge.ts`:
+- **Entry points**: `routeChat()` (non-streaming), `streamChat()` (streaming async generator)
+- **Provider registry**: `src/lib/9router-engine/provider-registry.ts` — 20 providers, OpenAI/Claude/Gemini formats
+- **Protocol translator**: `src/lib/9router-engine/protocol-translator.ts` — hub-and-spoke (OpenAI as intermediate)
+- **Fallback chains**: GLM → DeepSeek → Groq → OpenAI → Anthropic → Gemini → OpenRouter → ZAI SDK
+- **API routes**: `/api/9router/providers` (status), `/api/9router/route-chat` (direct routing)
+
+**NEVER import `z-ai-web-dev-sdk` directly in API routes.** Always use 9router bridge. The ZAI SDK exists only as the final fallback inside `9router-bridge.ts`.
+
+### Migrated API Routes
+
+All these routes now use 9router bridge (not direct SDK):
+- `/api/orchestrate` — Mythos agent orchestration with tool calling
+- `/api/agent/chat/stream` — Streaming chat via `streamChat()`
+- `/api/agent/chat` — Non-streaming chat via `routeChat()`
+- `/api/agent/analyze` — Ecosystem analysis via `routeChat()`
+- `/api/rag/query` — RAG pipeline synthesis via `routeChat()`
+- `/api/fable/spawn` — Fable 5 OS subagent spawning via `routeChat()`
 
 ## Proactive Rules
 
@@ -17,6 +42,7 @@ When working in this repository, Claude Code should proactively apply the Fable 
    /api/fable/domain?sector=chimera-dashboard
    /api/fable/domain?sector=bitcoin-vault
    /api/fable/domain?sector=rag-rrna
+   /api/fable/domain?sector=colibri-routing
    ```
 
 3. **Check for known traps** — Review the trap fixtures for the sector before making changes.
@@ -34,6 +60,7 @@ When working in this repository, Claude Code should proactively apply the Fable 
    - Check that no trap fixtures were triggered
    - Verify CSS variables are synced (`#080b0d` palette, not `#1a1a1b`)
    - Confirm no dead code was introduced
+   - Confirm no direct `z-ai-web-dev-sdk` imports in src/ (only in 9router-bridge.ts)
 
 2. For significant changes, run `fable-judge` to get an automated verification score
 
@@ -44,6 +71,8 @@ When working in this repository, Claude Code should proactively apply the Fable 
 - **NEVER** reuse content TF maps for title/source scoring in RAG
 - **ALWAYS** use `let` not `const` for variables that will be reassigned
 - **NEVER** use Turbopack-conflicting function names (e.g., don't name functions `deriveChild` when HDKey already has one)
+- **NEVER** import `z-ai-web-dev-sdk` directly — always use `@/lib/9router-bridge`
+- **ALWAYS** specify `fallbackChain` when calling `routeChat()` for resilience
 
 ## Fable Method Skills — Quick Reference
 
@@ -77,21 +106,33 @@ Use to get domain knowledge, conventions, and trap fixtures for a sector.
 ```
 src/
 ├── app/
-│   ├── api/fable/          # All Fable API routes
-│   │   ├── method/         # fable-method skill
-│   │   ├── loop/           # fable-loop skill
-│   │   ├── judge/          # fable-judge skill
-│   │   ├── domain/         # fable-domain skill
-│   │   ├── spawn/          # Fable 5 OS subagent spawning
-│   │   ├── stats/          # Execution statistics
-│   │   ├── tasks/          # Task listing
-│   │   └── task/[id]/      # Task details
-│   └── page.tsx            # Main dashboard (10 tabs)
+│   ├── api/
+│   │   ├── 9router/          # 9router bridge API routes
+│   │   │   ├── providers/    # Provider listing + status
+│   │   │   └── route-chat/   # Direct chat routing
+│   │   ├── orchestrate/      # Mythos agent orchestration
+│   │   ├── agent/
+│   │   │   ├── chat/         # Agent chat (stream + non-stream)
+│   │   │   └── analyze/      # Ecosystem analysis
+│   │   ├── rag/query/        # RAG rRNA pipeline
+│   │   └── fable/            # All Fable API routes
+│   │       ├── method/       # fable-method skill
+│   │       ├── loop/         # fable-loop skill
+│   │       ├── judge/        # fable-judge skill
+│   │       ├── domain/       # fable-domain skill
+│   │       ├── spawn/        # Fable 5 OS subagent spawning
+│   │       ├── stats/        # Execution statistics
+│   │       ├── tasks/        # Task listing
+│   │       └── task/[id]/    # Task details
+│   └── page.tsx              # Main dashboard (10 tabs)
 ├── components/
 │   └── fable-method-tab.tsx  # Fable Method UI
 ├── lib/
+│   ├── 9router-bridge.ts     # Main routing bridge (routeChat, streamChat)
+│   ├── 9router-engine/       # 9router engine (provider-registry, protocol-translator)
 │   ├── fable-method-engine.ts  # Core engine (Think/Act/Prove)
-│   └── fable-5-orchestrator.ts # LLM subagent orchestrator
+│   ├── fable-5-orchestrator.ts # LLM subagent orchestrator (via 9router)
+│   └── llm-synthesis.ts     # Streaming LLM synthesis (via 9router)
 └── contexts/
     └── ecosystem-context.tsx
 ```

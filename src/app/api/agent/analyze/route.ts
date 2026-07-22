@@ -1,37 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { routeChat } from "@/lib/9router-bridge";
 
 async function llmAnalyze(messages: Array<{ role: string; content: string }>): Promise<string> {
   try {
-    if (!process.env.ZAI_API_BASE_URL && !process.env.ZAI_API_KEY) {
-      return `## Analise do Ecosistema (Modo Offline)
-
-### Top Tendencias
-1. **AI domina o cenario** — 690 projetos (28.7% do total) sao de IA, incluindo ferramentas GPT, Claude, DeepSeek e modelos proprios.
-2. **Developer Tools em alta** — 554 projetos (23.1%) focam em ferramentas para desenvolvedores, desde APIs ate plugins.
-3. **SaaS emergente** — Projetos SaaS estao crescendo, mostrando maturidade na monetizacao de produtos independentes.
-
-### Insights
-- **1,467 desenvolvedores unicos** contribuem com 2,402 projetos
-- **82.4% dos projetos estao ativos**, demonstrando alta sustentabilidade
-- A categoria "Outros" (632 projetos) indica diversidade beyond das categorias principais
-
-### Recomendacoes
-- Focar em AI + Developer Tools para maximo impacto
-- Observar o crescimento de SaaS como sinal de maturidade do mercado
-- Cidades como Pequim e Xangai concentram a maior parte dos desenvolvedores`;
-    }
-    const ZAI = (await import("z-ai-web-dev-sdk")).default;
-    const client = await ZAI.create() as any;
-    const result = await client.createChatCompletion({
-      model: "glm-4-flash",
-      messages,
-      thinking: "disabled",
+    const result = await routeChat({
+      provider: 'glm',
+      fallbackChain: ['glm', 'deepseek', 'groq'],
+      messages: messages as any,
+      maxTokens: 1024,
+      timeoutMs: 20000,
+      metadata: { source: 'agent-analyze' },
     });
-    return result?.choices?.[0]?.message?.content || "";
+    return result.content || '';
   } catch (err) {
-    console.error("[LLM Analyze Error]", err);
-    return "";
+    console.error('[LLM Analyze Error]', err);
+    return '';
   }
 }
 

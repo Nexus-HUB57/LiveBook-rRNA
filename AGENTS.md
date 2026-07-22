@@ -2,17 +2,30 @@
 
 ## Overview
 
-CHIMERA is a multi-agent fusion engine built on Next.js 16 (standalone output), featuring 5 AI agents, Bitcoin BIP32/39 + PSBT v2 custody, RAG rRNA pipeline, and a 10-tab dashboard.
+CHIMERA is a multi-agent fusion engine built on Next.js 16 (standalone output), featuring 5 AI agents, Bitcoin BIP32/39 + PSBT v2 custody, RAG rRNA pipeline, a 10-tab dashboard, and the **9router bridge** — an in-process routing layer that orchestrates all LLM calls across 100+ AI providers.
 
 The **Fable Method** (inspired by Sahir619/fable-method) provides the cognitive architecture for all agents — a Think/Act/Prove loop that every skill must follow.
+
+### 9router Bridge Integration
+
+All LLM calls are routed through `src/lib/9router-bridge.ts` (derived from decolua/9router open-sse engine):
+
+- **Protocol Translation**: Hub-and-spoke — OpenAI as intermediate format. Translates to/from Claude (Anthropic) and Gemini (Google) formats.
+- **Provider Registry**: 20+ providers registered (OpenAI, Anthropic, Gemini, DeepSeek, Groq, xAI, Mistral, Together, Fireworks, OpenRouter, Cerebras, SiliconFlow, GLM, Ollama, Azure, Cohere, NVIDIA, Hyperbolic, SambaNova, Cloudflare).
+- **Fallback Chains**: GLM → DeepSeek → Groq → OpenAI → Anthropic → Gemini → OpenRouter → ZAI SDK (final).
+- **Credential Resolution**: Automatic API key lookup from environment variables per provider.
+- **Streaming**: `streamChat()` async generator for SSE token-by-token streaming.
+
+**Architecture**: `API Route → 9routerBridge.routeChat() → detectFormat() → translateRequest() → fetch(provider) → translateResponse() → normalize to OpenAI format`
 
 ## Agent Roster
 
 | Agent | Role | Primary Tab | Integration |
 |-------|------|-------------|-------------|
-| **Fable 5 OS** | Recursive sandbox orchestrator — spawns subagents, auto-corrects, tracks karma | Fable Method | fable-5-orchestrator.ts, /api/fable/spawn |
+| **Fable 5 OS** | Recursive sandbox orchestrator — spawns subagents via 9router, auto-corrects, tracks karma | Fable Method | fable-5-orchestrator.ts, /api/fable/spawn |
 | **RAG rRNA** | Biological retrieval pipeline — Extract, Encode, Retrieve, Rerank, Augment, Generate | RAG Chat | rag-engine.ts, /api/rag/query |
 | **Bitcoin Vault** | BIP32/39 HD wallet + PSBT v2 + AES-256-GCM custody | Dashboard | vault-service.ts, dynamic-vault.ts, /api/vaults/* |
+| **9router** | Multi-provider routing — 100+ AI providers, protocol translation, fallback chains | Orquestracao | 9router-bridge.ts, /api/9router/* |
 | **Colibri** | LLM routing expert atlas — multi-model orchestration with tier-based selection | Orquestracao | /api/colibri/* |
 | **MoltBook** | Social knowledge graph with karma-weighted content ranking | MoltBook | /api/moltbook, moltbook.json |
 
@@ -58,6 +71,7 @@ Pre-built domain knowledge adapters with trap fixtures:
 - **chimera-dashboard** — Dark premium palette, shadcn/ui conventions, tab navigation, dead code traps
 - **bitcoin-vault** — Key exposure checks, PSBT v2 conventions, custody safety
 - **rag-rrna** — TF field isolation, BM25 scoring correctness, n-gram expansion rules
+- **colibri-routing** — 9router bridge: provider credential checks, protocol translation fidelity, timeout propagation, fallback chain correctness
 
 Each adapter includes: conventions, trap fixtures (common mistakes to catch), smoke tests
 
@@ -88,17 +102,32 @@ Fable 5 OS tracks karma per task execution
 ## Key Files
 
 ### Engine
+- `src/lib/9router-bridge.ts` — Main routing bridge: routeChat(), streamChat(), getProviderStatus()
+- `src/lib/9router-engine/provider-registry.ts` — Provider database with 20+ providers
+- `src/lib/9router-engine/protocol-translator.ts` — Hub-and-spoke protocol translation
 - `src/lib/fable-method-engine.ts` — Core Think/Act/Prove engine with all 4 skills
-- `src/lib/fable-5-orchestrator.ts` — LLM-powered subagent spawning and auto-correction
+- `src/lib/fable-5-orchestrator.ts` — LLM-powered subagent spawning via 9router bridge
+- `src/lib/llm-synthesis.ts` — Streaming LLM synthesis via 9router bridge
 - `src/lib/self-healing-engine.ts` — Reactive auto-cure for dashboard errors
 - `src/lib/wisdom-engine.ts` — Knowledge accumulation and retrieval
 
-### API Routes
+### API Routes — 9router
+- `/api/9router/providers` — List all providers with configuration status
+- `/api/9router/route-chat` — Direct chat routing through any provider
+
+### API Routes — Orchestration
+- `/api/orchestrate` — Mythos multi-agent orchestration with tool calling (9router)
+- `/api/agent/chat` — Agent chat (non-streaming, 9router)
+- `/api/agent/chat/stream` — Agent chat (streaming, 9router)
+- `/api/agent/analyze` — Ecosystem analysis (9router)
+- `/api/rag/query` — RAG pipeline with 9router LLM synthesis
+
+### API Routes — Fable Method
 - `/api/fable/method` — Execute fable-method (POST) + get history (GET)
 - `/api/fable/loop` — Execute fable-loop with parallel subagents
 - `/api/fable/judge` — Run adversarial verification
 - `/api/fable/domain` — Get/list domain adapters
-- `/api/fable/spawn` — Spawn Fable 5 OS subagent
+- `/api/fable/spawn` — Spawn Fable 5 OS subagent (9router-powered)
 - `/api/fable/stats` — Method execution statistics
 - `/api/fable/tasks` — List all Fable tasks
 - `/api/fable/task/[id]` — Get specific task details
