@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import {
   Zap, Bot, Database, LayoutDashboard, BrainCircuit, Cpu, Flame,
   Globe, Dna, Users, Landmark, Atom, Feather, MessageSquareText, Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardTab, QuickSearch } from '@/components/dashboard-tab';
@@ -20,6 +21,7 @@ import MoltbookTab from '@/components/moltbook-tab';
 import GovernanceTab from '@/components/governance-tab';
 import RrnaSystemsTab from '@/components/rrna-systems-tab';
 import FableMethodTab from '@/components/fable-method-tab';
+import { SandboxTab } from '@/components/sandbox-tab';
 
 /* ================================================================
    TAB CONFIG — CHIMERA MULTI-AGENT FUSION ENGINE
@@ -39,6 +41,8 @@ const TABS = [
   // Ecosystem
   { value: 'moltbook', label: 'Moltbook', icon: Users, color: '#e01b24' },
   { value: 'governance', label: 'Governanca', icon: Landmark, color: '#fbbf24' },
+  // Sandbox
+  { value: 'sandbox', label: 'Sandbox Nativo', icon: ShieldCheck, color: '#22d3ee' },
 ] as const;
 
 type TabValue = typeof TABS[number]['value'];
@@ -175,6 +179,7 @@ export default function Home() {
               {activeTab === 'fable-method' && <FableMethodTab />}
               {activeTab === 'moltbook' && <MoltbookTab />}
               {activeTab === 'governance' && <GovernanceTab />}
+              {activeTab === 'sandbox' && <SandboxTab />}
             </motion.div>
           </AnimatePresence>
         </TooltipProvider>
