@@ -1,0 +1,15 @@
+node_modules
+.next
+git
+.gitignore
+*.md
+.env*
+!.env.production
+upload/
+tool-results/
+9router/
+colibri/
+agents/
+tests/
+*.log
+.DS_Store

@@ -1,0 +1,72 @@
+# ═══════════════════════════════════════════════════════════════
+# CHIMERA — Docker Compose (Production)
+# ═══════════════════════════════════════════════════════════════
+# Usage:
+#   cp .env.production .env
+#   docker compose up -d --build
+#   docker compose logs -f chimera
+# ═══════════════════════════════════════════════════════════════
+
+services:
+  # ── CHIMERA App (Next.js Standalone) ───────────────────────
+  chimera:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chimera-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - chimera-data:/app/data
+      - chimera-db:/app/db
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/colibri/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    networks:
+      - chimera-net
+
+  # ── Caddy (Reverse Proxy + Auto-SSL) ─────────────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: chimera-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      chimera:
+        condition: service_healthy
+    networks:
+      - chimera-net
+
+volumes:
+  chimera-data:
+    driver: local
+  chimera-db:
+    driver: local
+  caddy-data:
+    driver: local
+  caddy-config:
+    driver: local
+
+networks:
+  chimera-net:
+    driver: bridge

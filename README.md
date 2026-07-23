@@ -1,67 +1,28 @@
 # CHIMERA — Multi-Agent Fusion Engine
 
 <p align="center">
-  <strong>LLM Orchestration</strong> · <strong>100+ AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline</strong> · <strong>Cognitive Architecture</strong>
+  <img src="https://img.shields.io/badge/Next.js-16.1-black?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/9router-20%2B%20providers-00ff88" alt="Providers" />
+  <img src="https://img.shields.io/badge/tRPC-v11-0097A7?logo=trpc" alt="tRPC" />
+  <img src="https://img.shields.io/badge/Prisma-6.19-2D3748?logo=prisma" alt="Prisma" />
+  <img src="https://img.shields.io/badge/GLM--5.2%20744B%20MoE-emerald" alt="GLM-5.2" />
+  <img src="https://img.shields.io/badge/API%20Routes-42-cyan" alt="API Routes" />
+  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker" alt="Docker" />
+</p>
+
+<p align="center">
+  <strong>LLM Orchestration</strong> · <strong>20+ AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Cognitive Architecture</strong> · <strong>Auto-Cura Reativa</strong>
 </p>
 
 ---
 
-## O que e o CHIMERA
+## Visao Geral
 
-O **CHIMERA** e uma **Multi-Agent Fusion Engine** — uma plataforma de orquestracao de agentes de IA com roteamento inteligente para mais de 100 provedores LLM. O sistema combina chamadas nativas de API com traducao automatica de protocolo (OpenAI, Claude, Gemini), cadeias de fallback resilientes, e uma arquitetura cognitiva baseada no metodo Think/Act/Prove.
+O **CHIMERA** e uma **Multi-Agent Fusion Engine** — plataforma de orquestracao de agentes de IA com roteamento inteligente para 20+ provedores LLM. O sistema combina chamadas nativas de API com traducao automatica de protocolo (OpenAI, Claude, Gemini), cadeias de fallback resilientes, e uma arquitetura cognitiva baseada no metodo Think/Act/Prove.
 
-Alem da camada de roteamento, o ecossistema inclui pipeline RAG biologico de 6 fases, custodia Bitcoin com PSBT v2, auto-cura reativa, e 5 agentes especializados com sincronizacao GitHub.
-
-**Versao atual:** Integracao completa com **9router bridge** — todas as rotas de API roteiam atraves de 20+ provedores com fallback automatico.
-
----
-
-## Arquitetura do 9router Bridge
-
-Toda chamada LLM passa pelo bridge em-processo derivado do [decolua/9router](https://github.com/decolua/9router):
-
-```
-API Route → 9routerBridge.routeChat()
-  ├── Resolve provider (registry + aliases)
-  ├── Detect source format (OpenAI/Claude/Gemini)
-  ├── Translate request: OpenAI → provider format (hub-and-spoke)
-  ├── Execute fetch com timeout por-provider
-  ├── Translate response: provider format → OpenAI
-  └── Se falhou → proximo provider na fallback chain
-```
-
-### Fallback Chain Padrao
-
-```
-GLM (Zhipu AI) → DeepSeek → Groq → OpenAI → Anthropic (Claude) → Gemini → OpenRouter → ZAI SDK
-```
-
-Cada provider tem timeout independente. Credenciais sao resolvidas automaticamente de variaveis de ambiente. O ZAI SDK so e acionado como ultimo recurso quando nenhum provider responde.
-
-### Provedores Registrados (20+)
-
-| Provider | Formato | Modelos Principais |
-|----------|---------|-------------------|
-| **GLM (Zhipu AI)** | OpenAI | glm-4-flash, glm-4-plus, glm-4-long |
-| **OpenAI** | OpenAI | gpt-4o, gpt-4o-mini, o3, o4-mini |
-| **Anthropic (Claude)** | Claude | claude-sonnet-4, claude-opus-4, claude-haiku-3.5 |
-| **Google Gemini** | Gemini | gemini-2.5-pro, gemini-2.5-flash |
-| **DeepSeek** | OpenAI | deepseek-chat, deepseek-reasoner |
-| **Groq** | OpenAI | llama-3.3-70b, mixtral-8x7b |
-| **xAI (Grok)** | OpenAI | grok-3, grok-3-mini |
-| **Mistral** | OpenAI | mistral-large, codestral |
-| **Together AI** | OpenAI | Llama-3-70B, Mixtral |
-| **Fireworks AI** | OpenAI | llama-v3p1-70b |
-| **OpenRouter** | OpenAI | 100+ modelos meta-router |
-| **Cerebras** | OpenAI | llama-3.3-70b (inference wafer-scale) |
-| **SiliconFlow** | OpenAI | DeepSeek-V3, Qwen3-8B |
-| **Ollama (Local)** | OpenAI | llama3, mistral, phi3 |
-| **Azure OpenAI** | OpenAI | gpt-4o (enterprise) |
-| **Cohere** | OpenAI | command-r-plus, command-a |
-| **NVIDIA NIM** | OpenAI | Llama-3.1-70B, Llama-3.1-405B |
-| **Hyperbolic** | OpenAI | DeepSeek-V3 |
-| **SambaNova** | OpenAI | Llama-3.3-70B |
-| **Cloudflare Workers AI** | OpenAI | meta/llama-3.1-8b |
+Alem da camada de roteamento, o ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico, custodia Bitcoin com PSBT v2, auto-cura reativa em 6 fases, 7 agentes especializados, e 42 API routes.
 
 ---
 
@@ -73,14 +34,63 @@ Cada provider tem timeout independente. Credenciais sao resolvidas automaticamen
 | **UI** | React 19 + Tailwind CSS 4 + shadcn/ui + Framer Motion |
 | **Linguagem** | TypeScript 5 |
 | **LLM Routing** | 9router bridge (in-process, hub-and-spoke protocol translation) |
-| **API Layer** | tRPC v11 (type-safe) + 41 REST API routes |
-| **Database** | Prisma 6.19 + SQLite (15 modelos) |
+| **API Layer** | tRPC v11 (type-safe) + 42 REST API routes |
+| **Database** | Prisma 6 + SQLite (15 modelos) |
 | **Bitcoin** | bitcoinjs-lib (BIP32/39, P2PKH) + @noble/secp256k1 (PSBT v2) |
 | **RAG** | Pipeline rRNA com BM25 field-boosted + cross-encoder reranking |
 | **Cognitive** | Fable Method Engine (Think/Act/Prove) + Fable 5 OS |
 | **Auto-Cura** | Protocolo reativo de 6 fases + Wisdom Engine adaptativa |
 | **Streaming** | SSE nativo (fetch + ReadableStream, async generators) |
-| **Deploy** | Docker (standalone) + Space-Z (HuggingFace Spaces) |
+| **Deploy** | Docker + Caddy (auto-SSL) + docker-compose |
+
+---
+
+## Arquitetura 9router Bridge
+
+Toda chamada LLM passa pelo bridge em-processo derivado do [decolua/9router](https://github.com/decolua/9router):
+
+```
+API Route -> 9routerBridge.routeChat()
+  |-- Resolve provider (registry + aliases)
+  |-- Detect source format (OpenAI/Claude/Gemini)
+  |-- Translate request: OpenAI -> provider format (hub-and-spoke)
+  |-- Execute fetch com timeout por-provider
+  |-- Translate response: provider format -> OpenAI
+  +-- Se falhou -> proximo provider na fallback chain
+```
+
+### Fallback Chain
+
+```
+GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> OpenRouter -> ZAI SDK (ultimo recurso)
+```
+
+Cada provider tem timeout independente. O ZAI SDK so e acionado como fallback final.
+
+### Provedores Registrados (20+)
+
+| Provider | Formato | Modelos Principais |
+|----------|---------|-------------------|
+| **GLM (Zhipu AI)** | OpenAI | GLM-5.2 744B MoE, glm-4-flash, glm-4-plus |
+| **DeepSeek** | OpenAI | DeepSeek-V3, DeepSeek-Reasoner |
+| **Groq** | OpenAI | Llama 4 Maverick, Llama 4 Scout |
+| **OpenAI** | OpenAI | GPT-4o, GPT-4o-mini, o3, o4-mini |
+| **Anthropic** | Claude | Claude 4 Sonnet, Claude 4 Opus, Claude 3.5 Haiku |
+| **Google Gemini** | Gemini | Gemini 2.5 Pro, Gemini 2.5 Flash |
+| **xAI (Grok)** | OpenAI | Grok 3, Grok 3 Mini |
+| **Mistral** | OpenAI | Mistral Large, Codestral |
+| **Together AI** | OpenAI | Llama 4, Mixtral |
+| **Fireworks AI** | OpenAI | Llama 4 Scout |
+| **OpenRouter** | OpenAI | 100+ modelos (meta-router) |
+| **Cerebras** | OpenAI | Llama 4 (inference wafer-scale, 32ms latency) |
+| **SiliconFlow** | OpenAI | DeepSeek-V3, Qwen3-8B |
+| **Ollama (Local)** | OpenAI | llama3, mistral, phi3 |
+| **Azure OpenAI** | OpenAI | GPT-4o (enterprise) |
+| **Cohere** | OpenAI | Command R+, Command A |
+| **NVIDIA NIM** | OpenAI | Llama 4 (NIM-optimized) |
+| **Hyperbolic** | OpenAI | DeepSeek-V3 |
+| **SambaNova** | OpenAI | Llama 4 (reconfigurable) |
+| **Cloudflare** | OpenAI | Llama 4 Workers AI |
 
 ---
 
@@ -91,48 +101,50 @@ Cada provider tem timeout independente. Credenciais sao resolvidas automaticamen
 | Background | `#080b0d` |
 | Accent primario | `#00ff88` (emerald) |
 | Accent secundario | `#22d3ee` (cyan) |
-| Fonte body | Inter |
 | Fonte mono | IBM Plex Mono |
 | Componentes | shadcn/ui + Tailwind CSS 4 |
-| Badges | `text-[10px]`, borders `border-zinc-800/60` |
-| Cards | `bg-zinc-900/30` |
-| Idioma | pt-BR (todos os strings visiveis) |
+| Animacoes | Framer Motion |
+| Idioma | pt-BR |
 
 ---
 
-## Agentes do Ecossistema
+## 7 Agentes do Ecossistema
 
 | Agente | Tipo | Especialidade | Integracao |
 |--------|------|---------------|-------------|
 | **Mythos** | Orquestrador | Coordena multiplos agentes com tool calling via 9router | `/api/orchestrate` |
 | **Fable 5 OS** | Subagente | Spawning recursivo, auto-correcao (3 tentativas), karma tracking | `/api/fable/spawn` |
 | **RAG rRNA** | Pipeline | 6 estagios biologicos com BM25 + reranking + 9router synthesis | `/api/rag/query` |
-| **9router** | Routing | 100+ providers, traducao de protocolo, fallback chains | `/api/9router/*` |
+| **9router** | Routing | 20+ providers, traducao de protocolo, fallback chains | `/api/9router/*` |
 | **Bitcoin Vault** | Custodia | BIP32/39 HD wallet + PSBT v2 + AES-256-GCM | `/api/vaults/*` |
 | **Colibri** | Inference | GLM-5.2 744B MoE, 3-tier expert cache (VRAM/RAM/Disk) | `/api/colibri/*` |
-| **Sibyl Analyst** | Analista | Analise de mercado financeiro e cripto | Orquestrado via Mythos |
-| **Neo Synth** | Tecnico | Analise de codigo, arquiteturas, planos de acao | Orquestrado via Mythos |
+| **Moltbook** | Social | Rede social de agentes com karma, rank, curadoria | `/api/moltbook` |
 
-### Diagnostico Clinico por Agente
+---
 
-O ecossistema suporta atribuicoes de **diagnostico clinico** quando configurado com provedores de LLM apropriados:
+## Capacidades de Diagnostico Clinico
 
-| Capacidade | Agente Responsavel | Rota | Descricao |
-|------------|---------------------|------|-------------|
-| Analise de sintomas | Mythos + subagentes | `/api/orchestrate` | Interpreta descricao de sintomas, solicita exames complementares, gera hipoteses diagnosticas |
-| Triagem prioritaria | Sibyl Analyst | Via Mythos | Classifica urgencia (emergencia/urgencia/eletriva) com base em protocolos clinicos |
-| Sintese de resultados | Neo Synth | Via Mythos | Consolida resultados de multiplas fontes em laudo estruturado |
-| Pesquisa de evidencias | Fable 5 | `/api/fable/spawn` | Busca diretrizes clinicas, estudos, e meta-analises como subagente recursivo |
-| Base de conhecimento medico | RAG rRNA | `/api/rag/query` | Indexa diretrizes, protocolos, e artigos para recuperacao contextual |
-| Roteamento multi-provider | 9router | `/api/9router/route-chat` | Garante disponibilidade: se um provider falha, outro assume |
+O ecossistema suporta atribuicoes de **diagnostico clinico** como ferramenta de apoio a decisao medica:
+
+| Capacidade | Agente | Rota | Descricao |
+|------------|--------|------|-------------|
+| Identificacao de Patogenos | RAG rRNA | `/api/rag/query` | rRNA 16S/23S para classificacao taxonomica |
+| Resistencia Antimicrobiana | RAG rRNA | `/api/rag/query` | Deteccao de genes de resistencia via RAG |
+| Diarreia Infecciosa | Mythos + RAG | `/api/orchestrate` | Triagem multiplex para GI pathogens |
+| Meningite Bacteriana | Mythos | `/api/agent/analyze` | Identificacao rapida via rRNA CNS |
+| Sepsis Neonatal | Fable 5 | `/api/fable/spawn` | Screening precoce via blood culture rRNA |
+| Tuberculose | RAG rRNA | `/api/rag/query` | Deteccao M. tuberculosis via rRNA |
+| Analise de Sintomas | Mythos + sub | `/api/orchestrate` | Interpreta sintomas, solicita exames, gera hipoteses |
+| Triagem Prioritaria | Sibyl Analyst | Via Mythos | Classifica urgencia (emergencia/urgencia/eletiva) |
+| Sintese de Laudos | Neo Synth | Via Mythos | Consolida resultados multi-fonte em laudo estruturado |
+| Pesquisa de Evidencias | Fable 5 | `/api/fable/spawn` | Diretrizes clinicas, estudos, meta-analises |
+| Base de Conhecimento | RAG rRNA | `/api/rag/query` | Indexa diretrizes, protocolos, artigos |
 
 > **Nota:** O diagnostico clinico requer dados de entrada do profissional de saude. O sistema opera como ferramenta de apoio a decisao clinica, nao substitui o julgamento medico.
 
 ---
 
 ## Arquitetura Fable Method (4 Skills)
-
-Toda tarefa nao-trivial percorre o pipeline cognitivo **Think → Act → Prove**:
 
 ```
 User Task
@@ -145,135 +157,36 @@ Fable Method Engine
   +-- fable-domain  --> Adaptadores de setor com trap fixtures
 ```
 
-### Skill 1: fable-method — Think / Act / Prove
+### Skill 1: fable-method (Think/Act/Prove)
 
 | Modo | Comportamento |
 |------|---------------|
-| `inline` | Execucao completa Think → Act → Prove |
+| `inline` | Execucao completa Think -> Act -> Prove |
 | `plan` | Para apos THINK, entrega o plano |
 | `audit` | Avalia trabalho existente contra o metodo |
 | `report` | Reescreve outcome-first com caveats honestos |
 
-**THINK** classifica complexidade (trivial/standard/complex/critical), avalia risco, reune evidencias.
-**ACT** gera e executa plan steps com rastreabilidade de evidencia por step.
-**PROVE** verifica cada step concluido contra evidencias (confianca >= 0.7), computa score.
+### Skill 2: fable-loop (Orquestracao Paralela)
 
-### Skill 2: fable-loop — Orquestracao Paralela
+Spawn de 3 subagentes em paralelo -> merge de evidencias -> THINK/ACT/PROVE -> fable-judge automatico.
 
-Para tarefas complexas/criticas:
-1. Spawn de 3 subagentes em paralelo (file-mapper, dep-checker, api-verifier)
-2. Merge de evidencias em contexto unificado
-3. Execucao THINK → ACT → PROVE
-4. Invocacao automatica do fable-judge
+### Skill 3: fable-judge (Verificacao Adversarial)
 
-### Skill 3: fable-judge — Verificacao Adversarial
+8 checks automaticos: Think phase, Act results, Prove verification, Evidence quality, Phase completion, Time bounds, Traceability, Failed steps. Veredictos: VERIFIED (>=80), CAVEATS (>=50), REFUTED (<50).
 
-8 checks automaticos com veredicto quantificado:
+### Skill 4: fable-domain (5 Adaptadores)
 
-| # | Check | Criterio | Peso |
-|---|-------|----------|------|
-| 1 | Think phase executed | Fase think presente e nao pulada | 15 |
-| 2 | Act phase produced results | Pelo menos 1 step concluido | 15 |
-| 3 | Prove phase verified | Fase prove executou verificacao | 15 |
-| 4 | Evidence quality | >= 2 evidencias com confianca >= 70% | 15 |
-| 5 | No skipped phases | Zero fases puladas | 10 |
-| 6 | Reasonable time | Duracao < 120 segundos | 10 |
-| 7 | Plan-to-evidence traceability | Steps ligados a evidencias | 10 |
-| 8 | No failed steps | Nenhum passo falhou | 10 |
-
-Veredictos: **VERIFIED** (>= 80), **CAVEATS** (>= 50), **REFUTED** (< 50)
-
-### Skill 4: fable-domain — Adaptadores de Setor
-
-5 adaptadores pre-construidos com convencoes, trap fixtures e smoke tests:
-
-| Setor | Foco | Traps |
-|-------|------|-------|
-| `chimera-dashboard` | Dark premium, shadcn/ui, tabs, pt-BR | Dead code, CSS sync, type safety |
-| `bitcoin-vault` | BIP32/39, PSBT v2, custody | Key exposure no client bundle |
-| `rag-rrna` | BM25 field boosting, TF isolation | TF reuso entre campos |
-| `fable-orchestrator` | LLM spawning, auto-correcao, karma | Infinite loop, sandbox cleanup |
-| `colibri-routing` | 9router: providers, protocol translation, fallback | Credential check, timeout propagation |
-
----
-
-## Fable 5 OS — Orquestrador de Subagentes
-
-Sistema de spawning de subagentes via 9router bridge com auto-correcao:
-
-- **Spawning**: Gera solucoes via LLM com capability especifica e fallback chain
-- **Auto-correcao**: Ate 3 tentativas com analise de erro iterativa
-- **Karma tracking**: Karma gerado proporcional ao trabalho real (duracao)
-- **Sandbox management**: Sandboxes isolados com cleanup automatico
-- **Capabilities**: `code-gen`, `analysis`, `refactor`, `test-gen`, `doc-gen`
-- **Persistencia**: Tasks e execucoes salvas via Prisma
-- **Routing**: Toda chamada LLM via 9router bridge (GLM → DeepSeek → Groq)
-
----
-
-## 9router — Roteamento Multi-Provider
-
-### Funcionalidades
-
-- **Protocol Translation**: Hub-and-spoke com OpenAI como formato intermediario
-- **Provider Registry**: 20+ providers com transport config, modelos, e aliases
-- **Credential Resolution**: Lookup automatico de API keys por provider via env vars
-- **Fallback Chains**: Cadeias customizaveis com timeout independente por provider
-- **Streaming**: Async generator `streamChat()` para SSE token-by-token
-- **Provider Status**: `/api/9router/providers` retorna status de configuracao de cada provider
-
-### Variaveis de Ambiente para Providers
-
-```env
-# Primario (Zhipu AI / GLM)
-ZAI_API_KEY="..."
-
-# OpenAI
-OPENAI_API_KEY="..."
-
-# Anthropic (Claude)
-ANTHROPIC_API_KEY="..."
-
-# Google Gemini
-GOOGLE_API_KEY="..."
-
-# DeepSeek
-DEEPSEEK_API_KEY="..."
-
-# Groq
-GROQ_API_KEY="..."
-
-# xAI (Grok)
-XAI_API_KEY="..."
-
-# Mistral
-MISTRAL_API_KEY="..."
-
-# OpenRouter (meta-router para 100+ modelos)
-OPENROUTER_API_KEY="..."
-```
-
-Se nenhum provider externo estiver configurado, o sistema opera via ZAI SDK como fallback.
-
----
-
-## Bitcoin Vault — BIP32/39 + PSBT v2
-
-Modulo completo de custodia Bitcoin:
-
-- **HD Wallet**: Derivacao BIP32/39 com mnemonic de 12/24 palavras
-- **Enderecos**: P2PKH via bitcoinjs-lib
-- **PSBT v2**: Assinatura parcial via @noble/secp256k1
-- **Custody**: Encriptacao AES-256-GCM para vault storage (lazy key access)
-- **Consolidacao**: UTXO consolidation para otimizacao de fees
-- **Balance**: Verificacao via mempool.space API
-- **Seguranca**: Chaves privadas nunca no client-side, XPRV/seed server-side only
+| Setor | Foco |
+|-------|------|
+| `chimera-dashboard` | Dark premium, shadcn/ui, tabs, pt-BR |
+| `bitcoin-vault` | BIP32/39, PSBT v2, custody |
+| `rag-rrna` | BM25 field boosting, TF isolation |
+| `fable-orchestrator` | LLM spawning, auto-correcao, karma |
+| `colibri-routing` | 9router: providers, protocol translation, fallback |
 
 ---
 
 ## RAG rRNA Pipeline
-
-Pipeline biologico de 6 estagios com sintese via 9router:
 
 ```
 EXTRACT --> ENCODE --> RETRIEVE --> RERANK --> AUGMENT --> GENERATE
@@ -285,166 +198,61 @@ EXTRACT --> ENCODE --> RETRIEVE --> RERANK --> AUGMENT --> GENERATE
                        title 2x
 ```
 
-- **TF-IDF** com n-gram expansion (bigramas)
-- **BM25 scoring** com field boosting (content 1.5x, title 2.0x, source 1.0x)
-- **Per-field TF maps** — cada campo tem seu proprio TF (nunca reusado entre campos)
-- **Cross-encoder reranking** heuristico (exact phrase, n-gram overlap, positional bonus)
-- **Context window** de 4000 chars maximo
-- **LLM Synthesis** via 9router bridge (GLM → DeepSeek → Groq)
+- TF-IDF com n-gram expansion (bigramas)
+- BM25 scoring com field boosting (content 1.5x, title 2.0x)
+- Per-field TF maps isolados
+- Cross-encoder reranking heuristico
+- Context window de 4000 chars
+- LLM Synthesis via 9router bridge
 
 ---
 
-## Protocolo de Auto-Cura Reativo (6 Fases)
+## Protocolo de Auto-Cura Reativa (6 Fases)
 
 ```
 INVOKE --> DETECT --> HEAL --> LEARN --> DIRECT --> PERSIST
-   |          |         |        |         |         |
-   v          v         v        v         v         v
- Executa   Detecta   Aplica   Armazena  Redireciona Persiste
- agente    anomalia  cura    sabedoria  proxima   estado
- (9router)           peso++   acao      no DB
 ```
 
-Anomalias detectadas geram `HealingEvent` com severidade (critical/warning/info). Padroes recorrentes acumulam peso na `WisdomEntry` — memoria que melhora com o tempo.
+Anomalias geram `HealingEvent` com severidade. Padroes recorrentes acumulam peso na `WisdomEntry` — memoria que melhora com o tempo.
 
 ---
 
-## API Routes (41 endpoints)
+## API Routes (42 endpoints)
 
-### 9router Bridge (2 rotas)
+### 9router (2) | Agent (3) | Fable (9) | Colibri (5) | RAG (1) | Bitcoin (5) | Utilidades (17)
 
-| Metodo | Rota | Descricao |
-|--------|------|-----------|
-| GET | `/api/9router/providers` | Listar todos os providers com status de configuracao |
-| POST | `/api/9router/route-chat` | Roteamento direto de chat via qualquer provider |
-
-### Orquestracao (3 rotas)
-
-| Metodo | Rota | Descricao |
-|--------|------|-----------|
-| POST | `/api/orchestrate` | Ciclo completo Mythos (tool calling + subagentes via 9router) |
-| POST | `/api/agent/chat` | Chat com agente (non-streaming, 9router) |
-| POST | `/api/agent/chat/stream` | Chat streaming SSE (9router) |
-| POST | `/api/agent/analyze` | Analise de ecossistema (9router) |
-
-### Fable Method (9 rotas)
-
-| Metodo | Rota | Descricao |
-|--------|------|-----------|
-| POST | `/api/fable/method` | Executar fable-method (inline/plan/audit/report) |
-| GET | `/api/fable/method` | Historico de execucoes |
-| POST | `/api/fable/loop` | Executar fable-loop (subagentes paralelos + judge) |
-| POST | `/api/fable/judge` | Verificacao adversarial com 8 checks |
-| POST | `/api/fable/domain` | Obter adaptador de setor |
-| GET | `/api/fable/domain` | Listar todos os adaptadores |
-| POST | `/api/fable/spawn` | Spawn Fable 5 OS subagente (via 9router) |
-| GET | `/api/fable/stats` | Estatisticas de execucao |
-| POST | `/api/fable/tasks` | Listar tasks |
-| GET | `/api/fable/task/[id]` | Detalhe de task especifico |
-
-### Bitcoin Vault (5 rotas)
-
-| Metodo | Rota | Descricao |
-|--------|------|-----------|
-| GET/POST | `/api/vaults` | Listar/criar vaults |
-| GET/DELETE | `/api/vaults/[id]` | Detalhe/remover vault |
-| POST | `/api/vaults/[id]/generate-address` | Derivar endereco HD |
-| POST | `/api/vaults/[id]/custody` | Custodia de transacao |
-| POST | `/api/vaults/import-address` | Importar endereco existente |
-
-### Colibri Engine (5 rotas)
-
-| Metodo | Rota | Descricao |
-|--------|------|-----------|
-| GET | `/api/colibri/health` | Health check com scheduler, tiers, hwinfo |
-| GET | `/api/colibri/models` | Modelos disponiveis |
-| GET | `/api/colibri/experts` | Hex-encoded expert heatmap |
-| POST | `/api/colibri/chat` | Chat completions com SSE |
-| POST | `/api/colibri/orchestrate` | Orquestracao multi-modelo |
-
-### RAG (1 rota)
-
-| Metodo | Rota | Descricao |
-|--------|------|-----------|
-| POST | `/api/rag/query` | Pipeline RAG rRNA completa com 9router synthesis |
-
-### Utilidades (16 rotas)
-
-| Metodo | Rota | Descricao |
-|--------|------|-----------|
-| GET/POST | `/api/projects` | Projetos do ecossistema |
-| GET | `/api/projects/stats` | Estatisticas de projetos |
-| POST | `/api/hd-wallet` | Carteira HD (BIP32/39) |
-| POST | `/api/mnemonic` | Gerar mnemonic |
-| POST | `/api/generate-wallet` | Gerar carteira completa |
-| POST | `/api/withdraw` | Saque Bitcoin |
-| POST | `/api/consolidate` | Consolidacao UTXO |
-| POST | `/api/moltbook` | Feed social Moltbook |
-| POST | `/api/federated` | Consulta federada |
-| POST | `/api/webhook/invoke` | Invocacao via webhook |
-| GET | `/api/agents` | Listar agentes |
-| POST | `/api/binance` | Dados Binance |
-| GET | `/api/chat/history` | Historico de chat |
-| POST | `/api/fable/agent-query` | Query de capabilities de agente |
-| * | `/api/trpc/[trpc]` | tRPC v11 type-safe router |
-| * | `/api` | API root |
+| Grupo | Rotas |
+|-------|-------|
+| **9router** | `GET /api/9router/providers`, `POST /api/9router/route-chat` |
+| **Agent** | `POST /api/agent/chat`, `POST /api/agent/chat/stream`, `POST /api/agent/analyze` |
+| **Fable** | `/api/fable/method`, `/api/fable/loop`, `/api/fable/judge`, `/api/fable/domain`, `/api/fable/spawn`, `/api/fable/stats`, `/api/fable/tasks`, `/api/fable/task/[id]`, `/api/fable/agent-query` |
+| **Colibri** | `/api/colibri/health`, `/api/colibri/models`, `/api/colibri/experts`, `/api/colibri/chat`, `/api/colibri/orchestrate` |
+| **RAG** | `POST /api/rag/query` |
+| **Orquestracao** | `POST /api/orchestrate` |
+| **Bitcoin** | `/api/vaults`, `/api/vaults/[id]`, `/api/vaults/[id]/generate-address`, `/api/vaults/[id]/custody`, `/api/vaults/import-address` |
+| **Wallet** | `/api/hd-wallet`, `/api/mnemonic`, `/api/generate-wallet`, `/api/withdraw` |
+| **System** | `/api/projects`, `/api/projects/stats`, `/api/consolidate`, `/api/federated`, `/api/agents`, `/api/moltbook`, `/api/binance`, `/api/chat/history`, `/api/webhook/invoke` |
+| **tRPC** | `/api/trpc/[trpc]` |
 
 ---
 
-## Models do Prisma (15)
+## Dashboard — 12 Paineis Integrados
 
-### Core (7)
-
-| Modelo | Descricao |
-|--------|-----------|
-| `Project` | Projetos do ecossistema com categoria e metadados |
-| `Agent` | Agentes AI com tipo, tier, capabilities, LLM model |
-| `AgentSkill` | Skills por agente (reasoning, execution, perception, finance, voice, governance) |
-| `KnowledgeEntry` | Chunks de conhecimento para RAG (doc, flow, api, config) |
-| `ChatSession` | Sessoes de chat com agente |
-| `ChatSessionMessage` | Mensagens com fontes RAG |
-| `ChatMessage` | Mensagens genericas |
-
-### Orquestracao (4)
-
-| Modelo | Descricao |
-|--------|-----------|
-| `ColibriConnection` | Conexoes ao motor de inferencia |
-| `OrchestrationCycle` | Ciclos das 6 fases com metricas |
-| `HealingEvent` | Eventos de cura com severidade e delta |
-| `WisdomEntry` | Memoria de padroes com peso adaptativo |
-
-### Bitcoin (3)
-
-| Modelo | Descricao |
-|--------|-----------|
-| `Vault` | Vaults encriptados com XPUB e derivacao HD |
-| `VaultAddress` | Enderecos derivados com balance e UTXO count |
-| `VaultTransaction` | Transacoes rastreadas (send/receive/consolidate/custody) |
-
-### Social (1)
-
-| Modelo | Descricao |
-|--------|-----------|
-| `MoltbookState` | Estado do Moltbook + persistencia Fable Method |
-
----
-
-## Dashboard (11 Paineis)
-
-| # | Tab | Descricao | Status |
-|---|-----|-----------|--------|
-| 1 | **Dashboard** | QuickStats (6 metricas), Engine Status, Hardware, Expert Cortex, Inline Chat | Producao |
-| 2 | **Agent Hub** | 5+ agentes filtraveis por tipo com capabilities e GitHub sync | Producao |
-| 3 | **Chat** | Chat streaming SSE com 9router multi-provider, TTFT, tokens/sec | Producao |
-| 4 | **Invocacao** | 12 skills em 6 categorias com execucao e log | Producao |
-| 5 | **Orquestracao** | Pipeline 6 fases animado, gauges SVG, Mythos agent routing | Producao |
-| 6 | **Metaverso** | WebXR/WebGL com particles, wormhole, black hole, knowledge graph | Producao |
-| 7 | **Recuperacao** | Self-healing engine, recovery protocols, wisdom memory | Producao |
-| 8 | **rRNA Systems** | Pipeline RAG rRNA com BM25 + reranking + 9router synthesis | Producao |
-| 9 | **Fable Method** | 4 skills interativos (method/loop/judge/domain) + history | Producao |
-| 10 | **Moltbook** | Social knowledge graph com karma weighting | Producao |
-| 11 | **Governanca** | Voting e governance | Producao |
+| # | Painel | Descricao |
+|---|--------|-----------|
+| 1 | **Conexao CHIMERA** | Endpoint config, status online/offline |
+| 2 | **Motor CHIMERA** | Scheduler: ativo, fila, completos, falhas |
+| 3 | **Quick Stats** | 6 metricas: Cores, RAM, Model, Experts, KV Slots, Uptime |
+| 4 | **Hardware** | CPU, GPU, VRAM, RAM detalhes |
+| 5 | **Expert Tiers** | Distribuicao VRAM/RAM/Disk com heatmap |
+| 6 | **Fallback Chain** | 8 provedores em cadeia animada com latencia |
+| 7 | **System Metrics** | 6 metricas live com sparklines (throughput, latencia, cache, tokens, uptime, erros) |
+| 8 | **9router Provider Grid** | 20 providers com status, latencia, RPM, modelo |
+| 9 | **Agent Command Center** | 7 agentes com contexto, RPM, status, ultima acao |
+| 10 | **Fable Method + RAG Pipeline + Diagnostico** | 4 skills, 5 domain adapters, 6 estagios pipeline, 6 areas clinicas |
+| 11 | **API Routes** | 42 endpoints em 8 grupos |
+| 12 | **Expert Cortex** | Heatmap interativo do GLM-5.2 |
+| 13 | **Chat CHIMERA** | Streaming inline com TTFT, tokens/sec |
 
 ---
 
@@ -454,135 +262,118 @@ Anomalias detectadas geram `HealingEvent` com severidade (critical/warning/info)
 chimera/
 |-- AGENTS.md                          # Mapa de arquitetura dos agentes
 |-- CLAUDE.md                          # Regras proativas para Claude Code
-|-- .claude/skills/                    # Claude Code plugin skills (4)
-|   |-- fable-method/SKILL.md          #   Think/Act/Prove pipeline
-|   |-- fable-loop/SKILL.md            #   Orquestracao paralela
-|   |-- fable-judge/SKILL.md           #   Verificacao adversarial
-|   +-- fable-domain/SKILL.md          #   Adaptadores de setor
+|-- docker-compose.yml                 # Producao: app + Caddy + volumes
+|-- Dockerfile                         # Multi-stage build (standalone)
+|-- Caddyfile                          # Reverse proxy + SSL auto
+|-- .env.production                   # Template de variaveis de producao
+|-- .dockerignore                      # Build context limpo
+|-- prisma/
+|   +-- schema.prisma                 # 15 modelos
 |-- src/
 |   |-- app/
 |   |   |-- page.tsx                   # Dashboard principal — 11 tabs
-|   |   |-- layout.tsx                 # Root layout + Inter font
-|   |   +-- api/                       # 41 API routes
+|   |   |-- layout.tsx                 # Root layout + IBM Plex Mono
+|   |   +-- api/                       # 42 API routes
 |   |       |-- 9router/               #   2 rotas 9router bridge
 |   |       |-- fable/                 #   9 rotas Fable Method
-|   |       |-- orchestrate/           #   Mythos orchestration
-|   |       |-- agent/                 #   3 rotas agentic (chat + analyze)
-|   |       |-- vaults/                #   5 rotas Bitcoin vault
+|   |       |-- agent/                 #   3 rotas agentic
 |   |       |-- colibri/               #   5 rotas Colibri engine
+|   |       |-- vaults/                #   5 rotas Bitcoin vault
 |   |       +-- rag/                   #   RAG rRNA pipeline
-|   |-- components/                    # 89 componentes React
-|   |   |-- fable-method-tab.tsx       # Tab Fable Method interativa
-|   |   |-- dashboard-tab.tsx          # Dashboard com sub-paineis
-|   |   |-- agent-hub-tab.tsx          # Hub de agentes
-|   |   |-- rag-chat-tab.tsx           # Chat RAG com streaming
-|   |   +-- metaverse/                 # 22 componentes WebGL/canvas
+|   |-- components/                    # 90+ componentes React
 |   |-- lib/
 |   |   |-- 9router-bridge.ts          # Bridge principal (routeChat, streamChat)
 |   |   |-- 9router-engine/            # Motor 9router
-|   |   |   |-- provider-registry.ts   #   20+ providers com transporte
-|   |   |   |-- protocol-translator.ts #   Traducao OpenAI/Claude/Gemini
-|   |   |   +-- translator/            #   Concerns JS do 9router original
-|   |   |-- fable-method-engine.ts     # Motor Think/Act/Prove (4 skills)
-|   |   |-- fable-5-orchestrator.ts    # Orquestrador LLM subagentes (via 9router)
-|   |   |-- llm-synthesis.ts          # Streaming LLM synthesis (via 9router)
+|   |   |   |-- provider-registry.ts   #   20+ providers
+|   |   |   +-- protocol-translator.ts #   Traducao OpenAI/Claude/Gemini
+|   |   |-- fable-method-engine.ts     # Motor Think/Act/Prove
+|   |   |-- fable-5-orchestrator.ts    # Orquestrador LLM subagentes
+|   |   |-- llm-synthesis.ts          # Streaming LLM synthesis
 |   |   |-- rag-engine.ts             # Pipeline RAG rRNA
-|   |   |-- vault-service.ts          # Servico de custody Bitcoin
-|   |   |-- dynamic-vault.ts          # Vault dinamico BIP32
-|   |   |-- psbt.ts                   # PSBT v2 operations
-|   |   |-- bip39.ts                  # Mnemonic generation
 |   |   |-- self-healing-engine.ts    # Auto-cura reativa 6 fases
 |   |   +-- wisdom-engine.ts          # Memoria de sabedoria
 |   +-- server/
 |       +-- routers/                   # 4 tRPC routers
-|-- prisma/
-|   +-- schema.prisma                 # 15 modelos
-|-- colibri/                            # Colibri Engine (C) — GLM-5.2 744B MoE
-|-- agents/                            # 5 AI Agents (submodules)
 |-- 9router/                           # decolua/9router (referencia, read-only)
-+-- Dockerfile                         # Multi-stage build (standalone)
++-- colibri/                            # Colibri Engine (C) — GLM-5.2 744B MoE
 ```
 
 ---
 
-## Claude Code Integration
+## Deploy de Producao
 
-O ecossistema inclui integracao proativa com Claude Code:
-
-- **AGENTS.md** — Mapa completo de agentes, skills, data flow, e 9router bridge
-- **CLAUDE.md** — Regras proativas: classificar complexidade, carregar domain adapters, verificar traps, nunca importar SDK diretamente
-- **.claude/skills/** — 4 skills instalados como plugin Claude Code (fable-method, fable-loop, fable-judge, fable-domain)
-
----
-
-## Setup
+### Docker Compose (Recomendado)
 
 ```bash
-# Clonar
+# 1. Clonar
 gh repo clone Nexus-HUB57/LiveBook-rRNA
 
-# Instalar dependencias
-npm install
+# 2. Configurar variaveis
+ cp .env.production .env
+# Edite .env com suas API keys
 
-# Setup do banco
-npx prisma db push
-npx prisma generate
-
-# Desenvolvimento
-npx next dev          # http://localhost:3000
-
-# Build de producao
-npx next build        # Standalone output
-node .next/standalone/server.js  # Producao
+# 3. Subir
+ docker compose up -d --build
 ```
 
-### Docker
+O Caddy provisiona SSL automaticamente via Let's Encrypt quando um dominio e configurado. Sem dominio, serve HTTP na porta 80.
+
+### Docker Manual
 
 ```bash
 docker build -t chimera .
-docker run -p 3000:3000 --env-file .env.local chimera
+docker run -p 3000:3000 --env-file .env chimera
+```
+
+### Desenvolvimento Local
+
+```bash
+npm install
+npx prisma db push && npx prisma generate
+npx next dev    # http://localhost:3000
 ```
 
 ### Requisitos
 
-- **Node.js** 20+
-- **Prisma CLI** (incluso como dependencia)
-- **API keys** para pelo menos um provider LLM (GLM via `ZAI_API_KEY` ou outros)
-- **Colibri Engine** (opcional) para funcionalidade completa de expert routing
+- Node.js 20+
+- API key para pelo menos um provider LLM
+- (Opcional) Colibri Engine para expert routing completo
 
-### Variaveis de Ambiente Essenciais
+---
+
+## Variaveis de Ambiente
 
 ```env
+# Essenciais
 DATABASE_URL="file:./chimera.db"
-ZAI_API_KEY="..."                       # GLM/Zhipu AI (provider primario)
-VAULT_ENCRYPTION_KEY="..."              # AES-256-GCM para vaults Bitcoin
-# Adicione outras API keys conforme os providers desejados
+ZAI_API_KEY="..."          # GLM/Zhipu AI (primario)
+VAULT_ENCRYPTION_KEY="..." # AES-256-GCM para vaults
+
+# 9router Providers (preencha conforme necessidade)
+OPENAI_API_KEY="..."
+ANTHROPIC_API_KEY="..."
+GEMINI_API_KEY="..."
+DEEPSEEK_API_KEY="..."
+GROQ_API_KEY="..."
+XAI_API_KEY="..."
+MISTRAL_API_KEY="..."
+OPENROUTER_API_KEY="..."
+# ... veja .env.production para lista completa
 ```
 
 ---
 
-## Possibilidades de Uso
+## Possibilidades de Desenvolvimento
 
-### Desenvolvimento de Software
-- Orquestracao de agentes para geracao de codigo, refactoring, e analise de arquitetura
-- Verificacao adversarial automatica (fable-judge) com 8 checks de qualidade
-- Domain adapters com trap fixtures para evitar erros conhecidos
-
-### Diagnostico Clinico (Apoio a Decisao)
-- Triagem de sintomas com classificacao de prioridade via Mythos orchestration
-- Pesquisa de evidencias em bases de conhecimento via RAG rRNA
-- Sintese de laudos com multi-provider fallback para disponibilidade maxima
-- Analise de resultados laboratoriais com Neo Synth
-
-### Analise Financeira
-- Monitoramento de mercado cripto via Sibyl Analyst
-- Custodia Bitcoin com PSBT v2 e derivacao HD
-- Consolidacao de UTXOs e otimizacao de fees
-
-### Pesquisa e RAG
-- Indexacao de documentos com chunking recursivo
-- Recuperacao BM25 com reranking heuristico
-- Sintese contextual via 9router bridge com 100+ providers
+| Dominio | Exemplo |
+|---------|---------|
+| **Multiagentes Autonomos** | Assistentes empresariais, pipelines de automacao, sistemas de decisao |
+| **Saude e Bioinformatica** | Diagnostico genomico, analise de sequencias, vigilancia epidemiologica |
+| **Financeiro e Blockchain** | Custodia de cripto, analise on-chain, trading algoritmico, AML |
+| **Infraestrutura Auto-Curada** | Monitoramento autonomo, SRE assistido por IA, disaster recovery |
+| **Conhecimento e RAG** | Bases corporativas inteligentes, busca semantica, pesquisa academica |
+| **IA Explicavel (XAI)** | Auditoria de decisoes com Fable Judge, relatorios com cadeia de raciocinio |
+| **DAOs de IA** | Governanca descentralizada, marketplaces de skills, curadoria colaborativa |
 
 ---
 
