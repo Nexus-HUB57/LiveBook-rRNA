@@ -5,10 +5,15 @@
 #   cp .env.production .env
 #   docker compose up -d --build
 #   docker compose logs -f chimera
+#
+# Services:
+#   chimera   — Next.js 16 standalone (port 3000)
+#   caddy     — Reverse proxy + auto-SSL (ports 80/443)
+#
 # ═══════════════════════════════════════════════════════════════
 
 services:
-  # ── CHIMERA App (Next.js Standalone) ───────────────────────
+  # ── CHIMERA App (Next.js 16 Standalone) ──────────────────
   chimera:
     build:
       context: .
@@ -20,8 +25,8 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     volumes:
-      - chimera-data:/app/data
-      - chimera-db:/app/db
+      - chimera-data:/app/data       # SQLite DB + Obscura snapshots
+      - chimera-db:/app/db            # Prisma migrations
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/colibri/health"]
       interval: 30s
@@ -47,6 +52,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "${CADDY_ADMIN_PORT:-2019}:2019"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
@@ -70,3 +76,6 @@ volumes:
 networks:
   chimera-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
