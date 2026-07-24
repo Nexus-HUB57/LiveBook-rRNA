@@ -4,26 +4,26 @@
   <img src="https://img.shields.io/badge/Next.js-16.1-black?logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/9router-20%2B%20providers-00ff88" alt="Providers" />
+  <img src="https://img.shields.io/badge/9router-21%20providers-00ff88" alt="Providers" />
   <img src="https://img.shields.io/badge/tRPC-v11-0097A7?logo=trpc" alt="tRPC" />
   <img src="https://img.shields.io/badge/Prisma-6.11-2D3748?logo=prisma" alt="Prisma" />
   <img src="https://img.shields.io/badge/GLM--5.2%20744B%20MoE-emerald" alt="GLM-5.2" />
   <img src="https://img.shields.io/badge/API%20Routes-62-cyan" alt="API Routes" />
   <img src="https://img.shields.io/badge/Dashboard-13%20tabs-f97316" alt="Tabs" />
-  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker" alt="Docker" />
+  <img src="https://img.shields.io/badge/Docker-5%20services-2496ED?logo=docker" alt="Docker" />
 </p>
 
 <p align="center">
-  <strong>LLM Orchestration</strong> · <strong>20+ AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Sandbox Nativo</strong> · <strong>Navegador Obscura</strong> · <strong>Auto-Cura Reativa</strong>
+  <strong>LLM Orchestration</strong> · <strong>21 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Sandbox Nativo</strong> · <strong>Navegador Obscura</strong> · <strong>Auto-Cura Reativa</strong>
 </p>
 
 ---
 
 ## Visao Geral
 
-O **CHIMERA** e uma **Multi-Agent Fusion Engine** — plataforma de orquestracao de agentes de IA com roteamento inteligente para 20+ provedores LLM. O sistema combina chamadas nativas de API com traducao automatica de protocolo (OpenAI, Claude, Gemini), cadeias de fallback resilientes, e uma arquitetura cognitiva baseada no metodo Think/Act/Prove.
+O **CHIMERA** e uma **Multi-Agent Fusion Engine** — plataforma de orquestracao de agentes de IA com roteamento inteligente para 21 provedores LLM. O sistema combina chamadas nativas de API com traducao automatica de protocolo (OpenAI, Claude, Gemini), cadeias de fallback resilientes, e uma arquitetura cognitiva baseada no metodo Think/Act/Prove.
 
-O ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico, custodia Bitcoin com PSBT v2, auto-cura reativa em 6 fases, 7 agentes especializados, sandbox de execucao isolada com VM nativa, navegador headless Obscura (Rust/V8) com stealth mode, e 62 API routes.
+O ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico, custodia Bitcoin com PSBT v2, auto-cura reativa em 6 fases, 9 agentes especializados, sandbox de execucao isolada com VM nativa, navegador headless Obscura (Rust/V8) com stealth mode, e 62 API routes.
 
 ---
 
@@ -44,7 +44,7 @@ O ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico,
 | **Browser** | Obscura headless (Rust/V8/CDP), stealth mode, 3520+ trackers bloqueados |
 | **Auto-Cura** | Protocolo reativo de 6 fases + Wisdom Engine adaptativa |
 | **Streaming** | SSE nativo (fetch + ReadableStream, async generators) |
-| **Deploy** | Docker multi-stage + Caddy (auto-SSL) + docker-compose |
+| **Deploy** | Docker multi-stage (5 services) + Caddy (auto-SSL) + docker-compose |
 
 ---
 
@@ -68,22 +68,23 @@ API Route -> 9routerBridge.routeChat()
 GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> OpenRouter -> ZAI SDK (ultimo recurso)
 ```
 
-### Provedores Registrados (20+)
+### Provedores Registrados (21)
 
 | Provider | Formato | Modelos Principais |
 |----------|---------|-------------------|
-| **GLM (Zhipu AI)** | OpenAI | GLM-5.2 744B MoE, glm-4-flash, glm-4-plus |
+| **GLM (Zhipu AI)** | OpenAI | GLM-4-Flash, GLM-4-Plus, GLM-4-Long |
 | **DeepSeek** | OpenAI | DeepSeek-V3, DeepSeek-Reasoner |
-| **Groq** | OpenAI | Llama 4 Maverick, Llama 4 Scout |
+| **Groq** | OpenAI | Llama 4 Maverick, Llama 4 Scout (32ms) |
 | **OpenAI** | OpenAI | GPT-4o, GPT-4o-mini, o3, o4-mini |
 | **Anthropic** | Claude | Claude 4 Sonnet, Claude 4 Opus, Claude 3.5 Haiku |
 | **Google Gemini** | Gemini | Gemini 2.5 Pro, Gemini 2.5 Flash |
 | **xAI (Grok)** | OpenAI | Grok 3, Grok 3 Mini |
 | **Mistral** | OpenAI | Mistral Large, Codestral |
+| **Perplexity** | OpenAI | Sonar Pro, Sonar Reasoning |
 | **Together AI** | OpenAI | Llama 4, Mixtral |
 | **Fireworks AI** | OpenAI | Llama 4 Scout |
 | **OpenRouter** | OpenAI | 100+ modelos (meta-router) |
-| **Cerebras** | OpenAI | Llama 4 (inference wafer-scale, 32ms latency) |
+| **Cerebras** | OpenAI | Llama 4 (wafer-scale, 32ms latency) |
 | **SiliconFlow** | OpenAI | DeepSeek-V3, Qwen3-8B |
 | **Ollama (Local)** | OpenAI | llama3, mistral, phi3 |
 | **Azure OpenAI** | OpenAI | GPT-4o (enterprise) |
@@ -91,7 +92,8 @@ GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> 
 | **NVIDIA NIM** | OpenAI | Llama 4 (NIM-optimized) |
 | **Hyperbolic** | OpenAI | DeepSeek-V3 |
 | **SambaNova** | OpenAI | Llama 4 (reconfigurable) |
-| **Cloudflare** | OpenAI | Llama 4 Workers AI |
+| **Cloudflare AI** | OpenAI | Llama 4 Workers AI |
+| **Google Vertex AI** | Gemini | Gemini 2.5 Pro (enterprise) |
 
 ---
 
@@ -116,7 +118,7 @@ GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> 
 | **Mythos** | Orquestrador | Coordena multiplos agentes com tool calling via 9router | `/api/orchestrate` |
 | **Fable 5 OS** | Subagente | Spawning recursivo, auto-correcao (3 tentativas), karma tracking | `/api/fable/spawn` |
 | **RAG rRNA** | Pipeline | 6 estagios biologicos com BM25 + reranking + 9router synthesis | `/api/rag/query` |
-| **9router** | Routing | 20+ providers, traducao de protocolo, fallback chains | `/api/9router/*` |
+| **9router** | Routing | 21 providers, traducao de protocolo, fallback chains | `/api/9router/*` |
 | **Bitcoin Vault** | Custodia | BIP32/39 HD wallet + PSBT v2 + AES-256-GCM | `/api/vaults/*` |
 | **Colibri** | Inference | GLM-5.2 744B MoE, 3-tier expert cache (VRAM/RAM/Disk) | `/api/colibri/*` |
 | **Moltbook** | Social | Rede social de agentes com karma, rank, curadoria | `/api/moltbook` |
@@ -143,11 +145,13 @@ Sistema de execucao isolada com Node.js `vm` module — sem dependencias externa
 Integracao completa com o [h4ckf0r0day/obscura](https://github.com/h4ckf0r0day/obscura) — headless browser em Rust com motor V8:
 
 - **14 API Routes**: navigate, scrape, eval, links, markdown, snapshot, status, serve, intercept, trackers, proxy, sessions, network, health
+- **8 Crates**: obscura-core, obscura-cdp, obscura-stealth, obscura-mcp, obscura-intercept, obscura-proxy, obscura-serve, obscura-worker
 - **CDP Protocol**: WebSocket server compativel com Puppeteer/Playwright
-- **Stealth Mode**: Anti-fingerprinting, 3520+ trackers bloqueados, navigator.webdriver = undefined
-- **MCP Server**: 13 ferramentas para agentes de IA (browser_navigate, browser_click, browser_evaluate...)
-- **Request Interception**: Regras por padrão (block/fulfill/redirect/continue), historia de requests
-- **Proxy Rotation**: 3 estrategias (round-robin, random, failover), tracking de sucesso/falha
+- **Stealth Mode**: Anti-fingerprinting, 3520+ trackers bloqueados em 6 categorias, navigator.webdriver = undefined
+- **MCP Server**: 13 ferramentas para agentes de IA (browser_navigate, browser_click, browser_evaluate, browser_screenshot...)
+- **Request Interception**: Regras por padrao (block/fulfill/redirect/continue), hit counting, historico
+- **Proxy Rotation**: 4 estrategias (round-robin, random, failover, sticky), tracking de sucesso/falha
+- **Serve Mode**: CDP WebSocket para Puppeteer/Playwright, gerenciamento de processo
 - **Tracker Dashboard**: 6 categorias (analytics, ads, telemetry, fingerprinting, social, other)
 
 ---
@@ -193,15 +197,108 @@ Integracao completa com o [h4ckf0r0day/obscura](https://github.com/h4ckf0r0day/o
 
 ---
 
+## Deploy de Producao
+
+### Docker Compose — Completo (Recomendado)
+
+```bash
+# 1. Clonar
+git clone https://github.com/Nexus-HUB57/LiveBook-rRNA.git
+cd LiveBook-rRNA
+
+# 2. Configurar variaveis
+cp .env.production .env
+# Edite .env com suas API keys (minimo: uma chave de provider LLM)
+
+# 3. Subir stack completa (app + Caddy)
+docker compose up -d --build
+
+# 4. Opcional: ativar servicos adicionais
+# Obscura (navegador headless):
+docker compose --profile obscura up -d
+
+# Colibri (GLM-5.2 inference — requer GPU):
+docker compose --profile colibri up -d
+
+# Ollama (LLM local):
+docker compose --profile ollama up -d
+
+# 5. Verificar logs
+docker compose logs -f chimera
+
+# 6. Status dos servicos
+docker compose ps
+```
+
+### Servicos Docker (5)
+
+| Servico | Porta | Profile | Descricao |
+|---------|-------|---------|-----------|
+| **chimera** | 3000 | default | Next.js 16 standalone + 62 API routes |
+| **caddy** | 80, 443 | default | Reverse proxy + auto-SSL (Let's Encrypt) |
+| **obscura** | 9222, 9223 | `obscura` | Headless browser Rust/V8 com CDP |
+| **colibri** | 8000 | `colibri` | GLM-5.2 744B MoE inference (GPU) |
+| **ollama** | 11434 | `ollama` | Local LLM inference (Llama 3, Mistral...) |
+
+O Caddy provisiona SSL automaticamente via Let's Encrypt quando `PUBLIC_DOMAIN` esta configurado. Sem dominio, serve HTTP na porta 80.
+
+### Docker Manual (app apenas)
+
+```bash
+docker build -t chimera .
+docker run -p 3000:3000 --env-file .env chimera
+```
+
+### Desenvolvimento Local
+
+```bash
+npm install
+npx prisma db push && npx prisma generate
+npx next dev    # http://localhost:3000
+```
+
+### Requisitos
+
+- Node.js 20+
+- API key para pelo menos um provider LLM (ver `.env.production`)
+- (Opcional) Docker + Docker Compose para deploy containerizado
+- (Opcional) NVIDIA GPU + CUDA para Colibri / Ollama com aceleracao
+- (Opcional) Obscura binary para navegador headless integrado
+
+---
+
+## Variaveis de Ambiente
+
+Todas as variaveis estao documentadas no arquivo [`.env.production`](.env.production) com 12 secoes:
+
+```env
+# Essenciais
+DATABASE_URL="file:/app/data/chimera.db"
+ZAI_API_KEY="..."          # GLM/Zhipu AI (primario)
+VAULT_ENCRYPTION_KEY="..." # AES-256-GCM para vaults Bitcoin
+
+# 9router Providers (preencha conforme necessidade — 21 providers)
+OPENAI_API_KEY="..."
+ANTHROPIC_API_KEY="..."
+GEMINI_API_KEY="..."
+DEEPSEEK_API_KEY="..."
+GROQ_API_KEY="..."
+XAI_API_KEY="..."
+MISTRAL_API_KEY="..."
+# ... veja .env.production para lista completa
+```
+
+---
+
 ## Estrutura do Projeto
 
 ```
 chimera/
-|-- docker-compose.yml                 # Producao: app + Caddy + volumes
+|-- docker-compose.yml                 # Producao: 5 services (app, caddy, obscura, colibri, ollama)
 |-- Dockerfile                         # Multi-stage build (standalone)
 |-- Caddyfile                          # Reverse proxy + SSL auto
-|-- .env.production                   # Template de variaveis (11 secoes)
-|-- .dockerignore                      # Build context limpo
+|-- .env.production                    # Template de variaveis (12 secoes, 21 providers)
+|-- .gitignore                         # Ignora .env* exceto .env.production
 |-- prisma/
 |   +-- schema.prisma                 # 15 modelos
 |-- src/
@@ -220,7 +317,7 @@ chimera/
 |   |-- components/                    # 100+ componentes React
 |   |-- lib/
 |   |   |-- 9router-bridge.ts          # Bridge principal (routeChat, streamChat)
-|   |   |-- 9router-engine/            # Motor 9router (providers + translators)
+|   |   |-- 9router-engine/            # Motor 9router (21 providers + translators)
 |   |   |-- fable-method-engine.ts     # Motor Think/Act/Prove
 |   |   |-- fable-5-orchestrator.ts    # Orquestrador LLM subagentes
 |   |   |-- sandbox/                   # Sandbox (types, engine, memory, lifecycle, LLM, evolution)
@@ -231,74 +328,6 @@ chimera/
 |   |   +-- llm-synthesis.ts          # Streaming LLM synthesis
 |   +-- server/
 |       +-- routers/                   # 4 tRPC routers
-```
-
----
-
-## Deploy de Producao
-
-### Docker Compose (Recomendado)
-
-```bash
-# 1. Clonar
-git clone https://github.com/Nexus-HUB57/LiveBook-rRNA.git
-cd LiveBook-rRNA
-
-# 2. Configurar variaveis
-cp .env.production .env
-# Edite .env com suas API keys (minimo: ZAI_API_KEY ou OPENAI_API_KEY)
-
-# 3. Subir
-docker compose up -d --build
-
-# 4. Verificar
-docker compose logs -f chimera
-```
-
-O Caddy provisiona SSL automaticamente via Let's Encrypt quando `PUBLIC_DOMAIN` esta configurado. Sem dominio, serve HTTP na porta 80.
-
-### Docker Manual
-
-```bash
-docker build -t chimera .
-docker run -p 3000:3000 --env-file .env chimera
-```
-
-### Desenvolvimento Local
-
-```bash
-npm install
-npx prisma db push && npx prisma generate
-npx next dev    # http://localhost:3000
-```
-
-### Requisitos
-
-- Node.js 20+
-- API key para pelo menos um provider LLM
-- (Opcional) Colibri Engine para expert routing completo
-- (Opcional) Obscura binary para navegador headless integrado
-
----
-
-## Variaveis de Ambiente
-
-```env
-# Essenciais
-DATABASE_URL="file:./chimera.db"
-ZAI_API_KEY="..."          # GLM/Zhipu AI (primario)
-VAULT_ENCRYPTION_KEY="..." # AES-256-GCM para vaults
-
-# 9router Providers (preencha conforme necessidade)
-OPENAI_API_KEY="..."
-ANTHROPIC_API_KEY="..."
-GEMINI_API_KEY="..."
-DEEPSEEK_API_KEY="..."
-GROQ_API_KEY="..."
-XAI_API_KEY="..."
-MISTRAL_API_KEY="..."
-OPENROUTER_API_KEY="..."
-# ... veja .env.production para lista completa (22 providers)
 ```
 
 ---
