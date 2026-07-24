@@ -6,9 +6,12 @@
 #   docker compose up -d --build
 #   docker compose logs -f chimera
 #
-# Services:
-#   chimera   — Next.js 16 standalone (port 3000)
-#   caddy     — Reverse proxy + auto-SSL (ports 80/443)
+# Services (5):
+#   chimera    — Next.js 16 standalone (port 3000)
+#   caddy      — Reverse proxy + auto-SSL (ports 80/443)
+#   obscura    — Headless browser Rust/V8 (CDP port 9222)
+#   colibri    — GLM-5.2 744B MoE inference (port 8000) [optional]
+#   ollama     — Local LLM inference (port 11434) [optional]
 #
 # ═══════════════════════════════════════════════════════════════
 
@@ -25,8 +28,19 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     volumes:
-      - chimera-data:/app/data       # SQLite DB + Obscura snapshots
-      - chimera-db:/app/db            # Prisma migrations
+      - chimera-data:/app/data           # SQLite DB + Obscura snapshots
+      - chimera-db:/app/db                # Prisma migrations
+      - obscura-bin:/usr/local/bin/obscura # Shared Obscura binary
+    depends_on:
+      obscura:
+        condition: service_started
+        required: false
+      colibri:
+        condition: service_healthy
+        required: false
+      ollama:
+        condition: service_started
+        required: false
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/colibri/health"]
       interval: 30s
@@ -63,6 +77,87 @@ services:
     networks:
       - chimera-net
 
+  # ── Obscura (Headless Browser — Rust/V8/CDP) ────────────
+  # Optional: set ENABLE_OBSCURA=true in .env to activate
+  obscura:
+    image: alpine:3.20
+    container_name: chimera-obscura
+    restart: unless-stopped
+    profiles:
+      - obscura
+    entrypoint: ["sh", "-c", "echo 'Obscura: mount binary to /usr/local/bin/obscura/ and override entrypoint' && sleep infinity"]
+    ports:
+      - "${OBSCURA_CDP_PORT:-9222}:9222"  # CDP WebSocket
+      - "${OBSCURA_SERVE_PORT:-9223}:9223" # Serve mode (Puppeteer)
+    volumes:
+      - obscura-bin:/usr/local/bin/obscura:ro
+    environment:
+      - OBSCURA_HEADLESS=true
+      - OBSCURA_STEALTH=true
+      - OBSCURA_CDP_HOST=0.0.0.0
+      - OBSCURA_CDP_PORT=9222
+    networks:
+      - chimera-net
+
+  # ── Colibri (GLM-5.2 MoE Inference Engine) ────────────────
+  # Optional: set ENABLE_COLIBRI=true in .env to activate
+  # Requires GPU (NVIDIA) — uncomment gpu deployment below
+  colibri:
+    image: alpine:3.20
+    container_name: chimera-colibri
+    restart: unless-stopped
+    profiles:
+      - colibri
+    entrypoint: ["sh", "-c", "echo 'Colibri: build and mount custom Colibri binary' && sleep infinity"]
+    ports:
+      - "${COLIBRI_PORT:-8000}:8000"
+    environment:
+      - COLIBRI_MODEL=glm-5.2-744b-moe
+      - COLIBRI_HOST=0.0.0.0
+      - COLIBRI_PORT=8000
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/v1/models"] || exit 1
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    networks:
+      - chimera-net
+
+  # ── Ollama (Local LLM Inference) ─────────────────────────
+  # Optional: set ENABLE_OLLAMA=true in .env to activate
+  ollama:
+    image: ollama/ollama:latest
+    container_name: chimera-ollama
+    restart: unless-stopped
+    profiles:
+      - ollama
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    networks:
+      - chimera-net
+
 volumes:
   chimera-data:
     driver: local
@@ -71,6 +166,10 @@ volumes:
   caddy-data:
     driver: local
   caddy-config:
+    driver: local
+  obscura-bin:
+    driver: local
+  ollama-data:
     driver: local
 
 networks:
