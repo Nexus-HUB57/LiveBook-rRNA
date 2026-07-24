@@ -248,7 +248,7 @@ export function getSandboxHealth(): SandboxHealth {
   }
 
   const memUsage = process.memoryUsage();
-  const memoryMB = Math.round((memUsage.heapUsed + memUsage.external) / (1024 * 1024) * 10) / 10;
+  const memoryUsageMB = Math.round((memUsage.heapUsed + memUsage.external) / (1024 * 1024) * 10) / 10;
 
   const errorRate = totalExecutions > 0 ? totalErrors / totalExecutions : 0;
   const status: SandboxHealth['status'] =
@@ -262,7 +262,7 @@ export function getSandboxHealth(): SandboxHealth {
     totalExecutions,
     totalErrors,
     llmInteractions,
-    memoryUsageMB,
+    memoryUsageMB: memoryUsageMB,
     memoryLimitMB: 512,
     agentsByStatus,
     agentsByTier,

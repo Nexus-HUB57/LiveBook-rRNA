@@ -4,11 +4,13 @@ import { ragPipeline, recursiveChunk } from "@/lib/rag-engine";
 
 export async function POST(req: NextRequest) {
   try {
-    const { query, agentSlug, topK } = await req.json();
+    let body: Record<string, unknown> = {};
+    try { body = await req.json(); } catch {}
+    const { query, agentSlug, topK } = body;
     if (!query || typeof query !== "string") {
       return NextResponse.json({ error: "query string required" }, { status: 400 });
     }
-    const k = Math.min(topK || 5, 10);
+    const k = Math.min((topK as number) || 5, 10);
 
     // 1. FETCH knowledge entries from DB
     const where: Record<string, unknown> = {};

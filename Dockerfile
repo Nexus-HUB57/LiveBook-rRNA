@@ -47,6 +47,10 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/prisma ./prisma
 
+# Copy native/wasm modules that standalone output misses
+RUN mkdir -p node_modules/tiny-secp256k1/lib && \
+    cp -r /app/node_modules/tiny-secp256k1/lib/* node_modules/tiny-secp256k1/lib/ 2>/dev/null || true
+
 # Create data directory for SQLite
 RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
 

@@ -4,7 +4,8 @@ import { fableMethod, getMethodHistory } from "@/lib/fable-method-engine";
 /** POST /api/fable/method — Execute a fable-method skill */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body: Record<string, unknown> = {};
+    try { body = await request.json(); } catch {}
     const { task, mode } = body;
 
     if (!task || typeof task !== "string") {

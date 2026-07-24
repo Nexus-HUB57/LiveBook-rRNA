@@ -213,7 +213,8 @@ em 30 UTXOs não gastos, HD wallet BIP32 ativa com 20+ chaves derivadas.`,
 // ─── POST Handler ───
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body: Record<string, unknown> = {};
+    try { body = await request.json(); } catch {}
     const { task, agent } = body;
 
     if (!task || typeof task !== 'string') {

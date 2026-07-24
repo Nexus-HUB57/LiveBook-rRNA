@@ -238,7 +238,8 @@ export async function* dedicatedLLMStream(
 // ═══ LLM STATUS ═══════════════════════════════════════
 
 export function getDedicatedLLMStatus() {
-  const primaryStatus = getProviderStatus(config.provider);
+  const allStatus = getProviderStatus();
+  const primaryStatus = allStatus.find(p => p.id === config.provider) ?? allStatus[0] ?? { id: config.provider, name: config.provider, category: 'local', format: 'openai' as const, defaultModel: config.model, modelsCount: 0, configured: false };
   return {
     config: { ...config, systemPrompt: config.systemPrompt.slice(0, 100) + '...' },
     providerStatus: primaryStatus,
