@@ -1,11 +1,15 @@
-/**
- * GET /api/obscura/status — Obscura engine status
- */
 import { NextResponse } from 'next/server';
-import { getObscuraStatus, obscuraCDPInfo, getMCPTools } from '@/lib/obscura/obscura-engine';
+import {
+  getObscuraStatus, obscuraCDPInfo, getMCPTools, getServeState,
+  getInterceptState, getTrackerStats, getProxyConfig, getCDPSessions, getNetworkLog,
+} from '@/lib/obscura/obscura-engine';
 
 export async function GET() {
   const [status, cdpInfo] = await Promise.all([getObscuraStatus(), obscuraCDPInfo()]);
-  const mcpTools = getMCPTools();
-  return NextResponse.json({ status, cdpInfo, mcpTools });
+  return NextResponse.json({
+    status, cdpInfo, mcpTools: getMCPTools(),
+    serve: getServeState(), interception: getInterceptState(),
+    trackers: getTrackerStats(), proxy: getProxyConfig(),
+    sessions: getCDPSessions(), network: getNetworkLog(),
+  });
 }
