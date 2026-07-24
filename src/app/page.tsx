@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import {
   Zap, Bot, Database, LayoutDashboard, BrainCircuit, Cpu, Flame,
   Globe, Dna, Users, Landmark, Atom, Feather, MessageSquareText, Sparkles,
-  ShieldCheck,
+  ShieldCheck, Compass,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardTab, QuickSearch } from '@/components/dashboard-tab';
@@ -22,6 +22,7 @@ import GovernanceTab from '@/components/governance-tab';
 import RrnaSystemsTab from '@/components/rrna-systems-tab';
 import FableMethodTab from '@/components/fable-method-tab';
 import { SandboxTab } from '@/components/sandbox-tab';
+import { ObscuraTab } from '@/components/obscura-tab';
 
 /* ================================================================
    TAB CONFIG — CHIMERA MULTI-AGENT FUSION ENGINE
@@ -41,8 +42,9 @@ const TABS = [
   // Ecosystem
   { value: 'moltbook', label: 'Moltbook', icon: Users, color: '#e01b24' },
   { value: 'governance', label: 'Governanca', icon: Landmark, color: '#fbbf24' },
-  // Sandbox
+  // Sandbox & Tools
   { value: 'sandbox', label: 'Sandbox Nativo', icon: ShieldCheck, color: '#22d3ee' },
+  { value: 'obscura', label: 'Navegador Obscura', icon: Compass, color: '#f97316' },
 ] as const;
 
 type TabValue = typeof TABS[number]['value'];
@@ -180,6 +182,7 @@ export default function Home() {
               {activeTab === 'moltbook' && <MoltbookTab />}
               {activeTab === 'governance' && <GovernanceTab />}
               {activeTab === 'sandbox' && <SandboxTab />}
+              {activeTab === 'obscura' && <ObscuraTab />}
             </motion.div>
           </AnimatePresence>
         </TooltipProvider>
