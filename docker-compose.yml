@@ -11,7 +11,7 @@
 #   caddy      — Reverse proxy + auto-SSL (ports 80/443)
 #   obscura    — Headless browser Rust/V8 (CDP port 9222)
 #   colibri    — GLM-5.2 744B MoE inference (port 8000) [optional]
-#   ollama     — Local LLM inference (port 11434) [optional]
+#   ollama     — Local LLM + CodeGeeX4 (port 11434) [optional]
 #
 # ═══════════════════════════════════════════════════════════════
 
@@ -51,10 +51,10 @@ services:
       resources:
         limits:
           memory: 2G
-          cpus: '2.0'
+    cpus: '2.0'
         reservations:
           memory: 512M
-          cpus: '0.5'
+    cpus: '0.5'
     networks:
       - chimera-net
 
@@ -132,8 +132,9 @@ services:
     networks:
       - chimera-net
 
-  # ── Ollama (Local LLM Inference) ─────────────────────────
+  # ── Ollama + CodeGeeX4 (Local LLM Inference) ─────────────
   # Optional: set ENABLE_OLLAMA=true in .env to activate
+  # Pull CodeGeeX4: docker compose exec ollama ollama pull codegeex4
   ollama:
     image: ollama/ollama:latest
     container_name: chimera-ollama
@@ -155,6 +156,12 @@ services:
     #         - driver: nvidia
     #           count: 1
     #           capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
     networks:
       - chimera-net
 

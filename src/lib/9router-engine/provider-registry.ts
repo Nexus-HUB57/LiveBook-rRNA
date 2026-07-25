@@ -153,8 +153,16 @@ const PROVIDER_DB: ProviderInfo[] = [
     id: 'ollama-local', name: 'Ollama (Local)', category: 'local', format: 'openai',
     transport: { baseUrl: 'http://localhost:11434/v1', format: 'openai', authScheme: 'bearer' },
     defaultModel: 'llama3',
-    models: ['llama3', 'llama3.1', 'mistral', 'codellama', 'phi3'],
+    models: ['llama3', 'llama3.1', 'mistral', 'codellama', 'phi3', 'codegeex4'],
     aliases: ['ollama'],
+  },
+  // ── CodeGeeX4 via Ollama (9B code-specialist, 128K context) ──
+  {
+    id: 'codegeex4', name: 'CodeGeeX4 (Ollama)', category: 'local', format: 'openai',
+    transport: { baseUrl: 'http://ollama:11434/v1', format: 'openai', authScheme: 'bearer', timeoutMs: 60000 },
+    defaultModel: 'codegeex4',
+    models: ['codegeex4'],
+    aliases: ['codegeex', 'cgx4'],
   },
   // ── Azure OpenAI ──
   {
