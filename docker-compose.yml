@@ -6,12 +6,13 @@
 #   docker compose up -d --build
 #   docker compose logs -f chimera
 #
-# Services (5):
+# Services (6):
 #   chimera    — Next.js 16 standalone (port 3000)
 #   caddy      — Reverse proxy + auto-SSL (ports 80/443)
 #   obscura    — Headless browser Rust/V8 (CDP port 9222)
 #   colibri    — GLM-5.2 744B MoE inference (port 8000) [optional]
-#   ollama     — Local LLM + CodeGeeX4 (port 11434) [optional]
+#   ollama     — Local LLM inference (port 11434) [optional]
+#   codegeex   — CodeGeeX4 native OpenAI-compat API (port 8001) [optional]
 #
 # ═══════════════════════════════════════════════════════════════
 
@@ -41,6 +42,9 @@ services:
       ollama:
         condition: service_started
         required: false
+      codegeex:
+        condition: service_healthy
+        required: false
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/colibri/health"]
       interval: 30s
@@ -51,10 +55,10 @@ services:
       resources:
         limits:
           memory: 2G
-    cpus: '2.0'
+          cpus: '2.0'
         reservations:
           memory: 512M
-    cpus: '0.5'
+          cpus: '0.5'
     networks:
       - chimera-net
 
@@ -116,7 +120,7 @@ services:
       - COLIBRI_HOST=0.0.0.0
       - COLIBRI_PORT=8000
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/v1/models"] || exit 1
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/v1/models || exit 1"]
       interval: 30s
       timeout: 5s
       start_period: 60s
@@ -132,9 +136,9 @@ services:
     networks:
       - chimera-net
 
-  # ── Ollama + CodeGeeX4 (Local LLM Inference) ─────────────
+  # ── Ollama (Local LLM Inference) ────────────────────────
   # Optional: set ENABLE_OLLAMA=true in .env to activate
-  # Pull CodeGeeX4: docker compose exec ollama ollama pull codegeex4
+  # Pull models: docker compose exec ollama ollama pull llama3
   ollama:
     image: ollama/ollama:latest
     container_name: chimera-ollama
@@ -165,6 +169,55 @@ services:
     networks:
       - chimera-net
 
+  # ── CodeGeeX4 Native (OpenAI-Compatible API) ────────────────
+  # Optional: set ENABLE_CODEGEEX=true in .env to activate
+  # Exposes /v1/chat/completions with streaming + function calling
+  # Based on: github.com/zai-org/CodeGeeX4 (local_mode/protocols/openai_api.py)
+  # Requires: GPU + CodeGeeX4 model weights mounted at /models
+  codegeex:
+    build:
+      context: ./codegeex4
+      dockerfile: Dockerfile
+    container_name: chimera-codegeex
+    restart: unless-stopped
+    profiles:
+      - codegeex
+    ports:
+      - "${CODEGEEX_PORT:-8001}:8000"
+    volumes:
+      - codegeex-models:/models
+      - codegeex-cache:/root/.cache
+    environment:
+      - CODEGEEX_HOST=0.0.0.0
+      - CODEGEEX_PORT=8000
+      - CODEGEEX_MODEL=${CODEGEEX_MODEL:-codegeex4}
+      - CODEGEEX_MAX_TOKENS=${CODEGEEX_MAX_TOKENS:-4096}
+      - CODEGEEX_TEMPERATURE=${CODEGEEX_TEMPERATURE:-0.2}
+    deploy:
+      resources:
+        limits:
+          memory: 32G
+          cpus: '4.0'
+        reservations:
+          memory: 16G
+          cpus: '2.0'
+    # Uncomment the entire deploy block below for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/v1/models')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 5
+    networks:
+      - chimera-net
+
 volumes:
   chimera-data:
     driver: local
@@ -177,6 +230,10 @@ volumes:
   obscura-bin:
     driver: local
   ollama-data:
+    driver: local
+  codegeex-models:
+    driver: local
+  codegeex-cache:
     driver: local
 
 networks:

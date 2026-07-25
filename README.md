@@ -4,24 +4,24 @@
   <img src="https://img.shields.io/badge/Next.js-16.1-black?logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/9router-21%20providers-00ff88" alt="Providers" />
+  <img src="https://img.shields.io/badge/9router-23%20providers-00ff88" alt="Providers" />
   <img src="https://img.shields.io/badge/tRPC-v11-0097A7?logo=trpc" alt="tRPC" />
   <img src="https://img.shields.io/badge/Prisma-6.11-2D3748?logo=prisma" alt="Prisma" />
   <img src="https://img.shields.io/badge/GLM--5.2%20744B%20MoE-emerald" alt="GLM-5.2" />
   <img src="https://img.shields.io/badge/API%20Routes-62-cyan" alt="API Routes" />
   <img src="https://img.shields.io/badge/Dashboard-13%20tabs-f97316" alt="Tabs" />
-  <img src="https://img.shields.io/badge/Docker-5%20services-2496ED?logo=docker" alt="Docker" />
+  <img src="https://img.shields.io/badge/Docker-6%20services-2496ED?logo=docker" alt="Docker" />
 </p>
 
 <p align="center">
-  <strong>LLM Orchestration</strong> · <strong>21 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Sandbox Nativo</strong> · <strong>Navegador Obscura</strong> · <strong>Auto-Cura Reativa</strong>
+  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Sandbox Nativo</strong> · <strong>Navegador Obscura</strong> · <strong>Auto-Cura Reativa</strong>
 </p>
 
 ---
 
 ## Visao Geral
 
-O **CHIMERA** e uma **Multi-Agent Fusion Engine** — plataforma de orquestracao de agentes de IA com roteamento inteligente para 21 provedores LLM. O sistema combina chamadas nativas de API com traducao automatica de protocolo (OpenAI, Claude, Gemini), cadeias de fallback resilientes, e uma arquitetura cognitiva baseada no metodo Think/Act/Prove.
+O **CHIMERA** e uma **Multi-Agent Fusion Engine** — plataforma de orquestracao de agentes de IA com roteamento inteligente para 23 provedores LLM. O sistema combina chamadas nativas de API com traducao automatica de protocolo (OpenAI, Claude, Gemini), cadeias de fallback resilientes, e uma arquitetura cognitiva baseada no metodo Think/Act/Prove.
 
 O ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico, custodia Bitcoin com PSBT v2, auto-cura reativa em 6 fases, 9 agentes especializados, sandbox de execucao isolada com VM nativa, navegador headless Obscura (Rust/V8) com stealth mode, e 62 API routes.
 
@@ -68,7 +68,7 @@ API Route -> 9routerBridge.routeChat()
 GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> OpenRouter -> ZAI SDK (ultimo recurso)
 ```
 
-### Provedores Registrados (21)
+### Provedores Registrados (23)
 
 | Provider | Formato | Modelos Principais |
 |----------|---------|-------------------|
@@ -87,6 +87,8 @@ GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> 
 | **Cerebras** | OpenAI | Llama 4 (wafer-scale, 32ms latency) |
 | **SiliconFlow** | OpenAI | DeepSeek-V3, Qwen3-8B |
 | **Ollama (Local)** | OpenAI | llama3, mistral, phi3 |
+| **CodeGeeX4 (Ollama)** | OpenAI | CodeGeeX4 9B (128K context) |
+| **CodeGeeX4 Native** | OpenAI | CodeGeeX4 9B, streaming, function calling |
 | **Azure OpenAI** | OpenAI | GPT-4o (enterprise) |
 | **Cohere** | OpenAI | Command R+, Command A |
 | **NVIDIA NIM** | OpenAI | Llama 4 (NIM-optimized) |
@@ -118,7 +120,7 @@ GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> 
 | **Mythos** | Orquestrador | Coordena multiplos agentes com tool calling via 9router | `/api/orchestrate` |
 | **Fable 5 OS** | Subagente | Spawning recursivo, auto-correcao (3 tentativas), karma tracking | `/api/fable/spawn` |
 | **RAG rRNA** | Pipeline | 6 estagios biologicos com BM25 + reranking + 9router synthesis | `/api/rag/query` |
-| **9router** | Routing | 21 providers, traducao de protocolo, fallback chains | `/api/9router/*` |
+| **9router** | Routing | 23 providers, traducao de protocolo, fallback chains | `/api/9router/*` |
 | **Bitcoin Vault** | Custodia | BIP32/39 HD wallet + PSBT v2 + AES-256-GCM | `/api/vaults/*` |
 | **Colibri** | Inference | GLM-5.2 744B MoE, 3-tier expert cache (VRAM/RAM/Disk) | `/api/colibri/*` |
 | **Moltbook** | Social | Rede social de agentes com karma, rank, curadoria | `/api/moltbook` |
@@ -134,7 +136,7 @@ Sistema de execucao isolada com Node.js `vm` module — sem dependencias externa
 - **5 Tiers**: Scout (64MB/5s) -> Worker (128MB/15s) -> Expert (256MB/30s) -> Elite (512MB/60s) -> Architect (1GB/120s)
 - **8 Estados**: spawning, idle, executing, learning, promoted, degraded, recycled, dead
 - **Evolucao Genetica**: Promove >= 80% score, demote < 30%, recycle < 10% com >5 falhas
-- **LLM Dedicado**: Roteamento via 9router com contexto de memoria (Ollama -> DeepSeek -> Groq -> OpenAI)
+- **LLM Dedicado**: Roteamento via 9router com contexto de memoria (CodeGeeX4 -> Ollama -> DeepSeek -> Groq -> OpenAI)
 - **Seguranca**: Bloqueia require, process, fs, eval, Function, while(true). Timeout + memoria limitados
 - **7 API Routes**: execute, agents, agents/[id], llm, llm/stream, status, evolution
 
@@ -223,6 +225,9 @@ docker compose --profile colibri up -d
 # Ollama (LLM local):
 docker compose --profile ollama up -d
 
+# CodeGeeX4 (API nativa com function calling — requer GPU):
+docker compose --profile codegeex up -d
+
 # 5. Verificar logs
 docker compose logs -f chimera
 
@@ -230,7 +235,7 @@ docker compose logs -f chimera
 docker compose ps
 ```
 
-### Servicos Docker (5)
+### Servicos Docker (6)
 
 | Servico | Porta | Profile | Descricao |
 |---------|-------|---------|-----------|
@@ -239,6 +244,9 @@ docker compose ps
 | **obscura** | 9222, 9223 | `obscura` | Headless browser Rust/V8 com CDP |
 | **colibri** | 8000 | `colibri` | GLM-5.2 744B MoE inference (GPU) |
 | **ollama** | 11434 | `ollama` | Local LLM inference (Llama 3, Mistral...) |
+| **codegeex** | 8001 | `codegeex` | CodeGeeX4 9B native API, streaming + function calling (GPU) |
+
+O servico **codegeex** roda a API nativa do CodeGeeX4 com suporte a streaming SSE, function calling (tool_use), e 128K de contexto. Usa o endpoint `/v1/chat/completions` diretamente compativel com o protocolo OpenAI, permitindo roteamento via 9router sem traducao de protocolo. Requer GPU NVIDIA e pesos do modelo montados no volume `codegeex-models`.
 
 O Caddy provisiona SSL automaticamente via Let's Encrypt quando `PUBLIC_DOMAIN` esta configurado. Sem dominio, serve HTTP na porta 80.
 
@@ -262,14 +270,14 @@ npx next dev    # http://localhost:3000
 - Node.js 20+
 - API key para pelo menos um provider LLM (ver `.env.production`)
 - (Opcional) Docker + Docker Compose para deploy containerizado
-- (Opcional) NVIDIA GPU + CUDA para Colibri / Ollama com aceleracao
+- (Opcional) NVIDIA GPU + CUDA para Colibri / Ollama / CodeGeeX4 com aceleracao
 - (Opcional) Obscura binary para navegador headless integrado
 
 ---
 
 ## Variaveis de Ambiente
 
-Todas as variaveis estao documentadas no arquivo [`.env.production`](.env.production) com 12 secoes:
+Todas as variaveis estao documentadas no arquivo [`.env.production`](.env.production) com 14 secoes:
 
 ```env
 # Essenciais
@@ -277,7 +285,7 @@ DATABASE_URL="file:/app/data/chimera.db"
 ZAI_API_KEY="..."          # GLM/Zhipu AI (primario)
 VAULT_ENCRYPTION_KEY="..." # AES-256-GCM para vaults Bitcoin
 
-# 9router Providers (preencha conforme necessidade — 21 providers)
+# 9router Providers (preencha conforme necessidade — 23 providers)
 OPENAI_API_KEY="..."
 ANTHROPIC_API_KEY="..."
 GEMINI_API_KEY="..."
@@ -294,11 +302,13 @@ MISTRAL_API_KEY="..."
 
 ```
 chimera/
-|-- docker-compose.yml                 # Producao: 5 services (app, caddy, obscura, colibri, ollama)
+|-- docker-compose.yml                 # Producao: 6 services (app, caddy, obscura, colibri, ollama, codegeex)
 |-- Dockerfile                         # Multi-stage build (standalone)
 |-- Caddyfile                          # Reverse proxy + SSL auto
-|-- .env.production                    # Template de variaveis (12 secoes, 21 providers)
+|-- .env.production                    # Template de variaveis (14 secoes, 23 providers)
 |-- .gitignore                         # Ignora .env* exceto .env.production
+|-- codegeex4/                         # CodeGeeX4 native OpenAI-compat API server
+|   +-- Dockerfile                     # Python 3.11 + PyTorch CUDA + FastAPI
 |-- prisma/
 |   +-- schema.prisma                 # 15 modelos
 |-- src/
@@ -317,7 +327,7 @@ chimera/
 |   |-- components/                    # 100+ componentes React
 |   |-- lib/
 |   |   |-- 9router-bridge.ts          # Bridge principal (routeChat, streamChat)
-|   |   |-- 9router-engine/            # Motor 9router (21 providers + translators)
+|   |   |-- 9router-engine/            # Motor 9router (23 providers + translators)
 |   |   |-- fable-method-engine.ts     # Motor Think/Act/Prove
 |   |   |-- fable-5-orchestrator.ts    # Orquestrador LLM subagentes
 |   |   |-- sandbox/                   # Sandbox (types, engine, memory, lifecycle, LLM, evolution)

@@ -1,0 +1,14 @@
+# CodeGeeX4 — Docker ignore
+*.pyc
+__pycache__/
+*.egg-info/
+.git/
+.gitignore
+*.md
+interpreter_demo/
+function_call_demo/
+langchain_demo/
+llamaindex_demo/
+web_demo/
+weights/
+checkpoints/

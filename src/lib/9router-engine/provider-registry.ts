@@ -162,6 +162,14 @@ const PROVIDER_DB: ProviderInfo[] = [
     transport: { baseUrl: 'http://ollama:11434/v1', format: 'openai', authScheme: 'bearer', timeoutMs: 60000 },
     defaultModel: 'codegeex4',
     models: ['codegeex4'],
+    aliases: ['codegeex-ollama'],
+  },
+  // ── CodeGeeX4 Native (local_mode OpenAI-compat, 9B, function calling) ──
+  {
+    id: 'codegeex-native', name: 'CodeGeeX4 Native', category: 'local', format: 'openai',
+    transport: { baseUrl: 'http://codegeex:8000/v1', format: 'openai', authScheme: 'bearer', timeoutMs: 120000 },
+    defaultModel: 'codegeex4',
+    models: ['codegeex4'],
     aliases: ['codegeex', 'cgx4'],
   },
   // ── Azure OpenAI ──
