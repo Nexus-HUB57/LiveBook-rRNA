@@ -11,10 +11,12 @@
   <img src="https://img.shields.io/badge/API%20Routes-62-cyan" alt="API Routes" />
   <img src="https://img.shields.io/badge/Dashboard-13%20tabs-f97316" alt="Tabs" />
   <img src="https://img.shields.io/badge/Docker-6%20services-2496ED?logo=docker" alt="Docker" />
+  <img src="https://img.shields.io/badge/Live%20Lab-Tri--Nuclear%20v2.0-purple" alt="Live Lab" />
+  <img src="https://img.shields.io/badge/Agentica%20AI-Arquiteta--Cognitiva-f472b6" alt="Agentica AI" />
 </p>
 
 <p align="center">
-  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Sandbox Nativo</strong> · <strong>Navegador Obscura</strong> · <strong>Auto-Cura Reativa</strong>
+  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Sandbox Nativo</strong> · <strong>Navegador Obscura</strong> · <strong>Auto-Cura Reativa</strong> · <strong>Live Lab Tri-Nuclear</strong> · <strong>Agentica AI</strong>
 </p>
 
 ---
@@ -23,7 +25,7 @@
 
 O **CHIMERA** e uma **Multi-Agent Fusion Engine** — plataforma de orquestracao de agentes de IA com roteamento inteligente para 23 provedores LLM. O sistema combina chamadas nativas de API com traducao automatica de protocolo (OpenAI, Claude, Gemini), cadeias de fallback resilientes, e uma arquitetura cognitiva baseada no metodo Think/Act/Prove.
 
-O ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico, custodia Bitcoin com PSBT v2, auto-cura reativa em 6 fases, 9 agentes especializados, sandbox de execucao isolada com VM nativa, navegador headless Obscura (Rust/V8) com stealth mode, e 62 API routes.
+O ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico, custodia Bitcoin com PSBT v2, auto-cura reativa em 6 fases, 9 agentes especializados, sandbox de execucao isolada com VM nativa, navegador headless Obscura (Rust/V8) com stealth mode, 62 API routes, e o **Live Lab Tri-Nuclear** — ecossistema cognitivo com 3 nucleos orquestrados pela Agentica AI (Arquiteta-Cognitiva).
 
 ---
 
@@ -96,6 +98,89 @@ GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> 
 | **SambaNova** | OpenAI | Llama 4 (reconfigurable) |
 | **Cloudflare AI** | OpenAI | Llama 4 Workers AI |
 | **Google Vertex AI** | Gemini | Gemini 2.5 Pro (enterprise) |
+
+---
+
+## Live Lab Tri-Nuclear — Ecossistema Cognitivo
+
+O **Live Lab Tri-Nuclear** e um subsistema cognitivo integrado ao CHIMERA, composto por tres nucleos sinergicos orquestrados pela **Agentica AI** (Arquiteta-Cognitiva v2.0). Cada nucleo opera com dados, regras e propositos distintos, conectados por workflows hibridos que atravessam nucleos para entregar valor composto.
+
+### N1 — Nucleo Agregador (LLMs)
+
+Camada de roteamento inteligente com 9 modelos LLM e algoritmo de cascata baseado em intencoes. Cada modelo possui metadados de custo, latencia, peso de roteamento e casos de uso prioritarios. O algoritmo avalia a intencao do usuario, seleciona o modelo primario pela cascata, e aplica fallback por peso se o primario falhar.
+
+| Modelo | Provedor | Contexto | Custo (1M tok) | Latencia |
+|--------|----------|----------|-----------------|----------|
+| **GLM-4-Flash** | Zhipu AI | 128K | $0.10 / $0.10 | 320ms |
+| **GLM-4-Plus** | Zhipu AI | 128K | $1.40 / $1.40 | 450ms |
+| **DeepSeek-V3** | DeepSeek | 128K | $0.27 / $1.10 | 600ms |
+| **GPT-4o** | OpenAI | 128K | $2.50 / $10.00 | 800ms |
+| **Claude 4 Sonnet** | Anthropic | 200K | $3.00 / $15.00 | 700ms |
+| **Gemini 2.5 Pro** | Google | 1M | $1.25 / $5.00 | 900ms |
+| **Llama 4 Maverick** | Groq | 128K | $0.20 / $0.80 | 32ms |
+| **CodeGeeX4 9B** | CodeGeeX Native | 128K | $0.00 / $0.00 | local |
+| **GLM-5.2 744B MoE** | Colibri | 128K | $0.00 / $0.00 | local |
+
+### N2 — Nucleo Produtividade (Skills)
+
+Camada de 12 skills atomicas e 5 meta-skills compostas, cada uma com dominio, trigger regex, permissao RBAC e nivel de criticidade. As meta-skills encadeiam skills atomicas em sequencias determinadas (paralelo ou sequencial) para fluxos de produtividade avancada.
+
+**Skills Atomicas (12)**: code_review, debug_assist, test_generation, refactoring_suggest, doc_generation, api_design, data_analysis, security_audit, perf_optimization, prompt_engineering, git_workflow, infra_as_code.
+
+**Meta-Skills (5)**: full_stack_dev (encadeia 4+ atomicas), devops_pipeline (CI/CD completo), security_hardening (auditoria + remediacao), data_pipeline (ETL + analise + visualizacao), learning_path (modulo educacional adaptativo).
+
+### N3 — Nucleo Ecossistema (Educacao/Certs)
+
+Camada de trilhas de aprendizagem com modulos educacionais, criterios de aprovacao, e certificacoes por nivel. O nucleo conecta competencias ao ecossistema CHIMERA, permitindo que personas evoluam dentro de trilhas estruturadas com avaliacao automatica.
+
+| Trilha | Modulos | Certificacao |
+|--------|---------|--------------|
+| **Full-Stack AI Developer** | 4 modulos | CHIMERA-FSAI-L1 a L4 |
+| **DevOps Cloud Architect** | 3 modulos | CHIMERA-DCA-L1 a L3 |
+| **AI Research Engineer** | 3 modulos | CHIMERA-AIRE-L1 a L3 |
+| **Security & Compliance** | 2 modulos | CHIMERA-SC-L1 a L2 |
+
+### Agentica AI — Arquiteta-Cognitiva
+
+A **Agentica AI** e o agente orquestrador do Live Lab Tri-Nuclear, implementada em `src/lib/live-lab/agentica-ai.ts` com 7 funcoes de orquestracao:
+
+| Funcao | Descricao | Output |
+|--------|-----------|--------|
+| `agenticaDiagnose()` | Diagnostico completo do ecossistema (integridade, modelos, skills, trilhas, governanca) | `AgenticaDiagnostico` |
+| `agenticaRoute(intencao)` | Roteamento inteligente de intencao para modelo otimo (cascata + peso) | modelo + custo + latencia |
+| `agenticaExecuteSkill(skillId, input, persona)` | Executa skill com routing automatico e logging | `AgenticaSkillResult` |
+| `agenticaEvaluateModulo(moduloId)` | Avaliacao de modulo educacional com feedback | `AgenticaModuloResult` |
+| `agenticaProgress(personaId)` | Progresso da persona na trilha ativa | `AgenticaPersonaProgress` |
+| `agenticaStats()` | Estatisticas enriquecidas do ecossistema | modelos, skills, trilhas, workflows, certs |
+| `agenticaGovernanca(personaId, acao, nivel)` | Verificacao RBAC em tempo real | `AgenticaGovernancaCheck` |
+
+### Governanca RBAC — 5 Personas
+
+| Persona | Papel | Nivel RBAC | Trilha Ativa |
+|---------|-------|------------|--------------|
+| **Dev_Basic** | Desenvolvedor Junior | basic | Full-Stack AI Developer |
+| **DevOps_Admin** | Administrador DevOps | intermediate | DevOps Cloud Architect |
+| **System_Architect** | Arquiteto de Sistemas | advanced | AI Research Engineer |
+| **AI_Engineer** | Engenheiro de IA | advanced | AI Research Engineer |
+| **Product_Manager** | Gestor de Produto | admin | Security & Compliance |
+
+### Workflows Hibridos (Cross-Nucleo)
+
+Fluxos que atravessam os tres nucleos para entregar valor composto. Cada passo indica qual nucleo (N1/N2/N3) atua e qual saida produz.
+
+| Workflow | Nucleos | Descricao |
+|----------|---------|-----------|
+| **Desenvolvimento Guiado** | N1 -> N2 -> N3 | Usuario pede codigo -> LLM gera -> Skill executa -> Modulo avalia |
+| **Auditoria de Seguranca** | N2 -> N1 -> N3 | Skill audita -> LLM analisa resultado -> Certificacao atualiza |
+| **Pipeline de Aprendizado** | N3 -> N1 -> N2 | Trilha sugere modulo -> LLM ensina -> Skill pratica |
+
+### Politicas de Governanca
+
+O manifesto define politicas de governanca aplicadas pela Agentica AI em tempo real:
+
+- **Rate Limiting**: Limites por persona e por acao (req/min, req/hora, req/dia)
+- **Budget Tracking**: Orcamento mensal por persona com alertas em 50%, 80% e 95% de consumo
+- **Privacidade e PII**: Mascaramento automatico de campos sensiveis (email, CPF, telefone, cartao) via regex
 
 ---
 
@@ -325,9 +410,17 @@ chimera/
 |   |       |-- vaults/                #   5 rotas Bitcoin vault
 |   |       +-- rag/                   #   RAG rRNA pipeline
 |   |-- components/                    # 100+ componentes React
+|   |   +-- live-lab-tab.tsx           #   Painel Live Lab com Agentica AI
 |   |-- lib/
 |   |   |-- 9router-bridge.ts          # Bridge principal (routeChat, streamChat)
 |   |   |-- 9router-engine/            # Motor 9router (23 providers + translators)
+|   |   |-- live-lab/                  # Live Lab Tri-Nuclear v2.0
+|   |   |   |-- raw-manifesto.json     #   Manifesto JSON (9 LLMs, 17 skills, 4 trilhas, 5 personas)
+|   |   |   |-- manifesto.ts           #   Typed manifesto + AGENTICA_AI identity
+|   |   |   |-- types.ts               #   TypeScript interfaces (LiveLabManifesto, Persona, Skill...)
+|   |   |   |-- orchestrator.ts        #   Engine: routeToModel, executeSkill, evaluateModulo
+|   |   |   |-- agentica-ai.ts          #   7 funcoes Arquiteta-Cognitiva (diagnose, route, governanca...)
+|   |   |   +-- index.ts               #   Re-exports publicos
 |   |   |-- fable-method-engine.ts     # Motor Think/Act/Prove
 |   |   |-- fable-5-orchestrator.ts    # Orquestrador LLM subagentes
 |   |   |-- sandbox/                   # Sandbox (types, engine, memory, lifecycle, LLM, evolution)
