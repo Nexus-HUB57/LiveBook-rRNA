@@ -1,0 +1,1141 @@
+{
+  "nucleo_agregador": {
+    "modelos": [
+      {
+        "id": "gpt-4o",
+        "provedor": "OpenAI",
+        "contexto_tokens": 128000,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 2.5,
+          "saida_usd": 10.0
+        },
+        "latencia_media_ms": 650,
+        "peso_roteamento": 0.2,
+        "casos_uso_prioritarios": [
+          "Raciocínio multimodal",
+          "Geração de artefatos complexos",
+          "Análise de arquiteturas"
+        ]
+      },
+      {
+        "id": "claude-3-5-sonnet",
+        "provedor": "Anthropic",
+        "contexto_tokens": 200000,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 3.0,
+          "saida_usd": 15.0
+        },
+        "latencia_media_ms": 520,
+        "peso_roteamento": 0.25,
+        "casos_uso_prioritarios": [
+          "Engenharia de código complexa",
+          "Análise de artefatos estruturados",
+          "Raciocínio lógico encadeado"
+        ]
+      },
+      {
+        "id": "deepseek-r1",
+        "provedor": "DeepSeek (Self-Hosted / Infrastructure)",
+        "contexto_tokens": 64000,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 0.55,
+          "saida_usd": 2.19
+        },
+        "latencia_media_ms": 1200,
+        "peso_roteamento": 0.15,
+        "casos_uso_prioritarios": [
+          "Raciocínio matemático avançado",
+          "Validação formal de algoritmos",
+          "Dedução lógica profunda"
+        ]
+      },
+      {
+        "id": "llama-3-3-70b-instruct",
+        "provedor": "Meta / Groq Engine",
+        "contexto_tokens": 128000,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 0.59,
+          "saida_usd": 0.79
+        },
+        "latencia_media_ms": 280,
+        "peso_roteamento": 0.15,
+        "casos_uso_prioritarios": [
+          "Processamento de alta velocidade",
+          "Transformação e ETL de texto",
+          "Tarefas operacionais de baixo custo"
+        ]
+      },
+      {
+        "id": "gemini-1-5-pro",
+        "provedor": "Google Cloud Vertex AI",
+        "contexto_tokens": 2000000,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 1.25,
+          "saida_usd": 5.0
+        },
+        "latencia_media_ms": 850,
+        "peso_roteamento": 0.1,
+        "casos_uso_prioritarios": [
+          "Análise de documentos ultralongos",
+          "Ingestão de repositórios completos",
+          "Processamento de vídeo/áudio longo"
+        ]
+      },
+      {
+        "id": "mistral-large-2",
+        "provedor": "Mistral AI",
+        "contexto_tokens": 128000,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 2.0,
+          "saida_usd": 6.0
+        },
+        "latencia_media_ms": 480,
+        "peso_roteamento": 0.05,
+        "casos_uso_prioritarios": [
+          "Tarefas multilíngues avançadas",
+          "Raciocínio conciso",
+          "Sumarização de negócios"
+        ]
+      },
+      {
+        "id": "qwen-2-5-coder-32b",
+        "provedor": "Alibaba Cloud / Local Instance",
+        "contexto_tokens": 32000,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 0.3,
+          "saida_usd": 0.6
+        },
+        "latencia_media_ms": 320,
+        "peso_roteamento": 0.05,
+        "casos_uso_prioritarios": [
+          "Autocomplete de código",
+          "Refatoração pontual",
+          "Geração de scripts e queries SQL"
+        ]
+      },
+      {
+        "id": "medlm-large-v2",
+        "provedor": "Google Health / Fine-Tuned Vertical",
+        "contexto_tokens": 32000,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 4.0,
+          "saida_usd": 12.0
+        },
+        "latencia_media_ms": 780,
+        "peso_roteamento": 0.05,
+        "casos_uso_prioritarios": [
+          "Análise de terminologia médica",
+          "Validação de dados biomédicos",
+          "NLU para saúde"
+        ]
+      }
+    ],
+    "algoritmo_roteamento": {
+      "estrategia": "Dynamic Latency-Cost Cascade with Intent Classification",
+      "etapas": [
+        "1. Classificação de Intenção e Complexidade (Intent Guard Router em < 40ms via Llama-3.3-8B).",
+        "2. Análise de SLAs e Restrições de Orcamento (Budget Quota Check).",
+        "3. Seleção do Modelo Primário com base nas tags de prioridade.",
+        "4. Execução com Timeout Curto.",
+        "5. Algoritmo de Fallback e Cascata se falhar ou exceder latência limite."
+      ],
+      "politica_fallback": {
+        "timeout_ms_trigger": 1500,
+        "regra_cascata": "Se Raciocínio (DeepSeek-R1) der Timeout -> Fallback para Claude-3-5-Sonnet -> Fallback final para Llama-3-3-70b-Instruct."
+      }
+    }
+  },
+  "nucleo_produtividade": {
+    "skills": [
+      {
+        "id": "devops_git_commit_analyzer",
+        "dominio": "DevOps",
+        "nome": "Analisador de Diff Git",
+        "trigger": "/analyze-commit",
+        "rbac_permissões": [
+          "repo:read",
+          "logs:write"
+        ],
+        "nivel_criticidade": "baixo",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "repo_url": {
+                "type": "string"
+              },
+              "commit_sha": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "repo_url",
+              "commit_sha"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "string"
+              },
+              "security_risks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "devops_k8s_deploy_debugger",
+        "dominio": "DevOps",
+        "nome": "Diagnóstico de Pods Kubernetes",
+        "trigger": "/k8s-debug",
+        "rbac_permissões": [
+          "k8s:cluster:read",
+          "k8s:pod:logs"
+        ],
+        "nivel_criticidade": "medio",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "namespace": {
+                "type": "string"
+              },
+              "pod_name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "namespace",
+              "pod_name"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "root_cause": {
+                "type": "string"
+              },
+              "remediation_command": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "devops_tf_plan_validator",
+        "dominio": "DevOps",
+        "nome": "Validador de Infraestrutura Terraform",
+        "trigger": "/validate-tf",
+        "rbac_permissões": [
+          "infra:plan:read"
+        ],
+        "nivel_criticidade": "medio",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan_json": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan_json"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "cost_delta": {
+                "type": "number"
+              },
+              "policy_violations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "dataviz_sql_query_builder",
+        "dominio": "DataViz",
+        "nome": "Gerador e Otimizador de Consultas SQL",
+        "trigger": "/generate-sql",
+        "rbac_permissões": [
+          "db:schema:read"
+        ],
+        "nivel_criticidade": "baixo",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "natural_prompt": {
+                "type": "string"
+              },
+              "schema_definition": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "natural_prompt"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "sql_query": {
+                "type": "string"
+              },
+              "estimated_cost_ms": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "dataviz_plotly_chart_generator",
+        "dominio": "DataViz",
+        "nome": "Renderizador de Gráficos Plotly",
+        "trigger": "/render-chart",
+        "rbac_permissões": [
+          "artifacts:create"
+        ],
+        "nivel_criticidade": "baixo",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "dataset_json": {
+                "type": "array"
+              },
+              "chart_type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_json",
+              "chart_type"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "html_artifact_url": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "dataviz_data_cleaner",
+        "dominio": "DataViz",
+        "nome": "Saneador de Anomalias de Dados (Pandas Engine)",
+        "trigger": "/clean-data",
+        "rbac_permissões": [
+          "sandbox:exec"
+        ],
+        "nivel_criticidade": "medio",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "file_ref": {
+                "type": "string"
+              },
+              "null_strategy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file_ref"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "cleaned_file_ref": {
+                "type": "string"
+              },
+              "rows_removed": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "contentgen_md_docs_builder",
+        "dominio": "ContentGen",
+        "nome": "Gerador de Documentação Técnica em Markdown",
+        "trigger": "/gen-docs",
+        "rbac_permissões": [
+          "wiki:write"
+        ],
+        "nivel_criticidade": "baixo",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "source_code": {
+                "type": "string"
+              },
+              "doc_format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source_code"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "markdown_output": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "contentgen_i18n_translator",
+        "dominio": "ContentGen",
+        "nome": "Tradutor Técnico Preservador de Contexto",
+        "trigger": "/translate-tech",
+        "rbac_permissões": [
+          "content:read"
+        ],
+        "nivel_criticidade": "baixo",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "target_lang": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "target_lang"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "translated_text": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "contentgen_mermaid_diagrammer",
+        "dominio": "ContentGen",
+        "nome": "Gerador de Diagramas de Arquitetura Mermaid",
+        "trigger": "/draw-architecture",
+        "rbac_permissões": [
+          "artifacts:create"
+        ],
+        "nivel_criticidade": "baixo",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "architecture_description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "architecture_description"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "mermaid_code": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "automation_webhook_dispatcher",
+        "dominio": "Automation",
+        "nome": "Disparador de Webhooks de Sistema",
+        "trigger": "/trigger-webhook",
+        "rbac_permissões": [
+          "network:outbound:http"
+        ],
+        "nivel_criticidade": "alto",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "endpoint_url": {
+                "type": "string"
+              },
+              "payload_data": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "endpoint_url",
+              "payload_data"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "http_status": {
+                "type": "integer"
+              },
+              "response_body": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "automation_slack_notifier",
+        "dominio": "Automation",
+        "nome": "Notificador de Canais Slack",
+        "trigger": "/notify-slack",
+        "rbac_permissões": [
+          "slack:write"
+        ],
+        "nivel_criticidade": "baixo",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "channel_id": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "channel_id",
+              "message"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "delivered": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "automation_jira_issue_creator",
+        "dominio": "Automation",
+        "nome": "Criador de Tickets Jira Automatizado",
+        "trigger": "/create-jira",
+        "rbac_permissões": [
+          "jira:issue:create"
+        ],
+        "nivel_criticidade": "medio",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "project_key": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "project_key",
+              "summary"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "issue_key": {
+                "type": "string"
+              },
+              "issue_url": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "security_pii_sanitizer",
+        "dominio": "Security",
+        "nome": "Higienizador de PII e Segredos",
+        "trigger": "/sanitize-pii",
+        "rbac_permissões": [
+          "security:mask"
+        ],
+        "nivel_criticidade": "alto",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "raw_text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "raw_text"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "sanitized_text": {
+                "type": "string"
+              },
+              "redacted_count": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "security_dependency_scanner",
+        "dominio": "Security",
+        "nome": "Escaneador de Vulnerabilidades de Dependências",
+        "trigger": "/scan-deps",
+        "rbac_permissões": [
+          "repo:read"
+        ],
+        "nivel_criticidade": "medio",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "manifest_file_content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "manifest_file_content"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "vulnerabilities": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "sandbox_python_executor",
+        "dominio": "DevOps",
+        "nome": "Executor de Código Python Isolado (gVisor Sandbox)",
+        "trigger": "/exec-python",
+        "rbac_permissões": [
+          "sandbox:exec:isolated"
+        ],
+        "nivel_criticidade": "alto",
+        "payload_schema": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "timeout_sec": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "stdout": {
+                "type": "string"
+              },
+              "stderr": {
+                "type": "string"
+              },
+              "exit_code": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "meta_skills": [
+      {
+        "id": "meta_repo_audit_and_notify",
+        "nome": "Auditoria de Repositório, Relatório e Notificação Executiva",
+        "trigger": "/meta-audit-repo",
+        "orquestracao": [
+          "1. Chamada: devops_git_commit_analyzer",
+          "2. Chamada: security_dependency_scanner",
+          "3. Chamada: contentgen_md_docs_builder (sintetiza relatório)",
+          "4. Chamada: automation_slack_notifier (envia alerta para a equipe)"
+        ],
+        "nivel_criticidade": "medio"
+      },
+      {
+        "id": "meta_data_pipeline_and_viz",
+        "nome": "Pipeline Completo de Ingestão, Limpeza, SQL e Visualização",
+        "trigger": "/meta-pipeline-viz",
+        "orquestracao": [
+          "1. Chamada: dataviz_data_cleaner",
+          "2. Chamada: dataviz_sql_query_builder",
+          "3. Chamada: sandbox_python_executor (executa query e extrai dataframe)",
+          "4. Chamada: dataviz_plotly_chart_generator"
+        ],
+        "nivel_criticidade": "medio"
+      },
+      {
+        "id": "meta_auto_incident_remediation",
+        "nome": "Triagem de Incidentes K8s e Abertura de Bug com Correção",
+        "trigger": "/meta-remediate-incident",
+        "orquestracao": [
+          "1. Chamada: devops_k8s_deploy_debugger",
+          "2. Chamada: security_pii_sanitizer (limpa logs sensíveis)",
+          "3. Chamada: automation_jira_issue_creator (abre ticket crítico)",
+          "4. Chamada: automation_slack_notifier (notifica equipe de plantão/SRE)"
+        ],
+        "nivel_criticidade": "alto"
+      }
+    ]
+  },
+  "nucleo_ecossistema": {
+    "trilhas_aprendizagem": [
+      {
+        "id": "trilha_assistente_dados",
+        "nome": "Assistente de Dados com IA",
+        "modulos": [
+          {
+            "modulo_id": "mod_d1",
+            "titulo": "Fundamentos de Engenharia de Prompts para Consultas de Dados",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "dataviz_sql_query_builder",
+              "modelo_obrigatorio_n1": "llama-3-3-70b-instruct"
+            }
+          },
+          {
+            "modulo_id": "mod_d2",
+            "titulo": "Saneamento de Dados Heterogêneos em Ambientação Isolada",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "dataviz_data_cleaner",
+              "modelo_obrigatorio_n1": "claude-3-5-sonnet"
+            }
+          },
+          {
+            "modulo_id": "mod_d3",
+            "titulo": "Execução Segura de Análises em Sandbox Python",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "sandbox_python_executor",
+              "modelo_obrigatorio_n1": "deepseek-r1"
+            }
+          },
+          {
+            "modulo_id": "mod_d4",
+            "titulo": "Geração Dinâmica de Artefatos Gráficos e Dashboards",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "dataviz_plotly_chart_generator",
+              "modelo_obrigatorio_n1": "gpt-4o"
+            }
+          },
+          {
+            "modulo_id": "mod_d5",
+            "titulo": "Orquestração Automática de Data Pipelines Práticos",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "meta_data_pipeline_and_viz",
+              "modelo_obrigatorio_n1": "claude-3-5-sonnet"
+            }
+          }
+        ]
+      },
+      {
+        "id": "trilha_engenheiro_prompts",
+        "nome": "Engenheiro de Prompts e Roteamento Avançado",
+        "modulos": [
+          {
+            "modulo_id": "mod_p1",
+            "titulo": "Taxonomia de Modelos e Seleção Estratégica por Custo-Latência",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "contentgen_md_docs_builder",
+              "modelo_obrigatorio_n1": "llama-3-3-70b-instruct"
+            }
+          },
+          {
+            "modulo_id": "mod_p2",
+            "titulo": "Técnicas de Raciocínio Encadeado (Chain-of-Thought) e Reasoning Models",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "sandbox_python_executor",
+              "modelo_obrigatorio_n1": "deepseek-r1"
+            }
+          },
+          {
+            "modulo_id": "mod_p3",
+            "titulo": "Segurança em LLMs: Mitigação de Injection e Masking de PII",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "security_pii_sanitizer",
+              "modelo_obrigatorio_n1": "gpt-4o"
+            }
+          },
+          {
+            "modulo_id": "mod_p4",
+            "titulo": "Engenharia de Contexto para Janelas Ultra-Extensas",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "contentgen_i18n_translator",
+              "modelo_obrigatorio_n1": "gemini-1-5-pro"
+            }
+          },
+          {
+            "modulo_id": "mod_p5",
+            "titulo": "Construção de Meta-Prompts para Sistemas Multi-Agentes",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "contentgen_mermaid_diagrammer",
+              "modelo_obrigatorio_n1": "claude-3-5-sonnet"
+            }
+          }
+        ]
+      },
+      {
+        "id": "trilha_automacao_empresarial",
+        "nome": "Especialista em Automação Empresarial com IA",
+        "modulos": [
+          {
+            "modulo_id": "mod_a1",
+            "titulo": "Modelagem de Integradores via Webhooks Assíncronos",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "automation_webhook_dispatcher",
+              "modelo_obrigatorio_n1": "llama-3-3-70b-instruct"
+            }
+          },
+          {
+            "modulo_id": "mod_a2",
+            "titulo": "Gestão e Governança de Eventos em ChatOps",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "automation_slack_notifier",
+              "modelo_obrigatorio_n1": "mistral-large-2"
+            }
+          },
+          {
+            "modulo_id": "mod_a3",
+            "titulo": "Automação de Incidentes e ITSM Integrado com IA",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "automation_jira_issue_creator",
+              "modelo_obrigatorio_n1": "gpt-4o"
+            }
+          },
+          {
+            "modulo_id": "mod_a4",
+            "titulo": "Varredura Dinâmica e Auditoria de Código Contínuo",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "security_dependency_scanner",
+              "modelo_obrigatorio_n1": "qwen-2-5-coder-32b"
+            }
+          },
+          {
+            "modulo_id": "mod_a5",
+            "titulo": "Orquestração Complexa de Workflows Autônomos",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "meta_repo_audit_and_notify",
+              "modelo_obrigatorio_n1": "claude-3-5-sonnet"
+            }
+          }
+        ]
+      },
+      {
+        "id": "trilha_arquiteto_ia",
+        "nome": "Arquiteto de Sistemas de IA Híbridos",
+        "modulos": [
+          {
+            "modulo_id": "mod_arch1",
+            "titulo": "Design de Arquiteturas Tri-Nucleares e Malha de Eventos",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "contentgen_mermaid_diagrammer",
+              "modelo_obrigatorio_n1": "gpt-4o"
+            }
+          },
+          {
+            "modulo_id": "mod_arch2",
+            "titulo": "Diagnóstico de Infraestrutura Kubernetes em Escala",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "devops_k8s_deploy_debugger",
+              "modelo_obrigatorio_n1": "claude-3-5-sonnet"
+            }
+          },
+          {
+            "modulo_id": "mod_arch3",
+            "titulo": "Validação de Infraestrutura como Código com Cálculo de Custo",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "devops_tf_plan_validator",
+              "modelo_obrigatorio_n1": "deepseek-r1"
+            }
+          },
+          {
+            "modulo_id": "mod_arch4",
+            "titulo": "Resolução Autônoma de Incidentes Críticos",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "meta_auto_incident_remediation",
+              "modelo_obrigatorio_n1": "gpt-4o"
+            }
+          },
+          {
+            "modulo_id": "mod_arch5",
+            "titulo": "Governança, Token-Budgeting e PII Masking Avançado",
+            "requisitos_praticos": {
+              "skill_obrigatoria_n2": "security_pii_sanitizer",
+              "modelo_obrigatorio_n1": "claude-3-5-sonnet"
+            }
+          }
+        ]
+      }
+    ],
+    "certificacoes": [
+      {
+        "nivel": "Bronze",
+        "titulo": "Operador Prático de Sistemas com IA",
+        "criterios_aprovacao": {
+          "trilhas_concluidas_minimo": 1,
+          "taxa_acerto_labs_percentual": 75.0,
+          "total_skills_distintas_executadas": 5
+        }
+      },
+      {
+        "nivel": "Prata",
+        "titulo": "Especialista em Orquestração e Automação Híbrida",
+        "criterios_aprovacao": {
+          "trilhas_concluidas_minimo": 2,
+          "taxa_acerto_labs_percentual": 85.0,
+          "total_skills_distintas_executadas": 10,
+          "meta_skills_executadas_com_sucesso": 2
+        }
+      },
+      {
+        "nivel": "Ouro",
+        "titulo": "Arquiteto-Cognitivo de Ecossistemas Autônomos",
+        "criterios_aprovacao": {
+          "trilhas_concluidas_minimo": 4,
+          "taxa_acerto_labs_percentual": 95.0,
+          "total_skills_distintas_executadas": 15,
+          "meta_skills_executadas_com_sucesso": 3,
+          "contribuicao_sandbox_sucesso": 100.0
+        }
+      }
+    ]
+  },
+  "workflows_hibridos": {
+    "malha_eventos_descricao": "Barramento distribuído (Apache Kafka / EventBridge) com tópico pub/sub interconectando os núcleos em tempo real. O N1 gera decisões e roteamentos, publicando eventos de execução para o N2, enquanto o N3 subscreve todos os eventos para metrificação educacional, telemetria e validação de labs.",
+    "exemplos_fluxos": [
+      {
+        "id": "workflow_a_pesquisa",
+        "nome": "Pesquisa Enriquecida e Log de Aprendizado",
+        "tipo": "Assíncrono",
+        "passos": [
+          "1. Usuário envia consulta complexa via interface do Ecossistema (N3).",
+          "2. Roteador de N1 analisa complexidade e seleciona Gemini-1-5-Pro para expansão contextual.",
+          "3. N1 identifica necessidade de validação e aciona Skill 'devops_git_commit_analyzer' em N2 para ler dados de repositório.",
+          "4. N2 processa o diff e devolve os dados enriquecidos para o N1.",
+          "5. N1 gera a resposta sintética refinada para o usuário.",
+          "6. Evento final é enviado ao N3, logando o caso de uso no histórico do aluno como artefato complementar do Módulo M2."
+        ]
+      },
+      {
+        "id": "workflow_b_automacao",
+        "nome": "Agendamento de ETL com Sumarização e Emissão de Certificado",
+        "tipo": "Agendado / Trigger de Tempo",
+        "passos": [
+          "1. Cron-Trigger dispara a Meta-Skill 'meta_data_pipeline_and_viz' em N2 às 02:00.",
+          "2. N2 limpa dados, executa SQL e gera relatório visual.",
+          "3. N1 (via Llama-3.3-70b-Instruct) sumariza as métricas operacionais obtidas pelo N2.",
+          "4. O resultado é submetido ao avaliador do N3.",
+          "5. N3 detecta que o usuário atingiu a 10ª execução com 100% de precisão e emite automaticamente a Certificação Nível Bronze."
+        ]
+      },
+      {
+        "id": "workflow_c_correcao",
+        "nome": "Loop Autônomo de Correção de Código em Sandbox Educacional",
+        "tipo": "Reativo / Malha Fechada",
+        "passos": [
+          "1. Aluno submete um exercício prático no N3 que falha na execução da Skill 'sandbox_python_executor' (N2) com stderr.",
+          "2. N3 captura a exceção e publica evento no barramento.",
+          "3. N1 (utilizando DeepSeek-R1) analisa o código, o erro do stderr e constrói um plano de correção passo a passo.",
+          "4. N1 invoca novamente N2 em um ambiente isolado com o código corrigido para validação formal.",
+          "5. Se N2 retornar exit_code 0, o N3 libera a resposta explicativa e avança o progresso do aluno."
+        ]
+      }
+    ]
+  },
+  "personas": [
+    {
+      "id": "usr_001",
+      "nome": "Ana Souza",
+      "papel": "Analista de Dados Junior",
+      "nivel_acesso_rbac": "Developer_Basic",
+      "trilha_ativa": "trilha_assistente_dados",
+      "certificacao_atual": "Nenhuma (Em progresso)",
+      "historico_interacoes": {
+        "consultas_n1": 142,
+        "skills_executadas_n2": [
+          "dataviz_sql_query_builder",
+          "dataviz_data_cleaner",
+          "sandbox_python_executor"
+        ],
+        "modulos_concluidos_n3": [
+          "mod_d1",
+          "mod_d2"
+        ],
+        "taxa_sucesso_labs": 82.5
+      }
+    },
+    {
+      "id": "usr_002",
+      "nome": "Carlos Eduardo",
+      "papel": "Engenheiro DevOps Pleno",
+      "nivel_acesso_rbac": "DevOps_Admin",
+      "trilha_ativa": "trilha_automacao_empresarial",
+      "certificacao_atual": "Bronze",
+      "historico_interacoes": {
+        "consultas_n1": 310,
+        "skills_executadas_n2": [
+          "devops_k8s_deploy_debugger",
+          "devops_tf_plan_validator",
+          "automation_webhook_dispatcher",
+          "automation_slack_notifier"
+        ],
+        "modulos_concluidos_n3": [
+          "mod_a1",
+          "mod_a2",
+          "mod_a3",
+          "mod_a4"
+        ],
+        "taxa_sucesso_labs": 91.0
+      }
+    },
+    {
+      "id": "usr_003",
+      "nome": "Mariana Luz",
+      "papel": "Arquiteta de Soluções",
+      "nivel_acesso_rbac": "System_Architect",
+      "trilha_ativa": "trilha_arquiteto_ia",
+      "certificacao_atual": "Prata",
+      "historico_interacoes": {
+        "consultas_n1": 680,
+        "skills_executadas_n2": [
+          "contentgen_mermaid_diagrammer",
+          "meta_auto_incident_remediation",
+          "security_pii_sanitizer",
+          "devops_tf_plan_validator"
+        ],
+        "modulos_concluidos_n3": [
+          "mod_arch1",
+          "mod_arch2",
+          "mod_arch3",
+          "mod_arch4"
+        ],
+        "taxa_sucesso_labs": 98.0
+      }
+    },
+    {
+      "id": "usr_004",
+      "nome": "Lucas Prado",
+      "papel": "Engenheiro de IA / Prompt Engineer",
+      "nivel_acesso_rbac": "AI_Engineer",
+      "trilha_ativa": "trilha_engenheiro_prompts",
+      "certificacao_atual": "Bronze",
+      "historico_interacoes": {
+        "consultas_n1": 520,
+        "skills_executadas_n2": [
+          "contentgen_md_docs_builder",
+          "security_pii_sanitizer",
+          "sandbox_python_executor"
+        ],
+        "modulos_concluidos_n3": [
+          "mod_p1",
+          "mod_p2",
+          "mod_p3"
+        ],
+        "taxa_sucesso_labs": 88.0
+      }
+    },
+    {
+      "id": "usr_005",
+      "nome": "Beatriz Mendez",
+      "papel": "Gerente de Produtos Digitais (PM)",
+      "nivel_acesso_rbac": "Product_Manager",
+      "trilha_ativa": "trilha_assistente_dados",
+      "certificacao_atual": "Nenhuma",
+      "historico_interacoes": {
+        "consultas_n1": 95,
+        "skills_executadas_n2": [
+          "contentgen_i18n_translator",
+          "automation_jira_issue_creator"
+        ],
+        "modulos_concluidos_n3": [
+          "mod_d1"
+        ],
+        "taxa_sucesso_labs": 78.0
+      }
+    }
+  ],
+  "politicas_governanca": {
+    "rate_limiting": {
+      "regra_por_usuario": "Máximo de 60 requisições/minuto no N1; 20 execuções de Skills/minuto no N2.",
+      "regra_por_nivel_rbac": {
+        "Developer_Basic": "100k tokens/dia no N1",
+        "DevOps_Admin": "500k tokens/dia no N1",
+        "System_Architect": "2M tokens/dia no N1"
+      }
+    },
+    "budget_tracking": {
+      "teto_mensal_live_lab_usd": 1500.0,
+      "alocacao_por_nucleo": {
+        "nucleo_1_aggregators": "60% (USD 900.00)",
+        "nucleo_2_productivity": "25% (USD 375.00)",
+        "nucleo_3_ecosystem": "15% (USD 225.00)"
+      },
+      "mecanismo_alerta": "Notificação em 80% do budget via Skill 'automation_slack_notifier' e corte automático (Circuit Breaker) ao atingir 100%."
+    },
+    "privacidade_e_pii": {
+      "interceptador_obrigatorio": "Toda chamada externa para o N1 ou N2 passa obrigatoriamente pela Skill 'security_pii_sanitizer' na API Gateway.",
+      "politica_retencao": "Logs de execução mantidos por 90 dias no N3 apenas com dados anonimizados."
+    }
+  },
+  "versao": "1.0.0",
+  "visao_executiva": "O Live Lab Tri-Nuclear e um Laboratorio Vivo de Pesquisa Cientifica que integra tres nucleos cognitivos simbioticos: o Nucleo Agregador (N1) centraliza 8 LLMs com roteamento inteligente por peso e latencia, o Nucleo de Produtividade (N2) expoe 15+ Skills atomicas e 3 Meta-Skills de automacao, e o Nucleo Ecossistema (N3) estrutura 4 trilhas de capacitacao com certificacao progressiva. A malha de eventos assincronos conecta os nucleos em workflows de pesquisa, automacao e correcao pedagogica, garantindo que o laboratorio simule 6 meses de uso ativo com telemetria completa."
+}

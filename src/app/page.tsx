@@ -1,3 +1,4 @@
+          <TabsContent value="live-lab" className="mt-4"><LiveLabTab /></TabsContent>
 'use client';
 
 import { useState } from 'react';
@@ -216,4 +217,4 @@ export default function Home() {
       />
     </div>
   );
-}
+}          <TabsTrigger value="live-lab" className="text-xs sm:text-sm"><FlaskConical className="h-4 w-4 mr-1.5" />Live Lab</TabsTrigger>
