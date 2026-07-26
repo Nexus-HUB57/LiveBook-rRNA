@@ -13,6 +13,8 @@ import {
   LIVE_LAB_MANIFESTO,
   getLiveLabStats,
   routeToModel,
+  agenticaDiagnose,
+  agenticaStats,
 } from "@/lib/live-lab";
 
 const NUCLEO_COLORS: Record<number, string> = {
@@ -156,7 +158,7 @@ export default function LiveLabTab() {
         <TabsContent value="n2" className="mt-4">
           <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
             <Wrench className="h-4 w-4 text-cyan-400" />
-            Skills Atomicas ({manifesto.nucleo_produtividade.skills_atomicas.length})
+            Skills Atomicas ({manifesto.nucleo_produtividade.skills.length})
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -170,7 +172,7 @@ export default function LiveLabTab() {
                 </tr>
               </thead>
               <tbody>
-                {manifesto.nucleo_produtividade.skills_atomicas.map((s) => (
+                {manifesto.nucleo_produtividade.skills.map((s) => (
                   <tr key={s.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/30">
                     <td className="p-2 font-mono text-emerald-400">{s.nome}</td>
                     <td className="p-2 font-mono text-zinc-400">{s.trigger}</td>
@@ -179,10 +181,10 @@ export default function LiveLabTab() {
                         {s.dominio}
                       </span>
                     </td>
-                    <td className="p-2 text-zinc-400">{s.rbac_nivel}</td>
+                    <td className="p-2 text-zinc-400">{s.rbac_permissoes}</td>
                     <td className="p-2">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] ${CRITICIDADE_COLORS[s.criticidade] || ""}`}>
-                        {s.criticidade}
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] ${CRITICIDADE_COLORS[s.nivel_criticidade] || ""}`}>
+                        {s.nivel_criticidade}
                       </span>
                     </td>
                   </tr>
@@ -202,7 +204,7 @@ export default function LiveLabTab() {
                   <CardTitle className="text-sm font-mono text-yellow-400">{ms.nome}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 pt-0 space-y-2 text-xs">
-                  <p className="text-zinc-400">{ms.descricao}</p>
+                  <p className="text-zinc-400">{ms.nome}</p>
                   <div className="text-zinc-500">Skills compostas:</div>
                   <div className="flex flex-wrap gap-1">
                     {ms.skills_compostas.map((sid) => (
@@ -213,7 +215,7 @@ export default function LiveLabTab() {
                   </div>
                   <div className="flex justify-between text-zinc-500">
                     <span>Ordem: <span className="text-zinc-300">{ms.ordem_execucao}</span></span>
-                    <span>Criticidade: <span className={CRITICIDADE_COLORS[ms.criticidade]?.split(" ")[1] || "text-zinc-300"}>{ms.criticidade}</span></span>
+                    <span>Criticidade: <span className={CRITICIDADE_COLORS[ms.nivel_criticidade]?.split(" ")[1] || "text-zinc-300"}>{ms.nivel_criticidade}</span></span>
                   </div>
                 </CardContent>
               </Card>
@@ -224,13 +226,13 @@ export default function LiveLabTab() {
         {/* N3 — Ecossistema */}
         <TabsContent value="n3" className="mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {manifesto.nucleo_ecossistema.trilhas.map((trilha) => (
+            {manifesto.nucleo_ecossistema.trilhas_aprendizagem.map((trilha) => (
               <Card key={trilha.id} className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader className="p-3 pb-2">
                   <CardTitle className="text-sm text-violet-400 flex items-center justify-between">
                     {trilha.nome}
-                    <Badge className={`text-[10px] ${CERT_NIVEIS[trilha.certificacao.nivel] || ""}`}>
-                      {trilha.certificacao.nivel}
+                    <Badge className={`text-[10px] ${CERT_NIVEIS[trilha.certificacao?.nivel] || ""}`}>
+                      {trilha.certificacao?.nivel}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
@@ -266,7 +268,7 @@ export default function LiveLabTab() {
                     </div>
                   </div>
                   <div className="text-[10px] text-zinc-600 border-t border-zinc-800 pt-2">
-                    Requisitos cert.: {trilha.certificacao.requisitos.join(" | ")}
+                    Requisitos cert.: {(trilha.certificacao?.requisitos || []).join(" | ")}
                   </div>
                 </CardContent>
               </Card>
@@ -277,7 +279,7 @@ export default function LiveLabTab() {
         {/* Workflows */}
         <TabsContent value="workflows" className="mt-4">
           <div className="space-y-4">
-            {manifesto.workflows_hibridos.map((wf) => (
+            {(Array.isArray(manifesto.workflows_hibridos) ? manifesto.workflows_hibridos : manifesto.workflows_hibridos.exemplos_fluxos || []).map((wf) => (
               <Card key={wf.id} className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader className="p-3 pb-2">
                   <CardTitle className="text-sm text-white flex items-center justify-between">
@@ -329,14 +331,14 @@ export default function LiveLabTab() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-white">{p.nome}</span>
                     <Badge variant="outline" className="text-[10px] border-zinc-700 text-zinc-400">
-                      {p.rbac_nivel}
+                      {p.nivel_acesso_rbac}
                     </Badge>
                   </div>
-                  <div className="text-xs text-zinc-400">{p.perfil}</div>
+                  <div className="text-xs text-zinc-400">{p.papel}</div>
                   <div className="grid grid-cols-2 gap-2 text-[10px]">
                     <div className="flex items-center gap-1 text-zinc-500">
                       <DollarSign className="h-3 w-3" />
-                      <span>Budget: <span className="font-mono text-zinc-300">{(p.budget_diario_tokens / 1000).toFixed(0)}K tokens</span></span>
+                      <span>Budget: <span className="font-mono text-zinc-300">{(0 / 1000).toFixed(0)}K tokens</span></span>
                     </div>
                     <div className="flex items-center gap-1 text-zinc-500">
                       <BookOpen className="h-3 w-3" />
@@ -344,7 +346,7 @@ export default function LiveLabTab() {
                     </div>
                     <div className="flex items-center gap-1 text-zinc-500">
                       <Target className="h-3 w-3" />
-                      <span>Modulo: <span className="font-mono text-zinc-300">M{p.modulo_atual}</span></span>
+                      <span>Modulo: <span className="font-mono text-zinc-300">M{0}</span></span>
                     </div>
                     <div className="flex items-center gap-1 text-zinc-500">
                       <Clock className="h-3 w-3" />
@@ -376,7 +378,7 @@ export default function LiveLabTab() {
             Perguntas Criticas para o Time de Engenharia
           </h3>
           <div className="space-y-2">
-            {manifesto.perguntas_criticas.map((q, i) => (
+            {([] as string[]).map((q, i) => (
               <div key={i} className="flex items-start gap-2 p-3 bg-amber-500/5 border border-amber-500/10 rounded">
                 <span className="text-amber-400 font-mono text-xs mt-0.5">Q{i + 1}</span>
                 <p className="text-xs text-zinc-300">{q}</p>

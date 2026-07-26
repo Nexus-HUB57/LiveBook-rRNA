@@ -1,7 +1,6 @@
 /**
- * ═══════════════════════════════════════════════════════════════
- * LIVE LAB TRI-NUCLEAR — Type Definitions
- * ═══════════════════════════════════════════════════════════════
+ * LIVE LAB TRI-NUCLEAR — Type Definitions v2.0
+ * Alinhado com a estrutura real do raw-manifesto.json
  */
 
 export interface LiveLabModel {
@@ -23,14 +22,20 @@ export interface Skill {
   nome: string;
   dominio: string;
   trigger: string;
-  rbac_nivel: string;
-  entrada_schema: Record<string, unknown>;
-  saida_schema: Record<string, unknown>;
-  criticidade: string;
-  descricao: string;
+  rbac_permissoes: string;
+  nivel_criticidade: string;
+  payload_schema: Record<string, unknown>;
+  descricao?: string;
 }
 
-export interface MetaSkill extends Skill {
+export interface MetaSkill {
+  id: string;
+  nome: string;
+  dominio: string;
+  trigger: string;
+  rbac_permissoes: string;
+  nivel_criticidade: string;
+  payload_schema: Record<string, unknown>;
   skills_compostas: string[];
   ordem_execucao: string;
 }
@@ -48,9 +53,9 @@ export interface ModuloEducacional {
 export interface TrilhaAprendizagem {
   id: string;
   nome: string;
-  descricao: string;
   modulos: ModuloEducacional[];
-  certificacao: {
+  descricao?: string;
+  certificacao?: {
     nivel: string;
     requisitos: string[];
   };
@@ -81,18 +86,17 @@ export interface InteracaoHistorico {
 export interface Persona {
   id: string;
   nome: string;
-  perfil: string;
-  rbac_nivel: string;
-  budget_diario_tokens: number;
+  papel: string;
+  nivel_acesso_rbac: string;
   trilha_ativa: string | null;
-  modulo_atual: number;
+  certificacao_atual: string | null;
   historico_interacoes: InteracaoHistorico[];
 }
 
 export interface PoliticaGovernanca {
-  rate_limit: Record<string, Record<string, number>>;
+  rate_limiting: Record<string, Record<string, number>>;
   budget_tracking: Record<string, number>;
-  pii_masking: {
+  privacidade_e_pii: {
     campos_regex: string[];
     acao: string;
   };
@@ -106,15 +110,17 @@ export interface LiveLabManifesto {
     algoritmo_roteamento: Record<string, unknown>;
   };
   nucleo_produtividade: {
-    skills_atomicas: Skill[];
+    skills: Skill[];
     meta_skills: MetaSkill[];
   };
   nucleo_ecossistema: {
-    trilhas: TrilhaAprendizagem[];
+    trilhas_aprendizagem: TrilhaAprendizagem[];
     certificacoes: Record<string, unknown>;
   };
-  workflows_hibridos: WorkflowHibrido[];
+  workflows_hibridos: {
+    malha_eventos_descricao: Record<string, unknown>;
+    exemplos_fluxos: WorkflowHibrido[];
+  };
   personas: Persona[];
   politicas_governanca: PoliticaGovernanca;
-  perguntas_criticas: string[];
 }
