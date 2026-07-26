@@ -50,6 +50,8 @@ const CERT_NIVEIS: Record<string, string> = {
 export default function LiveLabTab() {
   const [activeSub, setActiveSub] = useState("n1");
   const stats = getLiveLabStats();
+  const agentica = agenticaDiagnose();
+  const aStats = agenticaStats();
   const manifesto = LIVE_LAB_MANIFESTO;
 
   return (

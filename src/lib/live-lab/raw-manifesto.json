@@ -128,6 +128,23 @@
           "Validação de dados biomédicos",
           "NLU para saúde"
         ]
+      },
+      {
+        "id": "codegeex4",
+        "provedor": "Zhipu AI / CodeGeeX (Self-Hosted)",
+        "contexto_tokens": 16384,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 0.0,
+          "saida_usd": 0.0
+        },
+        "latencia_media_ms": 180,
+        "peso_roteamento": 0.12,
+        "casos_uso_prioritarios": [
+          "Geracao de codigo nativo",
+          "Autocompletar e refactoring",
+          "Labs de baixo custo zero"
+        ],
+        "formato_api": "openai"
       }
     ],
     "algoritmo_roteamento": {
@@ -1136,6 +1153,6 @@
       "politica_retencao": "Logs de execução mantidos por 90 dias no N3 apenas com dados anonimizados."
     }
   },
-  "versao": "1.0.0",
-  "visao_executiva": "O Live Lab Tri-Nuclear e um Laboratorio Vivo de Pesquisa Cientifica que integra tres nucleos cognitivos simbioticos: o Nucleo Agregador (N1) centraliza 8 LLMs com roteamento inteligente por peso e latencia, o Nucleo de Produtividade (N2) expoe 15+ Skills atomicas e 3 Meta-Skills de automacao, e o Nucleo Ecossistema (N3) estrutura 4 trilhas de capacitacao com certificacao progressiva. A malha de eventos assincronos conecta os nucleos em workflows de pesquisa, automacao e correcao pedagogica, garantindo que o laboratorio simule 6 meses de uso ativo com telemetria completa."
+  "versao": "2.0.0-agentica",
+  "visao_executiva": "Agentica AI opera como Arquiteta-Cognitiva do Live Lab Tri-Nuclear, orquestrando 9+ LLMs heterogeneos, 17+ Skills (atomicas + meta), 4 trilhas de aprendizagem, 3 workflows hibridos, 5 personas RBAC e politicas de governanca em tempo real. O laboratorio integra pesquisa cientifica, produtividade agentic e evolucao ecossistemica numa arquitetura auto-organizavel."
 }
