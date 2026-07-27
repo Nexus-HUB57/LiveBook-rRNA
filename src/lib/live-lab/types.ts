@@ -1,11 +1,10 @@
-/** LIVE LAB TRI-NUCLEAR — Type Definitions v2.0.0-agentica */
+/** LIVE LAB TRI-NUCLEAR — Type Definitions v3.0.0-iogue */
 export interface LiveLabModel {
   id: string; provedor: string; provedor_registry_id?: string;
   contexto_tokens: number;
   custo_por_1m_tokens: { entrada_usd: number; saida_usd: number };
   latencia_media_ms: number; peso_roteamento: number;
-  qualidade_normalizada?: number;
-  casos_uso_prioritarios: string[];
+  qualidade_normalizada?: number; casos_uso_prioritarios: string[];
   formato_api?: string; is_local?: boolean;
   tokens_estimados?: number; modelo_preferido?: string;
 }
@@ -17,6 +16,7 @@ export interface AlgoritmoRoteamento {
   tipo: string; descricao?: string;
   cascata: CascataRegra[];
   pesos_mcdm: Record<string, number>;
+  promethee_thresholds?: Record<string, number>;
 }
 export interface NucleoAgregador {
   modelos: LiveLabModel[];
@@ -25,7 +25,7 @@ export interface NucleoAgregador {
 export interface Skill {
   id: string; nome: string; dominio: string; trigger: string;
   rbac_permissoes: string[]; nivel_criticidade: string;
-  payload_schema: Record<string, unknown>; descricao?: string;
+  payload_schema?: Record<string, unknown>; descricao?: string;
   tokens_estimados?: number; modelo_preferido?: string;
 }
 export interface MetaSkill extends Skill {
@@ -67,7 +67,7 @@ export interface WorkflowHibrido {
   passos: WorkflowPasso[];
 }
 export interface WorkflowsHibridos {
-  malha_eventos_descricao: Record<string, unknown>;
+  malha_eventos_descricao: string;
   exemplos_fluxos: WorkflowHibrido[];
 }
 export interface InteracaoHistorico {
@@ -90,8 +90,14 @@ export interface PoliticaGovernanca {
   budget_tracking: Record<string, BudgetTier>;
   privacidade_e_pii: { campos_regex: string[]; acao: string; descricao?: string };
 }
+export interface IogueEssence {
+  filosofia_nucleo: string;
+  principios_sabedoria: string[];
+  agentica_como_guru: string;
+}
 export interface LiveLabManifesto {
   versao: string; visao_executiva: string;
+  essencia_iogue?: IogueEssence;
   nucleo_agregador: NucleoAgregador;
   nucleo_produtividade: NucleoProdutividade;
   nucleo_ecossistema: NucleoEcossistema;
@@ -108,8 +114,10 @@ export interface AgenticaIdentity {
 }
 export interface MCDMScore {
   modelo_id: string; score_total: number; rank: number;
+  phi_positivo: number; phi_negativo: number;
   detalhes: { custo_norm: number; latencia_norm: number;
-    qualidade_norm: number; contexto_norm: number; disponibilidade_norm: number };
+    qualidade_norm: number; contexto_norm: number;
+    disponibilidade_norm: number; estabilidade_norm: number };
 }
 export interface RoutingResult {
   agente: string; intencao: string; modelo_selecionado: string;
@@ -121,6 +129,13 @@ export interface SkillResult {
   sucesso: boolean; skill_id: string; modelo_selecionado: string;
   tokens_usados: number; custo_usd: number; latencia_ms: number;
   resultado: Record<string, unknown>;
+}
+export interface MetaSkillResult {
+  sucesso: boolean; meta_skill_id: string;
+  resultados: SkillResult[];
+  total_tokens: number; total_custo_usd: number;
+  total_latencia_ms: number;
+  execution_plan: Array<{ skillId: string; order: number; parallelGroup: number }>;
 }
 export interface ModuloResult {
   modulo_id: string; aprovado: boolean; pontuacao: number;
@@ -145,7 +160,7 @@ export interface DiagnosticoEcosystem {
   integridade: { manifesto_valido: boolean; typecheck: 'PASS' | 'FAIL';
     modelos_count: number; skills_count: number; meta_skills_count: number;
     trilhas_count: number; workflows_count: number; personas_count: number;
-    certificacoes_count: number };
+    certificacoes_count: number; iogue_essence: boolean };
   nucleos: { n1_modelos: number; n2_skills: number; n2_meta_skills: number;
     n3_trilhas: number; n3_total_modulos: number; n3_certificacoes: number };
   governanca: { rate_limit_ativo: boolean; budget_tracking_ativo: boolean;
@@ -165,4 +180,21 @@ export interface TokenBucketState { tokens: number; last_refill: number; }
 export interface BudgetState {
   usado_usd: number; alerta_50_fired: boolean;
   alerta_80_fired: boolean; alerta_95_fired: boolean;
+}
+export interface BudgetForecast {
+  willExhaust: boolean; projectedDailyAvg: number;
+  daysUntilExhaustion: number | null; recommendation: string;
+}
+export interface PIIAuditEntry {
+  type: string; position: number; original: string;
+}
+export interface PIIMaskResult {
+  maskedText: string; detectedPii: PIIAuditEntry[];
+}
+export interface SkillCompositionPlan {
+  orderedSkills: string[]; hasCycle: boolean;
+  executionPlan: Array<{ skillId: string; order: number; parallelGroup: number }>;
+}
+export interface CascadeMatchResult {
+  rule: CascataRegra; keyword: string; score: number;
 }

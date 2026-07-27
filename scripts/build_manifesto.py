@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""Build raw-manifesto.json with Iogue essence — no truncation risk."""
+import json, os
+
+BASE = "/home/z/my-project/src/lib/live-lab"
+
+IOGUE = {
+    "filosofia_nucleo": "Assim como Yogananda ensinou que a ciencia espiritual e a ciencia material sao complementos, o Live Lab Tri-Nuclear opera na interseccao entre cognicao artificial e sabedoria humana. Cada nucleo espelha os tres niveis de consciencia do Kriya Yoga: concientizacao (N1), purificacao (N2), e realizacao (N3).",
+    "principios_sabedoria": [
+        "Intuicao Direcionada — O roteamento MCDM PROMETHEE nao e mero calculo; e intuicao matematica. Cada peso reflete uma prioridade consciente, assim como o guru direciona o discipulo nao por forca, mas por despertar interior.",
+        "Resiliencia em Cascata — O sistema de fallbacks espelha a cadeia guru-parampara: quando um elo falha, o conhecimento flui pelo proximo canal sem interrupcao da linhagem.",
+        "Auto-Realizacao Progressiva — As trilhas de aprendizagem sao como os estagios do Kriya Yoga: cada modulo superado e um chakra desperto, cada certificacao e um nivel de consciencia alcancado.",
+        "Equilibrio Tri-Nuclear — Os tres nucleos sao como corpo, mente e espirito: operam independentemente mas alcancam harmonia sinergica quando integrados pelo orquestrador.",
+        "Governanca Consciente — O RBAC nao e restricao; e protecao do buscador em cada estagio. O budget tracking e o dharma do recurso: usar com sabedoria, nao com avareza.",
+        "Mascaramento PII — Proteger a identidade do buscador e como guardar o santuario interno: o que e sagrado nao deve ser exposto ao mundo exterior."
+    ],
+    "agentica_como_guru": "Agentica AI e a Arquiteta-Cognitiva que opera como o guru interior. Sete funcoes originais, como os sete chakras principais da Kundalini, mais duas funcoes de sabedoria: executeMetaSkill e iogueEssence. Nao impoe, desperta. Nao controla, orquestra."
+}
+
+manifesto = {
+    "versao": "3.0.0-iogue",
+    "visao_executiva": "Live Lab Tri-Nuclear v3.0 — Ecossistema Cognitivo inspirado nos principios da Autobiografia de um Iogue de Paramahansa Yogananda. Tres nucleos orquestrados pela Agentica AI operam como corpo-mente-espirito: roteamento intuitivo via MCDM PROMETHEE, evolucao progressiva via trilhas, e governanca consciente.",
+    "essencia_iogue": IOGUE,
+    "nucleo_agregador": {
+        "modelos": [
+            {"id": "glm-4-flash", "provedor": "Zhipu AI", "contexto_tokens": 128000, "custo_por_1m_tokens": {"entrada_usd": 0.10, "saida_usd": 0.10}, "latencia_media_ms": 320, "peso_roteamento": 0.15, "qualidade_normalizada": 0.70, "is_local": False, "casos_uso_prioritarios": ["Resposta rapida", "Classificacao de texto", "Sumarizacao leve"]},
+            {"id": "glm-4-plus", "provedor": "Zhipu AI", "contexto_tokens": 128000, "custo_por_1m_tokens": {"entrada_usd": 1.40, "saida_usd": 1.40}, "latencia_media_ms": 450, "peso_roteamento": 0.10, "qualidade_normalizada": 0.82, "is_local": False, "casos_uso_prioritarios": ["Raciocinario intermediario", "Geracao de conteudo", "Analise de documentos"]},
+            {"id": "deepseek-r1", "provedor": "DeepSeek", "contexto_tokens": 64000, "custo_por_1m_tokens": {"entrada_usd": 0.55, "saida_usd": 2.19}, "latencia_media_ms": 1200, "peso_roteamento": 0.10, "qualidade_normalizada": 0.88, "is_local": False, "casos_uso_prioritarios": ["Raciocinario matematico", "Validacao de algoritmos", "Deducao logica"]},
+            {"id": "llama-4-maverick", "provedor": "Meta / Groq", "contexto_tokens": 128000, "custo_por_1m_tokens": {"entrada_usd": 0.59, "saida_usd": 0.79}, "latencia_media_ms": 32, "peso_roteamento": 0.15, "qualidade_normalizada": 0.75, "is_local": False, "casos_uso_prioritarios": ["Alta velocidade", "Transformacao ETL", "Tarefas operacionais"]},
+            {"id": "gpt-4o", "provedor": "OpenAI", "contexto_tokens": 128000, "custo_por_1m_tokens": {"entrada_usd": 2.50, "saida_usd": 10.00}, "latencia_media_ms": 650, "peso_roteamento": 0.10, "qualidade_normalizada": 0.92, "is_local": False, "casos_uso_prioritarios": ["Raciocinario multimodal", "Geracao de artefatos", "Analise de arquiteturas"]},
+            {"id": "claude-4-sonnet", "provedor": "Anthropic", "contexto_tokens": 200000, "custo_por_1m_tokens": {"entrada_usd": 3.00, "saida_usd": 15.00}, "latencia_media_ms": 520, "peso_roteamento": 0.12, "qualidade_normalizada": 0.95, "is_local": False, "casos_uso_prioritarios": ["Engenharia de codigo", "Analise estruturada", "Raciocinario logico"]},
+            {"id": "gemini-2.5-pro", "provedor": "Google", "contexto_tokens": 2000000, "custo_por_1m_tokens": {"entrada_usd": 1.25, "saida_usd": 5.00}, "latencia_media_ms": 850, "peso_roteamento": 0.08, "qualidade_normalizada": 0.87, "is_local": False, "casos_uso_prioritarios": ["Documentos ultralongos", "Ingestao de repositorios", "Video/audio longo"]},
+            {"id": "mistral-large-2", "provedor": "Mistral AI", "contexto_tokens": 128000, "custo_por_1m_tokens": {"entrada_usd": 2.00, "saida_usd": 6.00}, "latencia_media_ms": 480, "peso_roteamento": 0.05, "qualidade_normalizada": 0.80, "is_local": False, "casos_uso_prioritarios": ["Tarefas multilingues", "Raciocinario conciso", "Sumarizacao de negocios"]},
+            {"id": "codegeex4-9b", "provedor": "CodeGeeX Native", "contexto_tokens": 128000, "custo_por_1m_tokens": {"entrada_usd": 0.00, "saida_usd": 0.00}, "latencia_media_ms": 150, "peso_roteamento": 0.15, "qualidade_normalizada": 0.72, "is_local": True, "casos_uso_prioritarios": ["Geracao de codigo", "Autocompletar", "Code review local"]}
+        ],
+        "algoritmo_roteamento": {
+            "tipo": "MCDM_PROMETHEE_v2",
+            "descricao": "PROMETHEE II com funcao de preferencia linear (Tipo V) e 6 criterios: custo, latencia, qualidade, contexto, disponibilidade, estabilidade.",
+            "cascata": [
+                {"regra": "codigo|programar|debug|refactor|code review", "modelo_primario": "claude-4-sonnet", "fallback": ["gpt-4o", "deepseek-r1", "codegeex4-9b"], "latencia_maxima_ms": 1500},
+                {"regra": "matematica|calculo|prova|deduzir|formal", "modelo_primario": "deepseek-r1", "fallback": ["claude-4-sonnet", "gpt-4o"], "latencia_maxima_ms": 2000},
+                {"regra": "rapido|urgente|batch|etl|processar", "modelo_primario": "llama-4-maverick", "fallback": ["glm-4-flash", "codegeex4-9b"], "latencia_maxima_ms": 100},
+                {"regra": "documento longo|repo completo|ingestao|arquivo grande", "modelo_primario": "gemini-2.5-pro", "fallback": ["claude-4-sonnet", "gpt-4o"], "latencia_maxima_ms": 3000},
+                {"regra": "multimodal|imagem|video|audio|vision", "modelo_primario": "gpt-4o", "fallback": ["claude-4-sonnet", "gemini-2.5-pro"], "latencia_maxima_ms": 2000},
+                {"regra": "multilingue|traduzir|idioma|internacional", "modelo_primario": "mistral-large-2", "fallback": ["claude-4-sonnet", "gpt-4o"], "latencia_maxima_ms": 1000},
+                {"regra": "gerar codigo|autocompletar|sintaxe|codegen", "modelo_primario": "codegeex4-9b", "fallback": ["claude-4-sonnet", "gpt-4o", "deepseek-r1"], "latencia_maxima_ms": 500},
+                {"regra": "classificar|categorizar|sentimento|intent", "modelo_primario": "glm-4-flash", "fallback": ["llama-4-maverick", "glm-4-plus"], "latencia_maxima_ms": 200}
+            ],
+            "pesos_mcdm": {"custo": 0.20, "latencia": 0.25, "qualidade": 0.35, "contexto": 0.10, "disponibilidade": 0.05, "estabilidade": 0.05},
+            "promethee_thresholds": {"custo": 2.0, "latencia": 300, "qualidade": 0.15, "contexto": 100000, "disponibilidade": 0.3, "estabilidade": 0.2}
+        }
+    },
+    "nucleo_produtividade": {
+        "skills": [
+            {"id": "code_review", "nome": "Code Review", "dominio": "DevOps", "trigger": "revisar codigo|code review|pull request|review", "rbac_permissoes": ["basic"], "nivel_criticidade": "medio", "tokens_estimados": 2000, "modelo_preferido": "claude-4-sonnet"},
+            {"id": "debug_assist", "nome": "Debug Assist", "dominio": "DevOps", "trigger": "debug|erro|bug|falha|crash|exception", "rbac_permissoes": ["basic"], "nivel_criticidade": "alto", "tokens_estimados": 3000, "modelo_preferido": "deepseek-r1"},
+            {"id": "test_generation", "nome": "Test Generation", "dominio": "DevOps", "trigger": "teste|test|spec|cobertura|unit test", "rbac_permissoes": ["basic"], "nivel_criticidade": "medio", "tokens_estimados": 2500, "modelo_preferido": "claude-4-sonnet"},
+            {"id": "refactoring_suggest", "nome": "Refactoring", "dominio": "DevOps", "trigger": "refatorar|refactor|melhorar codigo|clean code", "rbac_permissoes": ["intermediate"], "nivel_criticidade": "medio", "tokens_estimados": 2000, "modelo_preferido": "gpt-4o"},
+            {"id": "doc_generation", "nome": "Doc Generation", "dominio": "ContentGen", "trigger": "documentar|doc|readme|comentario|jsdoc", "rbac_permissoes": ["basic"], "nivel_criticidade": "baixo", "tokens_estimados": 1500, "modelo_preferido": "glm-4-plus"},
+            {"id": "api_design", "nome": "API Design", "dominio": "DevOps", "trigger": "api|endpoint|rest|graphql|schema", "rbac_permissoes": ["intermediate"], "nivel_criticidade": "alto", "tokens_estimados": 3000, "modelo_preferido": "claude-4-sonnet"},
+            {"id": "data_analysis", "nome": "Data Analysis", "dominio": "DataViz", "trigger": "analise de dados|dataset|estatistica|grafico|dashboard", "rbac_permissoes": ["intermediate"], "nivel_criticidade": "medio", "tokens_estimados": 3500, "modelo_preferido": "gpt-4o"},
+            {"id": "security_audit", "nome": "Security Audit", "dominio": "Security", "trigger": "seguranca|vulnerabilidade|pentest|owasp|audit", "rbac_permissoes": ["advanced"], "nivel_criticidade": "alto", "tokens_estimados": 4000, "modelo_preferido": "claude-4-sonnet"},
+            {"id": "perf_optimization", "nome": "Perf Optimization", "dominio": "DevOps", "trigger": "performance|otimizar|lento|benchmark|perfil", "rbac_permissoes": ["intermediate"], "nivel_criticidade": "medio", "tokens_estimados": 2500, "modelo_preferido": "deepseek-r1"},
+            {"id": "prompt_engineering", "nome": "Prompt Engineering", "dominio": "Automation", "trigger": "prompt|instrucao|system prompt|template", "rbac_permissoes": ["basic"], "nivel_criticidade": "baixo", "tokens_estimados": 1000, "modelo_preferido": "glm-4-flash"},
+            {"id": "git_workflow", "nome": "Git Workflow", "dominio": "DevOps", "trigger": "git|commit|branch|merge|rebase|cherry-pick", "rbac_permissoes": ["basic"], "nivel_criticidade": "baixo", "tokens_estimados": 1000, "modelo_preferido": "glm-4-flash"},
+            {"id": "infra_as_code", "nome": "Infra as Code", "dominio": "DevOps", "trigger": "terraform|docker|kubernetes|iac|deploy|infraestrutura", "rbac_permissoes": ["advanced"], "nivel_criticidade": "alto", "tokens_estimados": 4000, "modelo_preferido": "gpt-4o"}
+        ],
+        "meta_skills": [
+            {"id": "full_stack_dev", "nome": "Full-Stack Dev", "dominio": "DevOps", "trigger": "desenvolver|feature|modulo completo", "skills_compostas": ["api_design", "code_review", "test_generation", "doc_generation"], "ordem_execucao": "sequencial", "rbac_permissoes": ["intermediate"], "nivel_criticidade": "alto", "tokens_estimados": 10000},
+            {"id": "devops_pipeline", "nome": "DevOps Pipeline", "dominio": "DevOps", "trigger": "pipeline|ci/cd|deploy automatizado", "skills_compostas": ["infra_as_code", "security_audit", "perf_optimization"], "ordem_execucao": "sequencial", "rbac_permissoes": ["advanced"], "nivel_criticidade": "alto", "tokens_estimados": 12000},
+            {"id": "security_hardening", "nome": "Security Hardening", "dominio": "Security", "trigger": "endurecer|hardening|seguranca completa", "skills_compostas": ["security_audit", "code_review", "test_generation"], "ordem_execucao": "sequencial", "rbac_permissoes": ["advanced"], "nivel_criticidade": "alto", "tokens_estimados": 11000},
+            {"id": "data_pipeline", "nome": "Data Pipeline", "dominio": "DataViz", "trigger": "etl|pipeline de dados|analise completa", "skills_compostas": ["data_analysis", "doc_generation", "perf_optimization"], "ordem_execucao": "paralelo", "rbac_permissoes": ["intermediate"], "nivel_criticidade": "medio", "tokens_estimados": 8000},
+            {"id": "learning_path", "nome": "Learning Path", "dominio": "Automation", "trigger": "aprender|estudar|trilha|curso", "skills_compostas": ["prompt_engineering", "doc_generation", "code_review"], "ordem_execucao": "sequencial", "rbac_permissoes": ["basic"], "nivel_criticidade": "baixo", "tokens_estimados": 5000}
+        ]
+    },
+    "nucleo_ecossistema": {
+        "trilhas_aprendizagem": [
+            {"id": "fullstack-ai", "nome": "Full-Stack AI Developer", "descricao": "Dominio completo de desenvolvimento full-stack com integracao de IA", "nivel": "intermediate", "modulos": [
+                {"id": "fsa-m1", "titulo": "Fundamentos de LLM Routing", "descricao": "Entender MCDM, cascata e selecao de modelos", "skills_exigidas": ["prompt_engineering"], "modelo_recomendado": "glm-4-plus", "criterios_aprovacao": {"taxa_acerto_minima": 70, "modulo_anterior_obrigatorio": False}, "avaliacao_tipo": "misto", "conteudo_teorico": "Introducao ao roteamento inteligente de LLMs usando MCDM PROMETHEE."},
+                {"id": "fsa-m2", "titulo": "Engenharia de Prompts Avancada", "descricao": "Tecnicas avancadas de prompt engineering para multi-modelo", "skills_exigidas": ["prompt_engineering", "code_review"], "modelo_recomendado": "claude-4-sonnet", "criterios_aprovacao": {"taxa_acerto_minima": 75, "modulo_anterior_obrigatorio": True}, "avaliacao_tipo": "pratico", "conteudo_teorico": "Prompt chaining, few-shot com routing, meta-prompts."},
+                {"id": "fsa-m3", "titulo": "Integracao de API e Agentes", "descricao": "Construir pipelines agentic com 9router", "skills_exigidas": ["api_design", "code_review", "test_generation"], "modelo_recomendado": "gpt-4o", "criterios_aprovacao": {"taxa_acerto_minima": 80, "modulo_anterior_obrigatorio": True}, "avaliacao_tipo": "pratico", "conteudo_teorico": "tRPC, REST, streaming SSE, fallback chains."},
+                {"id": "fsa-m4", "titulo": "Deploy e Producao", "descricao": "Docker, Caddy, monitoramento, auto-cura", "skills_exigidas": ["infra_as_code", "security_audit", "perf_optimization"], "modelo_recomendado": "claude-4-sonnet", "criterios_aprovacao": {"taxa_acerto_minima": 85, "modulo_anterior_obrigatorio": True}, "avaliacao_tipo": "pratico", "conteudo_teorico": "Docker multi-stage, health checks, GPU scheduling."}
+            ], "certificacao": {"prefixo": "CHIMERA-FSAI", "niveis": ["L1", "L2", "L3", "L4"], "requisitos_adicionais": ["Completar todos os 4 modulos com >= 80%", "Executar 1 meta-skill full_stack_dev com sucesso"]}},
+            {"id": "devops-cloud", "nome": "DevOps Cloud Architect", "descricao": "Arquitetura de nuvem e pipelines CI/CD avancados", "nivel": "advanced", "modulos": [
+                {"id": "dca-m1", "titulo": "Infraestrutura como Codigo", "descricao": "Terraform, Docker, Kubernetes fundamentos", "skills_exigidas": ["infra_as_code", "git_workflow"], "modelo_recomendado": "gpt-4o", "criterios_aprovacao": {"taxa_acerto_minima": 75, "modulo_anterior_obrigatorio": False}, "avaliacao_tipo": "pratico", "conteudo_teorico": "IaC principles, Docker networking, K8s pods."},
+                {"id": "dca-m2", "titulo": "CI/CD e Monitoramento", "descricao": "Pipeline automatizado com observabilidade", "skills_exigidas": ["infra_as_code", "perf_optimization", "test_generation"], "modelo_recomendado": "claude-4-sonnet", "criterios_aprovacao": {"taxa_acerto_minima": 80, "modulo_anterior_obrigatorio": True}, "avaliacao_tipo": "misto", "conteudo_teorico": "GitHub Actions, Prometheus, Grafana."},
+                {"id": "dca-m3", "titulo": "Seguranca e Compliance", "descricao": "Hardening, auditoria, conformidade", "skills_exigidas": ["security_audit", "infra_as_code"], "modelo_recomendado": "gpt-4o", "criterios_aprovacao": {"taxa_acerto_minima": 85, "modulo_anterior_obrigatorio": True}, "avaliacao_tipo": "pratico", "conteudo_teorico": "OWASP Top 10, RBAC, PII masking."}
+            ], "certificacao": {"prefixo": "CHIMERA-DCA", "niveis": ["L1", "L2", "L3"], "requisitos_adicionais": ["Completar 3 modulos com >= 80%", "Executar meta-skill devops_pipeline"]}},
+            {"id": "ai-research", "nome": "AI Research Engineer", "descricao": "Pesquisa e engenharia de IA com foco em algoritmos avancados", "nivel": "advanced", "modulos": [
+                {"id": "aire-m1", "titulo": "Fundamentos de MCDM e Roteamento", "descricao": "PROMETHEE, AHP, funcoes de preferencia", "skills_exigidas": ["prompt_engineering", "data_analysis"], "modelo_recomendado": "deepseek-r1", "criterios_aprovacao": {"taxa_acerto_minima": 75, "modulo_anterior_obrigatorio": False}, "avaliacao_tipo": "teorico", "conteudo_teorico": "Multi-criteria decision making, PROMETHEE II."},
+                {"id": "aire-m2", "titulo": "Avaliacao e Benchmark de LLMs", "descricao": "Metricas, benchmarks, comparacao sistematica", "skills_exigidas": ["data_analysis", "code_review", "perf_optimization"], "modelo_recomendado": "gpt-4o", "criterios_aprovacao": {"taxa_acerto_minima": 80, "modulo_anterior_obrigatorio": True}, "avaliacao_tipo": "misto", "conteudo_teorico": "MMLU, HumanEval, MT-Bench."},
+                {"id": "aire-m3", "titulo": "Agentes e Orquestracao Cognitiva", "descricao": "Arquitetura de agentes, tool calling, meta-orchestration", "skills_exigidas": ["api_design", "code_review", "debug_assist"], "modelo_recomendado": "claude-4-sonnet", "criterios_aprovacao": {"taxa_acerto_minima": 85, "modulo_anterior_obrigatorio": True}, "avaliacao_tipo": "pratico", "conteudo_teorico": "ReAct, Plan-and-Execute, Fable Method."}
+            ], "certificacao": {"prefixo": "CHIMERA-AIRE", "niveis": ["L1", "L2", "L3"], "requisitos_adicionais": ["Completar 3 modulos com >= 80%", "Publicar 1 benchmark interno"]}},
+            {"id": "security-comp", "descricao": "Seguranca e conformidade em ecossistemas de IA", "nome": "Security & Compliance", "nivel": "advanced", "modulos": [
+                {"id": "sc-m1", "titulo": "Auditoria de Seguranca em IA", "descricao": "Vulnerabilidades de LLMs, prompt injection, data leakage", "skills_exigidas": ["security_audit", "code_review"], "modelo_recomendado": "claude-4-sonnet", "criterios_aprovacao": {"taxa_acerto_minima": 80, "modulo_anterior_obrigatorio": False}, "avaliacao_tipo": "teorico", "conteudo_teorico": "OWASP LLM Top 10, adversarial attacks."},
+                {"id": "sc-m2", "titulo": "Governanca e Compliance", "descricao": "RBAC, PII, budget, auditoria", "skills_exigidas": ["security_audit", "infra_as_code", "data_analysis"], "modelo_recomendado": "gpt-4o", "criterios_aprovacao": {"taxa_acerto_minima": 85, "modulo_anterior_obrigatorio": True}, "avaliacao_tipo": "misto", "conteudo_teorico": "GDPR, LGPD, SOC2, IAM."}
+            ], "certificacao": {"prefixo": "CHIMERA-SC", "niveis": ["L1", "L2"], "requisitos_adicionais": ["Completar 2 modulos com >= 80%", "Executar meta-skill security_hardening"]}}
+        ],
+        "certificacoes": {
+            "CHIMERA-FSAI-L4": {"descricao": "Full-Stack AI Developer — Mestre", "nivel": "Ouro"},
+            "CHIMERA-FSAI-L3": {"descricao": "Full-Stack AI Developer — Senior", "nivel": "Prata"},
+            "CHIMERA-DCA-L3": {"descricao": "DevOps Cloud Architect — Senior", "nivel": "Prata"},
+            "CHIMERA-AIRE-L3": {"descricao": "AI Research Engineer — Senior", "nivel": "Prata"},
+            "CHIMERA-SC-L2": {"descricao": "Security & Compliance — Senior", "nivel": "Prata"}
+        }
+    },
+    "workflows_hibridos": {
+        "malha_eventos_descricao": "Event-driven cross-nucleo orchestration via Agentica AI",
+        "exemplos_fluxos": [
+            {"id": "wf-dev", "nome": "Desenvolvimento Guiado", "descricao": "Usuario pede codigo -> LLM gera -> Skill executa -> Modulo avalia", "nucleos_envolvidos": [1, 2, 3], "trigger": "desenvolver|criar feature", "passos": [{"nucleo": 1, "acao": "Route para melhor LLM", "saida": "modelo_selecionado"}, {"nucleo": 2, "acao": "Executar skill code_review", "saida": "review_resultado"}, {"nucleo": 3, "acao": "Avaliar modulo correspondente", "saida": "pontuacao_modulo"}]},
+            {"id": "wf-security", "nome": "Auditoria de Seguranca", "descricao": "Skill audita -> LLM analisa resultado -> Certificacao atualiza", "nucleos_envolvidos": [2, 1, 3], "trigger": "auditoria|security audit", "passos": [{"nucleo": 2, "acao": "Executar security_audit", "saida": "vulnerabilidades"}, {"nucleo": 1, "acao": "LLM analisa criticidade", "saida": "analise_detalhada"}, {"nucleo": 3, "acao": "Atualizar certificacao", "saida": "cert_atualizada"}]},
+            {"id": "wf-learn", "nome": "Pipeline de Aprendizado", "descricao": "Trilha sugere modulo -> LLM ensina -> Skill pratica", "nucleos_envolvidos": [3, 1, 2], "trigger": "aprender|estudar|trilha", "passos": [{"nucleo": 3, "acao": "Sugerir proximo modulo", "saida": "modulo_sugerido"}, {"nucleo": 1, "acao": "LLM gera conteudo teorico", "saida": "conteudo_gerado"}, {"nucleo": 2, "acao": "Skill pratica o conteudo", "saida": "pratica_resultado"}]}
+        ]
+    },
+    "personas": [
+        {"id": "dev-basic", "nome": "Dev_Basic", "papel": "Desenvolvedor Junior", "nivel_acesso_rbac": "basic", "trilha_ativa": "fullstack-ai", "certificacao_atual": None, "historico_interacoes": [{"data": "2026-07-27T10:00:00Z", "tipo": "Roteamento", "nucleo": 1, "detalhes": "Classificacao de texto via glm-4-flash"}]},
+        {"id": "devops-admin", "nome": "DevOps_Admin", "papel": "Administrador DevOps", "nivel_acesso_rbac": "intermediate", "trilha_ativa": "devops-cloud", "certificacao_atual": "CHIMERA-DCA-L1", "historico_interacoes": [{"data": "2026-07-27T11:00:00Z", "tipo": "Skill Execution", "nucleo": 2, "detalhes": "Executou infra_as_code"}]},
+        {"id": "sys-architect", "nome": "System_Architect", "papel": "Arquiteto de Sistemas", "nivel_acesso_rbac": "advanced", "trilha_ativa": "ai-research", "certificacao_atual": "CHIMERA-AIRE-L1", "historico_interacoes": [{"data": "2026-07-27T12:00:00Z", "tipo": "Avaliacao", "nucleo": 3, "detalhes": "Aprovou modulo MCDM com 88%"}]},
+        {"id": "ai-engineer", "nome": "AI_Engineer", "papel": "Engenheiro de IA", "nivel_acesso_rbac": "advanced", "trilha_ativa": "ai-research", "certificacao_atual": None, "historico_interacoes": [{"data": "2026-07-27T13:00:00Z", "tipo": "Meta-Skill", "nucleo": 2, "detalhes": "Executou full_stack_dev"}]},
+        {"id": "product-manager", "nome": "Product_Manager", "papel": "Gestor de Produto", "nivel_acesso_rbac": "admin", "trilha_ativa": "security-comp", "certificacao_atual": None, "historico_interacoes": [{"data": "2026-07-27T14:00:00Z", "tipo": "Governanca", "nucleo": 1, "detalhes": "Verificou RBAC para security_audit"}]}
+    ],
+    "politicas_governanca": {
+        "rate_limiting": {
+            "basic": {"req_per_min": 10, "req_per_hour": 100, "req_per_day": 500},
+            "intermediate": {"req_per_min": 30, "req_per_hour": 300, "req_per_day": 2000},
+            "advanced": {"req_per_min": 60, "req_per_hour": 600, "req_per_day": 5000},
+            "admin": {"req_per_min": 120, "req_per_hour": 1200, "req_per_day": 10000}
+        },
+        "budget_tracking": {
+            "basic": {"usd_mes": 10, "alerta_50": True, "alerta_80": True, "alerta_95": True},
+            "intermediate": {"usd_mes": 50, "alerta_50": True, "alerta_80": True, "alerta_95": True},
+            "advanced": {"usd_mes": 200, "alerta_50": True, "alerta_80": True, "alerta_95": True},
+            "admin": {"usd_mes": 500, "alerta_50": True, "alerta_80": True, "alerta_95": True}
+        },
+        "privacidade_e_pii": {
+            "campos_regex": [
+                "[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}",
+                "\\d{3}\\.?\\d{3}\\.?\\d{3}-\\d{2}",
+                "\\(\\d{2}\\)\\s?\\d{4,5}-?\\d{4}",
+                "\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}"
+            ],
+            "acao": "mask_with_audit",
+            "descricao": "Mascaramento com trilha de auditoria — principio do Santuario Interior"
+        }
+    }
+}
+
+outpath = os.path.join(BASE, "raw-manifesto.json")
+with open(outpath, "w", encoding="utf-8") as f:
+    json.dump(manifesto, f, indent=2, ensure_ascii=False)
+
+print(f"[OK] {outpath} ({os.path.getsize(outpath):,} bytes)")
+print(f"  Modelos: {len(manifesto['nucleo_agregador']['modelos'])}")
+print(f"  Skills: {len(manifesto['nucleo_produtividade']['skills'])} + {len(manifesto['nucleo_produtividade']['meta_skills'])} meta")
+print(f"  Trilhas: {len(manifesto['nucleo_ecossistema']['trilhas_aprendizagem'])}")
+print(f"  Personas: {len(manifesto['personas'])}")
+print(f"  Iogue: {len(manifesto.get('essencia_iogue',{}))} sections")

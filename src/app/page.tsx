@@ -1,4 +1,3 @@
-          <TabsContent value="live-lab" className="mt-4"><LiveLabTab /></TabsContent>
 'use client';
 
 import { useState } from 'react';
@@ -8,7 +7,8 @@ import { Toaster } from '@/components/ui/sonner';
 import {
   Zap, Bot, Database, LayoutDashboard, BrainCircuit, Cpu, Flame,
   Globe, Dna, Users, Landmark, Atom, Feather, MessageSquareText, Sparkles,
-  ShieldCheck, Compass,
+  ShieldCheck,
+  FlaskConical,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardTab, QuickSearch } from '@/components/dashboard-tab';
@@ -23,8 +23,7 @@ import GovernanceTab from '@/components/governance-tab';
 import RrnaSystemsTab from '@/components/rrna-systems-tab';
 import FableMethodTab from '@/components/fable-method-tab';
 import { SandboxTab } from '@/components/sandbox-tab';
-import LiveLabTab from '@/components/live-lab-tab';
-import { ObscuraTab } from '@/components/obscura-tab';
+import { LiveLabTab } from '@/components/live-lab-tab';
 
 /* ================================================================
    TAB CONFIG — CHIMERA MULTI-AGENT FUSION ENGINE
@@ -44,9 +43,10 @@ const TABS = [
   // Ecosystem
   { value: 'moltbook', label: 'Moltbook', icon: Users, color: '#e01b24' },
   { value: 'governance', label: 'Governanca', icon: Landmark, color: '#fbbf24' },
-  // Sandbox & Tools
+  // Sandbox
   { value: 'sandbox', label: 'Sandbox Nativo', icon: ShieldCheck, color: '#22d3ee' },
-  { value: 'obscura', label: 'Navegador Obscura', icon: Compass, color: '#f97316' },
+  // Live Lab Tri-Nuclear
+  { value: 'live-lab', label: 'Live Lab', icon: FlaskConical, color: '#a855f7' },
 ] as const;
 
 type TabValue = typeof TABS[number]['value'];
@@ -184,7 +184,7 @@ export default function Home() {
               {activeTab === 'moltbook' && <MoltbookTab />}
               {activeTab === 'governance' && <GovernanceTab />}
               {activeTab === 'sandbox' && <SandboxTab />}
-              {activeTab === 'obscura' && <ObscuraTab />}
+              {activeTab === 'live-lab' && <LiveLabTab />}
             </motion.div>
           </AnimatePresence>
         </TooltipProvider>
@@ -218,4 +218,4 @@ export default function Home() {
       />
     </div>
   );
-}          <TabsTrigger value="live-lab" className="text-xs sm:text-sm"><FlaskConical className="h-4 w-4 mr-1.5" />Live Lab</TabsTrigger>
+}
