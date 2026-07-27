@@ -1,38 +1,5 @@
-export type {
-  LiveLabManifesto,
-  LiveLabModel,
-  Skill,
-  MetaSkill,
-  ModuloEducacional,
-  TrilhaAprendizagem,
-  WorkflowHibrido,
-  WorkflowPasso,
-  Persona,
-  InteracaoHistorico,
-  PoliticaGovernanca,
-} from './types';
-
+export type { LiveLabManifesto, LiveLabModel, Skill, MetaSkill, NucleoAgregador, NucleoProdutividade, NucleoEcossistema, CascataRegra, AlgoritmoRoteamento, ModuloEducacional, TrilhaAprendizagem, TrilhaCertificacao, WorkflowHibrido, WorkflowPasso, WorkflowsHibridos, Persona, InteracaoHistorico, CriteriosAprovacao, PoliticaGovernanca, RateLimitTier, BudgetTier, AgenticaIdentity, MCDMScore, RoutingResult, SkillResult, ModuloResult, PersonaProgress, GovernancaCheck, DiagnosticoEcosystem, LiveLabStats, TokenBucketState, BudgetState } from './types';
 export { LIVE_LAB_MANIFESTO, AGENTICA_AI } from './manifesto';
-export {
-  routeToModel,
-  executeSkill,
-  evaluateModulo,
-  getPersonaProgress,
-  getLiveLabStats,
-} from './orchestrator';
-export {
-  agenticaDiagnose,
-  agenticaRoute,
-  agenticaExecuteSkill,
-  agenticaEvaluateModulo,
-  agenticaProgress,
-  agenticaStats,
-  agenticaGovernanca,
-} from './agentica-ai';
-export type {
-  AgenticaDiagnostico,
-  AgenticaSkillResult,
-  AgenticaModuloResult,
-  AgenticaPersonaProgress,
-  AgenticaGovernancaCheck,
-} from './agentica-ai';
+export { cascadeMatch, minMaxNormalize, computeMCDMScores, routeIntent, matchSkill, maskPII, rbacCheck, TokenBucket, BudgetTracker } from './algorithms';
+export { getRoutingResult, executeSkill, evaluateModulo, getPersonaProgress, getLiveLabStats, rateLimiter, budgetTracker, RBAC_LEVELS } from './orchestrator';
+export { agenticaDiagnose, agenticaRoute, agenticaExecuteSkill, agenticaEvaluateModulo, agenticaProgress, agenticaStats, agenticaGovernanca } from './agentica-ai';

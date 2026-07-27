@@ -1,4 +1,10 @@
-/** LIVE LAB TRI-NUCLEAR — Type Definitions v2.0.0-agentica */
+#!/usr/bin/env python3
+"""Rebuild all live-lab TS files to match the correct types and algorithms."""
+import os
+
+BASE = os.path.join(os.path.dirname(__file__), '..', 'src', 'lib', 'live-lab')
+
+types_ts = '''/** LIVE LAB TRI-NUCLEAR — Type Definitions v2.0.0-agentica */
 export interface LiveLabModel {
   id: string; provedor: string; provedor_registry_id?: string;
   contexto_tokens: number;
@@ -166,3 +172,9 @@ export interface BudgetState {
   usado_usd: number; alerta_50_fired: boolean;
   alerta_80_fired: boolean; alerta_95_fired: boolean;
 }
+'''
+
+with open(os.path.join(BASE, 'types.ts'), 'w') as f:
+    f.write(types_ts)
+print(f'types.ts: {len(types_ts.splitlines())} lines')
+print('DONE')

@@ -23,6 +23,7 @@ import GovernanceTab from '@/components/governance-tab';
 import RrnaSystemsTab from '@/components/rrna-systems-tab';
 import FableMethodTab from '@/components/fable-method-tab';
 import { SandboxTab } from '@/components/sandbox-tab';
+import LiveLabTab from '@/components/live-lab-tab';
 import { ObscuraTab } from '@/components/obscura-tab';
 
 /* ================================================================
