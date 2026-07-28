@@ -7,16 +7,17 @@
   <img src="https://img.shields.io/badge/9router-23%20providers-00ff88" alt="Providers" />
   <img src="https://img.shields.io/badge/tRPC-v11-0097A7?logo=trpc" alt="tRPC" />
   <img src="https://img.shields.io/badge/Prisma-6.11-2D3748?logo=prisma" alt="Prisma" />
-  <img src="https://img.shields.io/badge/GLM--5.2%20744B%20MoE-emerald" alt="GLM-5.2" />
-  <img src="https://img.shields.io/badge/API%20Routes-62-cyan" alt="API Routes" />
+  <img src="https://img.shields.io/badge/GLM--5.2-Connected-emerald" alt="GLM-5.2" />
+  <img src="https://img.shields.io/badge/API%20Routes-71-cyan" alt="API Routes" />
   <img src="https://img.shields.io/badge/Dashboard-13%20tabs-f97316" alt="Tabs" />
   <img src="https://img.shields.io/badge/Docker-6%20services-2496ED?logo=docker" alt="Docker" />
-  <img src="https://img.shields.io/badge/Live%20Lab-Tri--Nuclear%20v2.0-purple" alt="Live Lab" />
-  <img src="https://img.shields.io/badge/Agentica%20AI-Arquiteta--Cognitiva-f472b6" alt="Agentica AI" />
+  <img src="https://img.shields.io/badge/Live%20Lab-Tri--Nuclear%20v3.0-purple" alt="Live Lab" />
+  <img src="https://img.shields.io/badge/Tests-131%20passing-brightgreen" alt="Tests" />
+  <img src="https://img.shields.io/badge/Agentica%20AI-9%20functions-f472b6" alt="Agentica AI" />
 </p>
 
 <p align="center">
-  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Sandbox Nativo</strong> · <strong>Navegador Obscura</strong> · <strong>Auto-Cura Reativa</strong> · <strong>Live Lab Tri-Nuclear</strong> · <strong>Agentica AI</strong>
+  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Sandbox Nativo</strong> · <strong>Navegador Obscura</strong> · <strong>Auto-Cura Reativa</strong> · <strong>Live Lab Tri-Nuclear v3.0</strong> · <strong>Agentica AI 9 Functions</strong>
 </p>
 
 ---
@@ -25,7 +26,7 @@
 
 O **CHIMERA** e uma **Multi-Agent Fusion Engine** — plataforma de orquestracao de agentes de IA com roteamento inteligente para 23 provedores LLM. O sistema combina chamadas nativas de API com traducao automatica de protocolo (OpenAI, Claude, Gemini), cadeias de fallback resilientes, e uma arquitetura cognitiva baseada no metodo Think/Act/Prove.
 
-O ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico, custodia Bitcoin com PSBT v2, auto-cura reativa em 6 fases, 9 agentes especializados, sandbox de execucao isolada com VM nativa, navegador headless Obscura (Rust/V8) com stealth mode, 62 API routes, e o **Live Lab Tri-Nuclear** — ecossistema cognitivo com 3 nucleos orquestrados pela Agentica AI (Arquiteta-Cognitiva).
+O ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico, custodia Bitcoin com PSBT v2, auto-cura reativa em 6 fases, 9 agentes especializados, sandbox de execucao isolada com VM nativa, navegador headless Obscura (Rust/V8) com stealth mode, 71 API routes, e o **Live Lab Tri-Nuclear v3.0** — ecossistema cognitivo com 3 nucleos orquestrados pela Agentica AI (Arquiteta-Cognitiva, 9 funcoes), inspirado nos principios da *Autobiografia de um Iogue* de Paramahansa Yogananda.
 
 ---
 
@@ -248,7 +249,7 @@ Proteólise e Degradação (Aritmética Temporal): Nós e arestas do grafo que n
 | **UI** | React 19 + Tailwind CSS 4 + shadcn/ui + Framer Motion |
 | **Linguagem** | TypeScript 5 |
 | **LLM Routing** | 9router bridge (in-process, hub-and-spoke protocol translation) |
-| **API Layer** | tRPC v11 (type-safe) + 62 REST API routes |
+| **API Layer** | tRPC v11 (type-safe) + 71 REST API routes |
 | **Database** | Prisma 6 + SQLite (15 modelos) |
 | **Bitcoin** | bitcoinjs-lib (BIP32/39, P2PKH) + @noble/secp256k1 (PSBT v2) |
 | **RAG** | Pipeline rRNA com BM25 field-boosted + cross-encoder reranking |
@@ -257,7 +258,8 @@ Proteólise e Degradação (Aritmética Temporal): Nós e arestas do grafo que n
 | **Browser** | Obscura headless (Rust/V8/CDP), stealth mode, 3520+ trackers bloqueados |
 | **Auto-Cura** | Protocolo reativo de 6 fases + Wisdom Engine adaptativa |
 | **Streaming** | SSE nativo (fetch + ReadableStream, async generators) |
-| **Deploy** | Docker multi-stage (5 services) + Caddy (auto-SSL) + docker-compose |
+| **Testing** | Jest — 131 testes passando (algoritmos, orchestrator, agentica-ai, federated) |
+| **Deploy** | Docker multi-stage (6 services) + Caddy (auto-SSL) + docker-compose |
 
 ---
 
@@ -285,7 +287,7 @@ GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> 
 
 | Provider | Formato | Modelos Principais |
 |----------|---------|-------------------|
-| **GLM (Zhipu AI)** | OpenAI | GLM-4-Flash, GLM-4-Plus, GLM-4-Long |
+| **GLM (Zhipu AI)** | OpenAI | GLM-4-Flash, GLM-4-Plus, GLM-4-Long, **GLM-5.2** |
 | **DeepSeek** | OpenAI | DeepSeek-V3, DeepSeek-Reasoner |
 | **Groq** | OpenAI | Llama 4 Maverick, Llama 4 Scout (32ms) |
 | **OpenAI** | OpenAI | GPT-4o, GPT-4o-mini, o3, o4-mini |
@@ -312,37 +314,54 @@ GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> 
 
 ---
 
-## Live Lab Tri-Nuclear — Ecossistema Cognitivo
+## Live Lab Tri-Nuclear v3.0 — Ecossistema Cognitivo
 
-O **Live Lab Tri-Nuclear** e um subsistema cognitivo integrado ao CHIMERA, composto por tres nucleos sinergicos orquestrados pela **Agentica AI** (Arquiteta-Cognitiva v2.0). Cada nucleo opera com dados, regras e propositos distintos, conectados por workflows hibridos que atravessam nucleos para entregar valor composto.
+O **Live Lab Tri-Nuclear v3.0** e o subsistema cognitivo integrado ao CHIMERA, composto por tres nucleos sinergicos orquestrados pela **Agentica AI** (Arquiteta-Cognitiva v3.0). Cada nucleo opera com dados, regras e propositos distintos, conectados por workflows hibridos que atravessam nucleos para entregar valor composto.
 
-### N1 — Nucleo Agregador (LLMs)
+A versao 3.0 incorpora a **Essencia Iogue** — principios filosoficos extraidos da *Autobiografia de um Iogue* de Paramahansa Yogananda, mapeados em 6 algoritmos do sistema, e o modelo **GLM-5.2** conectado como 10o LLM do nucleo agregador.
 
-Camada de roteamento inteligente com 9 modelos LLM e algoritmo de cascata baseado em intencoes. Cada modelo possui metadados de custo, latencia, peso de roteamento e casos de uso prioritarios. O algoritmo avalia a intencao do usuario, seleciona o modelo primario pela cascata, e aplica fallback por peso se o primario falhar.
+### N1 — Nucleo Agregador (10 LLMs)
 
-| Modelo | Provedor | Contexto | Custo (1M tok) | Latencia |
-|--------|----------|----------|-----------------|----------|
-| **GLM-4-Flash** | Zhipu AI | 128K | $0.10 / $0.10 | 320ms |
-| **GLM-4-Plus** | Zhipu AI | 128K | $1.40 / $1.40 | 450ms |
-| **DeepSeek-V3** | DeepSeek | 128K | $0.27 / $1.10 | 600ms |
-| **GPT-4o** | OpenAI | 128K | $2.50 / $10.00 | 800ms |
-| **Claude 4 Sonnet** | Anthropic | 200K | $3.00 / $15.00 | 700ms |
-| **Gemini 2.5 Pro** | Google | 1M | $1.25 / $5.00 | 900ms |
-| **Llama 4 Maverick** | Groq | 128K | $0.20 / $0.80 | 32ms |
-| **CodeGeeX4 9B** | CodeGeeX Native | 128K | $0.00 / $0.00 | local |
-| **GLM-5.2 744B MoE** | Colibri | 128K | $0.00 / $0.00 | local |
+Camada de roteamento inteligente com **10 modelos LLM** e algoritmo PROMETHEE II (MCDM) com funcao de preferencia linear (Tipo V). O roteamento combina **cascade de intencoes** (matching ponderado por keyword com limiar >= 0.3) e **PROMETHEE II net flow** (phi+ - phi-) com 6 criterios: custo (0.20), latencia (0.25), qualidade (0.35), contexto (0.10), disponibilidade (0.05), estabilidade (0.05).
 
-### N2 — Nucleo Produtividade (Skills)
+| Modelo | Provedor | Contexto | Custo (1M tok in/out) | Latencia | Qualidade |
+|--------|----------|----------|----------------------|----------|-----------|
+| **GLM-4-Flash** | Zhipu AI | 128K | $0.10 / $0.10 | 320ms | 0.70 |
+| **GLM-4-Plus** | Zhipu AI | 128K | $1.40 / $1.40 | 450ms | 0.82 |
+| **GLM-5.2** | Zhipu AI | 128K | $2.00 / $8.00 | 480ms | **0.96** |
+| **DeepSeek-R1** | DeepSeek | 64K | $0.55 / $2.19 | 1200ms | 0.88 |
+| **Llama 4 Maverick** | Meta / Groq | 128K | $0.59 / $0.79 | **32ms** | 0.75 |
+| **GPT-4o** | OpenAI | 128K | $2.50 / $10.00 | 650ms | 0.92 |
+| **Claude 4 Sonnet** | Anthropic | 200K | $3.00 / $15.00 | 520ms | 0.95 |
+| **Gemini 2.5 Pro** | Google | **2M** | $1.25 / $5.00 | 850ms | 0.87 |
+| **Mistral Large 2** | Mistral AI | 128K | $2.00 / $6.00 | 480ms | 0.80 |
+| **CodeGeeX4 9B** | CodeGeeX Native | 128K | **$0.00 / $0.00** | 150ms | 0.72 |
 
-Camada de 12 skills atomicas e 5 meta-skills compostas, cada uma com dominio, trigger regex, permissao RBAC e nivel de criticidade. As meta-skills encadeiam skills atomicas em sequencias determinadas (paralelo ou sequencial) para fluxos de produtividade avancada.
+### Cascade de Intencoes (9 regras)
+
+| Trigger | Modelo Primario | Fallback | Latencia Max |
+|---------|----------------|----------|---------------|
+| codigo, programar, debug, code review | Claude 4 Sonnet | GPT-4o, DeepSeek-R1, CodeGeeX4 | 1500ms |
+| matematica, calculo, prova, deduzir | DeepSeek-R1 | Claude 4 Sonnet, GPT-4o | 2000ms |
+| rapido, urgente, batch, etl | Llama 4 Maverick | GLM-4-Flash, CodeGeeX4 | 100ms |
+| documento longo, repo completo | Gemini 2.5 Pro | Claude 4 Sonnet, GPT-4o | 3000ms |
+| multimodal, imagem, video, vision | GPT-4o | Claude 4 Sonnet, Gemini 2.5 Pro | 2000ms |
+| multilingue, traduzir, idioma | Mistral Large 2 | Claude 4 Sonnet, GPT-4o | 1000ms |
+| gerar codigo, autocompletar, codegen | CodeGeeX4 9B | Claude 4 Sonnet, GPT-4o, DeepSeek-R1 | 500ms |
+| classificar, categorizar, sentimento | GLM-4-Flash | Llama 4 Maverick, GLM-4-Plus | 200ms |
+| **raciocinario avancado, arquitetura, estrategia** | **GLM-5.2** | **Claude 4 Sonnet, GPT-4o, DeepSeek-R1** | **1500ms** |
+
+### N2 — Nucleo Produtividade (12 Skills + 5 Meta-Skills)
+
+Camada de 12 skills atomicas e 5 meta-skills compostas, cada uma com dominio, trigger regex, permissao RBAC e nivel de criticidade. As meta-skills usam **Skill Composition Graph** com topological sort para resolucao de dependencias, suportando execucao sequencial e paralela.
 
 **Skills Atomicas (12)**: code_review, debug_assist, test_generation, refactoring_suggest, doc_generation, api_design, data_analysis, security_audit, perf_optimization, prompt_engineering, git_workflow, infra_as_code.
 
 **Meta-Skills (5)**: full_stack_dev (encadeia 4+ atomicas), devops_pipeline (CI/CD completo), security_hardening (auditoria + remediacao), data_pipeline (ETL + analise + visualizacao), learning_path (modulo educacional adaptativo).
 
-### N3 — Nucleo Ecossistema (Educacao/Certs)
+### N3 — Nucleo Ecossistema (4 Trilhas + Certificacoes)
 
-Camada de trilhas de aprendizagem com modulos educacionais, criterios de aprovacao, e certificacoes por nivel. O nucleo conecta competencias ao ecossistema CHIMERA, permitindo que personas evoluam dentro de trilhas estruturadas com avaliacao automatica.
+Camada de trilhas de aprendizagem com modulos educacionais, criterios de aprovacao automatica, e certificacoes por nivel. Cada modulo tem modelo recomendado e avaliacao pratica ou teorica.
 
 | Trilha | Modulos | Certificacao |
 |--------|---------|--------------|
@@ -351,21 +370,45 @@ Camada de trilhas de aprendizagem com modulos educacionais, criterios de aprovac
 | **AI Research Engineer** | 3 modulos | CHIMERA-AIRE-L1 a L3 |
 | **Security & Compliance** | 2 modulos | CHIMERA-SC-L1 a L2 |
 
-### Agentica AI — Arquiteta-Cognitiva
+### Agentica AI — Arquiteta-Cognitiva (9 Funcoes)
 
-A **Agentica AI** e o agente orquestrador do Live Lab Tri-Nuclear, implementada em `src/lib/live-lab/agentica-ai.ts` com 7 funcoes de orquestracao:
+A **Agentica AI** e o agente orquestrador do Live Lab, implementada em `src/lib/live-lab/agentica-ai.ts` com **9 funcoes** espelhando os 7 chakras principais da Kundalini mais 2 funcoes de sabedoria:
 
-| Funcao | Descricao | Output |
-|--------|-----------|--------|
-| `agenticaDiagnose()` | Diagnostico completo do ecossistema (integridade, modelos, skills, trilhas, governanca) | `AgenticaDiagnostico` |
-| `agenticaRoute(intencao)` | Roteamento inteligente de intencao para modelo otimo (cascata + peso) | modelo + custo + latencia |
-| `agenticaExecuteSkill(skillId, input, persona)` | Executa skill com routing automatico e logging | `AgenticaSkillResult` |
-| `agenticaEvaluateModulo(moduloId)` | Avaliacao de modulo educacional com feedback | `AgenticaModuloResult` |
-| `agenticaProgress(personaId)` | Progresso da persona na trilha ativa | `AgenticaPersonaProgress` |
-| `agenticaStats()` | Estatisticas enriquecidas do ecossistema | modelos, skills, trilhas, workflows, certs |
-| `agenticaGovernanca(personaId, acao, nivel)` | Verificacao RBAC em tempo real | `AgenticaGovernancaCheck` |
+| # | Funcao | Descricao |
+|---|--------|-----------|
+| 1 | `agenticaDiagnose()` | Diagnostico completo do ecossistema (integridade, 3 nucleos, governanca, routing, alertas) |
+| 2 | `agenticaRoute(intencao)` | Roteamento inteligente via cascade + PROMETHEE II MCDM |
+| 3 | `agenticaExecuteSkill(skillId, input, personaId)` | Executa skill com RBAC + budget tracking automatico |
+| 4 | `agenticaEvaluateModulo(moduloId)` | Avaliacao de modulo com pontuacao e feedback |
+| 5 | `agenticaProgress(personaId)` | Progresso da persona na trilha ativa |
+| 6 | `agenticaStats()` | Estatisticas completas: 10 modelos, 12 skills, 5 meta-skills, 4 trilhas |
+| 7 | `agenticaGovernanca(personaId, acao, nivel)` | Verificacao RBAC + rate limit + budget em tempo real |
+| 8 | `agenticaExecuteMetaSkill(metaSkillId, input, personaId)` | Execucao de meta-skill com composition graph + execution plan |
+| 9 | `agenticaIogueEssence()` | Acesso a essencia filosofica: 6 principios mapeados em algoritmos |
 
-### Governanca RBAC — 5 Personas
+### Essencia Iogue — 6 Principios
+
+Cada principio da *Autobiografia de um Iogue* esta mapeado em um algoritmo do sistema:
+
+| Principio Iogue | Algoritmo Mapeado |
+|-----------------|-------------------|
+| Intuicao Direcionada | MCDM PROMETHEE II (pesos = prioridades conscientes) |
+| Resiliencia em Cascata | Fallback chains (guru-parampara: elo falha, conhecimento flui) |
+| Auto-Realizacao Progressiva | Trilhas + certificacoes (estagios Kriya Yoga) |
+| Equilibrio Tri-Nuclear | N1 + N2 + N3 harmonizados pelo orquestrador |
+| Governanca Consciente | RBAC + Budget tracking (protecao por estagio) |
+| Santuario Interior | PII Masking (proteger o sagrado, nao expor ao exterior) |
+
+### Governanca — Token Bucket + Budget + PII
+
+| Mecanismo | Implementacao |
+|-----------|----------------|
+| **Rate Limiting** | Token Bucket com burstAllowance=5, priority 1-5, 4 tiers RBAC (req/min, req/hora, req/dia) |
+| **Budget Tracking** | Tracker mensal com projecao de exaustao, alertas em 50%/80%/95% por persona |
+| **PII Masking** | Regex audit trail: retorna `detectedPII[]` com tipo, posicao, original + texto mascarado |
+| **RBAC** | 4 niveis (basic -> intermediate -> advanced -> admin), 5 personas |
+
+### 5 Personas
 
 | Persona | Papel | Nivel RBAC | Trilha Ativa |
 |---------|-------|------------|--------------|
@@ -377,21 +420,25 @@ A **Agentica AI** e o agente orquestrador do Live Lab Tri-Nuclear, implementada 
 
 ### Workflows Hibridos (Cross-Nucleo)
 
-Fluxos que atravessam os tres nucleos para entregar valor composto. Cada passo indica qual nucleo (N1/N2/N3) atua e qual saida produz.
-
 | Workflow | Nucleos | Descricao |
 |----------|---------|-----------|
 | **Desenvolvimento Guiado** | N1 -> N2 -> N3 | Usuario pede codigo -> LLM gera -> Skill executa -> Modulo avalia |
 | **Auditoria de Seguranca** | N2 -> N1 -> N3 | Skill audita -> LLM analisa resultado -> Certificacao atualiza |
 | **Pipeline de Aprendizado** | N3 -> N1 -> N2 | Trilha sugere modulo -> LLM ensina -> Skill pratica |
 
-### Politicas de Governanca
+### Live Lab API Routes (9 endpoints)
 
-O manifesto define politicas de governanca aplicadas pela Agentica AI em tempo real:
-
-- **Rate Limiting**: Limites por persona e por acao (req/min, req/hora, req/dia)
-- **Budget Tracking**: Orcamento mensal por persona com alertas em 50%, 80% e 95% de consumo
-- **Privacidade e PII**: Mascaramento automatico de campos sensiveis (email, CPF, telefone, cartao) via regex
+| Metodo | Rota | Funcao Agentica |
+|--------|------|-----------------|
+| `GET` | `/api/live-lab/diagnose` | agenticaDiagnose |
+| `POST` | `/api/live-lab/route` | agenticaRoute |
+| `POST` | `/api/live-lab/skill` | agenticaExecuteSkill |
+| `POST` | `/api/live-lab/evaluate` | agenticaEvaluateModulo |
+| `GET` | `/api/live-lab/progress?personaId=` | agenticaProgress |
+| `GET` | `/api/live-lab/stats` | agenticaStats |
+| `POST` | `/api/live-lab/governanca` | agenticaGovernanca |
+| `POST` | `/api/live-lab/meta-skill` | agenticaExecuteMetaSkill |
+| `GET` | `/api/live-lab/iogue-essence` | agenticaIogueEssence |
 
 ---
 
@@ -454,9 +501,9 @@ Integracao completa com o [h4ckf0r0day/obscura](https://github.com/h4ckf0r0day/o
 
 ---
 
-## API Routes (62 endpoints)
+## API Routes (71 endpoints)
 
-### 9router (2) | Agent (3) | Fable (9) | Colibri (5) | Sandbox (7) | Obscura (14) | Bitcoin (5) | RAG (1) | System (16)
+### 9router (2) | Agent (3) | Fable (9) | Colibri (5) | Live Lab (9) | Sandbox (7) | Obscura (14) | Bitcoin (5) | RAG (1) | System (16)
 
 | Grupo | Rotas |
 |-------|-------|
@@ -464,6 +511,7 @@ Integracao completa com o [h4ckf0r0day/obscura](https://github.com/h4ckf0r0day/o
 | **Agent** | `POST /api/agent/chat`, `POST /api/agent/chat/stream`, `POST /api/agent/analyze` |
 | **Fable** | `/api/fable/method`, `/api/fable/loop`, `/api/fable/judge`, `/api/fable/domain`, `/api/fable/spawn`, `/api/fable/stats`, `/api/fable/tasks`, `/api/fable/task/[id]`, `/api/fable/agent-query` |
 | **Colibri** | `/api/colibri/health`, `/api/colibri/models`, `/api/colibri/experts`, `/api/colibri/chat`, `/api/colibri/orchestrate` |
+| **Live Lab** | `/api/live-lab/diagnose`, `/api/live-lab/route`, `/api/live-lab/skill`, `/api/live-lab/evaluate`, `/api/live-lab/progress`, `/api/live-lab/stats`, `/api/live-lab/governanca`, `/api/live-lab/meta-skill`, `/api/live-lab/iogue-essence` |
 | **Sandbox** | `/api/sandbox/execute`, `/api/sandbox/agents`, `/api/sandbox/agents/[id]`, `/api/sandbox/llm`, `/api/sandbox/llm/stream`, `/api/sandbox/status`, `/api/sandbox/evolution` |
 | **Obscura** | `/api/obscura/navigate`, `/api/obscura/scrape`, `/api/obscura/eval`, `/api/obscura/links`, `/api/obscura/markdown`, `/api/obscura/snapshot`, `/api/obscura/status`, `/api/obscura/serve`, `/api/obscura/intercept`, `/api/obscura/trackers`, `/api/obscura/proxy`, `/api/obscura/sessions`, `/api/obscura/network`, `/api/obscura/health` |
 | **RAG** | `POST /api/rag/query` |
@@ -492,6 +540,30 @@ Integracao completa com o [h4ckf0r0day/obscura](https://github.com/h4ckf0r0day/o
 | 11 | **Governanca** | Governanca descentralizada |
 | 12 | **Sandbox Nativo** | 4 sub-tabs: execucao, agentes, LLM dedicado, evolucao |
 | 13 | **Navegador Obscura** | 6 sub-tabs: navegador, scrape, MCP tools, rede, stealth, info |
+
+---
+
+## Testes
+
+```
+131 testes passando — 3 suites
+
+src/lib/live-lab/__tests__/algorithms.test.ts   (88 testes)
+  minMaxNormalize, cascadeMatch, computeMCDMScores, routeIntent,
+  matchSkill, composeMetaSkill, TokenBucket, BudgetTracker,
+  maskPIIWithAudit, rbacCheck
+
+src/lib/live-lab/__tests__/orchestrator.test.ts  (36 testes)
+  getRoutingResult, executeSkill, executeMetaSkill, evaluateModulo,
+  getPersonaProgress, getLiveLabStats, getIogueEssence,
+  agenticaDiagnose, agenticaRoute, agenticaExecuteSkill,
+  agenticaExecuteMetaSkill, agenticaEvaluateModulo, agenticaProgress,
+  agenticaStats, agenticaIogueEssence, agenticaGovernanca
+
+tests/federated.test.ts                         (7 testes)
+  Federated Learning: NRP, ruido Gaussiano, validacao,
+  ancoragem, rounds, contribuicoes
+```
 
 ---
 
@@ -535,23 +607,14 @@ docker compose ps
 
 | Servico | Porta | Profile | Descricao |
 |---------|-------|---------|-----------|
-| **chimera** | 3000 | default | Next.js 16 standalone + 62 API routes |
+| **chimera** | 3000 | default | Next.js 16 standalone + 71 API routes |
 | **caddy** | 80, 443 | default | Reverse proxy + auto-SSL (Let's Encrypt) |
 | **obscura** | 9222, 9223 | `obscura` | Headless browser Rust/V8 com CDP |
 | **colibri** | 8000 | `colibri` | GLM-5.2 744B MoE inference (GPU) |
 | **ollama** | 11434 | `ollama` | Local LLM inference (Llama 3, Mistral...) |
 | **codegeex** | 8001 | `codegeex` | CodeGeeX4 9B native API, streaming + function calling (GPU) |
 
-O servico **codegeex** roda a API nativa do CodeGeeX4 com suporte a streaming SSE, function calling (tool_use), e 128K de contexto. Usa o endpoint `/v1/chat/completions` diretamente compativel com o protocolo OpenAI, permitindo roteamento via 9router sem traducao de protocolo. Requer GPU NVIDIA e pesos do modelo montados no volume `codegeex-models`.
-
 O Caddy provisiona SSL automaticamente via Let's Encrypt quando `PUBLIC_DOMAIN` esta configurado. Sem dominio, serve HTTP na porta 80.
-
-### Docker Manual (app apenas)
-
-```bash
-docker build -t chimera .
-docker run -p 3000:3000 --env-file .env chimera
-```
 
 ### Desenvolvimento Local
 
@@ -611,26 +674,29 @@ chimera/
 |   |-- app/
 |   |   |-- page.tsx                   # Dashboard principal — 13 tabs
 |   |   |-- layout.tsx                 # Root layout + IBM Plex Mono
-|   |   +-- api/                       # 62 API routes
+|   |   +-- api/                       # 71 API routes
 |   |       |-- 9router/               #   2 rotas 9router bridge
 |   |       |-- fable/                 #   9 rotas Fable Method
 |   |       |-- agent/                 #   3 rotas agentic
 |   |       |-- colibri/               #   5 rotas Colibri engine
+|   |       |-- live-lab/              #   9 rotas Live Lab Tri-Nuclear
 |   |       |-- sandbox/               #   7 rotas Sandbox Nativo
 |   |       |-- obscura/               #  14 rotas Navegador Obscura
 |   |       |-- vaults/                #   5 rotas Bitcoin vault
 |   |       +-- rag/                   #   RAG rRNA pipeline
 |   |-- components/                    # 100+ componentes React
-|   |   +-- live-lab-tab.tsx           #   Painel Live Lab com Agentica AI
+|   |   +-- live-lab-tab.tsx           #   Painel Live Lab (Diagnostico, Iogue, Roteamento, Progresso)
 |   |-- lib/
 |   |   |-- 9router-bridge.ts          # Bridge principal (routeChat, streamChat)
 |   |   |-- 9router-engine/            # Motor 9router (23 providers + translators)
-|   |   |-- live-lab/                  # Live Lab Tri-Nuclear v2.0
-|   |   |   |-- raw-manifesto.json     #   Manifesto JSON (9 LLMs, 17 skills, 4 trilhas, 5 personas)
+|   |   |-- live-lab/                  # Live Lab Tri-Nuclear v3.0
+|   |   |   |-- raw-manifesto.json     #   Manifesto JSON (10 LLMs, 12 skills, 5 meta-skills, 4 trilhas, 5 personas)
 |   |   |   |-- manifesto.ts           #   Typed manifesto + AGENTICA_AI identity
-|   |   |   |-- types.ts               #   TypeScript interfaces (LiveLabManifesto, Persona, Skill...)
-|   |   |   |-- orchestrator.ts        #   Engine: routeToModel, executeSkill, evaluateModulo
-|   |   |   |-- agentica-ai.ts          #   7 funcoes Arquiteta-Cognitiva (diagnose, route, governanca...)
+|   |   |   |-- types.ts               #   25+ TypeScript interfaces
+|   |   |   |-- algorithms.ts          #   PROMETHEE II, cascade, TokenBucket, Budget, PII, RBAC
+|   |   |   |-- orchestrator.ts        #   Engine: 7 funcoes + rateLimiter + budgetTracker singletons
+|   |   |   |-- agentica-ai.ts          #   9 funcoes Arquiteta-Cognitiva
+|   |   |   |-- __tests__/             #   131 testes (algorithms + orchestrator/agentica)
 |   |   |   +-- index.ts               #   Re-exports publicos
 |   |   |-- fable-method-engine.ts     # Motor Think/Act/Prove
 |   |   |-- fable-5-orchestrator.ts    # Orquestrador LLM subagentes
