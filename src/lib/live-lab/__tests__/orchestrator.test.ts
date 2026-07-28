@@ -83,6 +83,13 @@ describe('getRoutingResult', () => {
     expect(r1.modelo_selecionado).toBeTruthy();
     expect(r2.modelo_selecionado).toBeTruthy();
   });
+
+  it('routes to glm-5.2 for advanced reasoning intent', () => {
+    const result = getRoutingResult('raciocinario avancado para arquitetura de solucoes');
+    expect(result.modelo_selecionado).toBe('glm-5.2');
+    expect(result.provedor).toBe('Zhipu AI');
+    expect(result.cascade_match).not.toBeNull();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -251,9 +258,9 @@ describe('getPersonaProgress', () => {
 describe('getLiveLabStats', () => {
   it('returns stats with correct counts', () => {
     const stats = getLiveLabStats();
-    // 9 modelos (from manifesto)
+    // 10 modelos (from manifesto)
     expect(stats.modelos).toBe(M.nucleo_agregador.modelos.length);
-    expect(stats.modelos).toBe(9);
+    expect(stats.modelos).toBe(10);
     // 12 skills
     expect(stats.skills).toBe(M.nucleo_produtividade.skills.length);
     expect(stats.skills).toBe(12);
@@ -350,9 +357,9 @@ describe('agenticaDiagnose', () => {
     expect(diag.integridade.iogue_essence).toBe(true);
   });
 
-  it('nucleos.n1_modelos === 9', () => {
+  it('nucleos.n1_modelos === 10', () => {
     const diag = agenticaDiagnose();
-    expect(diag.nucleos.n1_modelos).toBe(9);
+    expect(diag.nucleos.n1_modelos).toBe(10);
   });
 
   it('alertas may contain warnings or be empty', () => {
@@ -502,7 +509,7 @@ describe('agenticaStats', () => {
 
   it('returns consistent data', () => {
     const stats = agenticaStats();
-    expect(stats.modelos).toBe(9);
+    expect(stats.modelos).toBe(10);
     expect(stats.skills).toBe(12);
     expect(stats.metaSkills).toBe(5);
     expect(stats.trilhas).toBe(4);

@@ -254,14 +254,14 @@ describe('computeMCDMScores', () => {
     }
   });
 
-  it('all 9 manifesto models produce valid scores when scored together', () => {
+  it('all 10 manifesto models produce valid scores when scored together', () => {
     const modelos = LIVE_LAB_MANIFESTO.nucleo_agregador.modelos;
     const pesos = LIVE_LAB_MANIFESTO.nucleo_agregador.algoritmo_roteamento.pesos_mcdm;
 
-    expect(modelos.length).toBe(9);
+    expect(modelos.length).toBe(10);
 
     const result = computeMCDMScores(modelos, pesos);
-    expect(result).toHaveLength(9);
+    expect(result).toHaveLength(10);
 
     // Each score has valid structure
     for (const score of result) {
@@ -269,7 +269,7 @@ describe('computeMCDMScores', () => {
       expect(typeof score.score_total).toBe('number');
       expect(typeof score.rank).toBe('number');
       expect(score.rank).toBeGreaterThanOrEqual(1);
-      expect(score.rank).toBeLessThanOrEqual(9);
+      expect(score.rank).toBeLessThanOrEqual(10);
       expect(score.phi_positivo).toBeGreaterThanOrEqual(0);
       expect(score.phi_negativo).toBeGreaterThanOrEqual(0);
 

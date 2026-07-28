@@ -176,6 +176,25 @@
           "Autocompletar",
           "Code review local"
         ]
+      },
+      {
+        "id": "glm-5.2",
+        "provedor": "Zhipu AI",
+        "contexto_tokens": 128000,
+        "custo_por_1m_tokens": {
+          "entrada_usd": 2.0,
+          "saida_usd": 8.0
+        },
+        "latencia_media_ms": 480,
+        "peso_roteamento": 0.10,
+        "qualidade_normalizada": 0.96,
+        "is_local": false,
+        "casos_uso_prioritarios": [
+          "Raciocinario avancado",
+          "Geracao complexa",
+          "Analise multimodal",
+          "Arquitetura de solucoes"
+        ]
       }
     ],
     "algoritmo_roteamento": {
@@ -255,6 +274,16 @@
             "glm-4-plus"
           ],
           "latencia_maxima_ms": 200
+        },
+        {
+          "regra": "raciocinario avancado|arquitetura|estrategia|solucao complexa|planejamento",
+          "modelo_primario": "glm-5.2",
+          "fallback": [
+            "claude-4-sonnet",
+            "gpt-4o",
+            "deepseek-r1"
+          ],
+          "latencia_maxima_ms": 1500
         }
       ],
       "pesos_mcdm": {
