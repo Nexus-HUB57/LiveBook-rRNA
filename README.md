@@ -646,6 +646,23 @@ chimera/
 
 ---
 
+Os 4 Pilares que Definem o Chimera como "Última Onda"1. Transição do LLM Monolítico para "Compound AI Systems"A 2ª onda tentou resolver todos os problemas aumentando o tamanho dos modelos ou esticando janelas de contexto (ex: 1M+ tokens). O mercado e a academia já comprovaram que isso gera custo proibitivo, latência e o fenômeno de Lost in the Middle (degradação da atenção no meio do texto).A Abordagem Chimera: O LLM deixa de ser o "cérebro central" e passa a ser apenas a unidade de processamento linguístico (LPU). A inteligência real migra para a orquestração do sistema — unindo RAG híbrido, execução de código e validação ativa.2. Memória Estável por Grafo ($G_M$) vs. Contexto EfémeroA imensa maioria das aplicações atuais faz RAG vetorial simples: busca os fragmentos mais parecidos e os "joga" no prompt. O Chimera implementa Consolidação de Memória Biomimética com função de atenuação temporal:$$W(t) = W_0 \cdot e^{-\lambda (t - t_0)} + \alpha \cdot \sum_{k=1}^{n} \delta(t - t_k)$$Isso permite ao sistema aprender, esquecer o que é irrelevante e reforçar conexões cruciais, exatamente como um cérebro biológico consolida memórias no hipocampo.3. Concorrência Real e Self-Healing na VM BEAMA maioria dos frameworks de agentes atuais roda em loops síncronos de Python. Se um agente falha ou entra em loop infinito, a execução trava.Ao adotar a máquina virtual do Erlang/Elixir (BEAM) no runtime do LiveBook, o Chimera ganha:Isolamento Absoluto: Cada agente é um processo leve independente (escalando a centenas de milhares por nó).Supervisão em Árvore: Se um agente de execução quebra, a árvore de supervisão o reinicia instantaneamente sem perder o estado do Grafo PC.4. Integração Neuro-Simbólica (Zero-Alucinação)A grande limitação da IA generativa pura é a falta de garantias formais. O Chimera resolve isso fundindo o componente neural (a fluidez da linguagem do LLM) com o componente simbólico (o Grafo de Memória $G_M$ e o Critic Loop).   ┌────────────────────┐       ┌────────────────────┐
+   │ Redes Neurais      │  ───► │ Fluidez, Intuição, │
+   │ (LLM Transformer)  │       │ Tradução e Contexto│
+   └─────────┬──────────┘       └─────────┬──────────┘
+             │                            │
+             └─────────────┬──────────────┘
+                           ▼
+              [ FUSÃO NEURO-SIMBÓLICA ]
+                           ▲
+             ┌─────────────┴──────────────┐
+             │                            │
+   ┌─────────┴──────────┐       ┌─────────┴──────────┐
+   │ Grafos Simbólicos  │  ───► │ Verificabilidade,  │
+   │ & Validação BEAM   │       │ Rigor e Memória PC │
+   └────────────────────┘       └────────────────────┘
+Se o LLM tenta gerar algo que viola as regras ontológicas do grafo ou que falha na execução do LiveBook, o agente Critic intervém e corrige a saída antes que ela seja consolidada.Resumo do Salto GeneracionalIA de 2ª Onda: Responde perguntas com base no que aprendeu no treino (conhecimento congelado) ou no que é passado no prompt imediato.Ecossistema Chimera (3ª Onda): Raciocina em malha fechada, executa código em tempo real, valida factualidade contra um grafo persistente, evolui seu estado interno e recupera-se autonomamente de falhas.
+
 ## Licenca
 
 Private — Nexus HUB57
