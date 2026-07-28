@@ -58,16 +58,16 @@ export function executeMetaSkill(metaSkillId: string, input: Record<string, unkn
   if (persona && !rbacCheck(persona.nivel_acesso_rbac, metaSkill.rbac_permissoes[0] || 'basic', [...RBAC_LEVELS]))
     return { sucesso: false, meta_skill_id: metaSkillId, resultados: [{ sucesso: false, skill_id: metaSkillId, modelo_selecionado: '', tokens_usados: 0, custo_usd: 0, latencia_ms: 0, resultado: { erro: 'RBAC: nivel insuficiente para meta-skill' } }], total_tokens: 0, total_custo_usd: 0, total_latencia_ms: 0, execution_plan: [] };
   const plan = composeMetaSkill(metaSkill as MetaSkill, M.nucleo_produtividade.skills);
-  if (plan.hasCycle) return { sucesso: false, meta_skill_id: metaSkillId, resultados: [], total_tokens: 0, total_custo_usd: 0, total_latencia_ms: 0, execution_plan: plan.execution_plan };
+  if (plan.hasCycle) return { sucesso: false, meta_skill_id: metaSkillId, resultados: [], total_tokens: 0, total_custo_usd: 0, total_latencia_ms: 0, execution_plan: plan.executionPlan };
   const resultados: SkillResult[] = [];
   let total_tokens = 0; let total_custo = 0; let total_lat = 0;
   for (const step of plan.executionPlan) {
     const r = executeSkill(step.skillId, input, personaId);
     resultados.push(r);
     total_tokens += r.tokens_usados; total_custo += r.custo_usd; total_lat += r.latencia_ms;
-    if (!r.sucesso) return { sucesso: false, meta_skill_id: metaSkillId, resultados, total_tokens, total_custo_usd: total_custo, total_latencia_ms: total_lat, execution_plan: plan.execution_plan };
+    if (!r.sucesso) return { sucesso: false, meta_skill_id: metaSkillId, resultados, total_tokens, total_custo_usd: total_custo, total_latencia_ms: total_lat, execution_plan: plan.executionPlan };
   }
-  return { sucesso: true, meta_skill_id: metaSkillId, resultados, total_tokens, total_custo_usd: total_custo, total_latencia_ms: total_lat, execution_plan: plan.execution_plan };
+  return { sucesso: true, meta_skill_id: metaSkillId, resultados, total_tokens, total_custo_usd: total_custo, total_latencia_ms: total_lat, execution_plan: plan.executionPlan };
 }
 
 export function evaluateModulo(moduloId: string, _score?: number): ModuloResult {
