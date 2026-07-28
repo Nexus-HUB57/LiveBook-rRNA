@@ -9,7 +9,6 @@
   <img src="https://img.shields.io/badge/Prisma-6.11-2D3748?logo=prisma" alt="Prisma" />
   <img src="https://img.shields.io/badge/GLM--5.2-Connected-emerald" alt="GLM-5.2" />
   <img src="https://img.shields.io/badge/API%20Routes-71-cyan" alt="API Routes" />
-  <img src="https://img.shields.io/badge/Dashboard-13%20tabs-f97316" alt="Tabs" />
   <img src="https://img.shields.io/badge/Docker-6%20services-2496ED?logo=docker" alt="Docker" />
   <img src="https://img.shields.io/badge/Live%20Lab-Tri--Nuclear%20v3.0-purple" alt="Live Lab" />
   <img src="https://img.shields.io/badge/Tests-131%20passing-brightgreen" alt="Tests" />
@@ -17,718 +16,666 @@
 </p>
 
 <p align="center">
-  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin Custody</strong> · <strong>RAG Pipeline Clinico</strong> · <strong>Sandbox Nativo</strong> · <strong>Navegador Obscura</strong> · <strong>Auto-Cura Reativa</strong> · <strong>Live Lab Tri-Nuclear v3.0</strong> · <strong>Agentica AI 9 Functions</strong>
+  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin PSBT v2</strong> · <strong>RAG Pipeline</strong> · <strong>Sandbox VM</strong> · <strong>Headless Browser</strong> · <strong>Self-Healing</strong> · <strong>Live Lab Tri-Nuclear v3.0</strong>
 </p>
 
 ---
 
-## Visao Geral
+## Abstract
 
-O **CHIMERA** e uma **Multi-Agent Fusion Engine** — plataforma de orquestracao de agentes de IA com roteamento inteligente para 23 provedores LLM. O sistema combina chamadas nativas de API com traducao automatica de protocolo (OpenAI, Claude, Gemini), cadeias de fallback resilientes, e uma arquitetura cognitiva baseada no metodo Think/Act/Prove.
-
-O ecossistema inclui pipeline RAG biologico de 6 fases para diagnostico clinico, custodia Bitcoin com PSBT v2, auto-cura reativa em 6 fases, 9 agentes especializados, sandbox de execucao isolada com VM nativa, navegador headless Obscura (Rust/V8) com stealth mode, 71 API routes, e o **Live Lab Tri-Nuclear v3.0** — ecossistema cognitivo com 3 nucleos orquestrados pela Agentica AI (Arquiteta-Cognitiva, 9 funcoes), inspirado nos principios da *Autobiografia de um Iogue* de Paramahansa Yogananda.
+CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa roteamento inteligente baseado em **MCDM PROMETHEE II** com funcao de preferencia linear (Tipo V), tradução automatica de protocolo em topologia hub-and-spoke para 23 provedores, e um subsistema cognitivo trinuclear — o **Live Lab v3.0** — orquestrado pela Agentica AI com 9 funcoes de alto nivel. O sistema incorpora governanca por RBAC hierárquico (4 tiers), controle de taxa por Token Bucket com prioridade, projecao de orcamento com alertas em limiares configuráveis, e mascaramento de PII com trilha de auditoria. A arquitetura suporta 71 REST endpoints, 4 routers tRPC, streaming SSE nativo, e deploy containerizado com 6 servicos Docker.
 
 ---
 
-## Ecossistema Consistente Chimera 
-
-Análise Técnica de Nível PhD: Ecossistema ChimeraVisão Geral da ArquiteturaO Ecossistema Chimera (incorporado na infraestrutura do repositório LiveBook-rRNA) representa uma arquitetura de Computação Cognitiva Contínua e Multi-Agente. Diferente de sistemas LLM tradicionais baseados em execuções stateless e janelas de contexto efémeras, o Chimera opera como um sistema híbrido que funde RAG de Alta Ordem (GraphRAG + Vetores), Grafos de Memória PC (Persistent Context) e Ambientes de Execução Reativos (LiveBook Engine).
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       ORCHESTRATION & AGENT LAYER                        │
-│   [Planner Agent] ◄───► [Executor Agent] ◄───► [Critic/Verifier Agent]  │
-└────────────────────────────────────┬────────────────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                   PERSISTENT CONTEXT GRAPH MEMORY (PC)                   │
-│      G_M = (V, E, W, T)  │  Nodes: Episodic, Semantic, Procedural      │
-│      Decay: W(t) = W_0 · e^{-λ(t-t_0)} + α · AccessCount               │
-└────────────────────────────────────┬────────────────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      HYBRID RAG & EXECUTION ENGINE                      │
-│   [Vector Store (HNSW)] ⊕ [Graph Traversal] ──► [LiveBook Kernel / BEAM] │
-└─────────────────────────────────────────────────────────────────────────┘
-
-Matriz Térmica e Dimensional do Ecossistema Chimera
-DimensãoEspecificação TécnicaMecanismo de AçãoArquitetura de AgentesSwarm Hierárquico AsShift/ReAct Modificado
-
-Decomposição recursiva de tarefas com validação por reflexão e critic loop.Memória Contínua
-Grafo de Contexto Persistente ($G_M$) Persistência determinística baseada em grafos ponderados com atenuação temporal
-.Mecanismo RAGRAG Híbrido Tripartido (Dense + Sparse + Graph)Busca vetorial HNSW combinada com travessia de subgrafos (Personalized PageRank)
-.Ambiente de ExecuçãoKernel Reativo LiveBook / Elixir BEAMAvaliação de código em ambiente isolado, concorrente e tolerante a falhas.Topologia LLMModel-Agnostic Engine
-Suporte a roteamento dinâmico de prompts, validação Pydantic/JSON-Schema e Structured Outputs.
-
-Análise Detalhada dos Componentes1. 
-Arquitetura de Agentes e Autonomia
-O subsistema de agentes do Chimera é construído sob uma Topologia Reativa de Múltiplos Agentes Especializados:
-. Planner Agent (Orquestrador): Decompõe objetivos complexos em grafos direcionados acíclicos (DAGs) de sub-tarefas executáveis
-. Executor Agent (Operador): Interage diretamente com o runtime do LiveBook e ferramentas externas (APIs, banco de dados, interpretador de código)
-.Critic / Verifier Agent (Auditor de Sanidade): Executa self-reflection contínuo sobre as respostas geradas pelo Executor antes de gravar os resultados no Grafo de Memória, evitando alucinações
-.Memory Integration Agent (Consolidador): Identifica novas entidades, relações e fatos resultantes da execução e os injeta no Grafo de Memória PC.Autonomia e Malha de Decisão (Decision Loop)A autonomia opera em um ciclo fechado Sense-Plan-Act-Reflect:
-
-$$\text{Objetivo} \longrightarrow \text{Decomposição DAG} \longrightarrow \text{Consulta à Memória PC} \longrightarrow \text{Execução} \longrightarrow \text{Validação} \longrightarrow \text{Consolidação}$$
-
-Se uma instrução falha na etapa de execução ou validação, o agente aciona um protocolo de Self-Healing (autocorreção de código e prompting) sem intervenção humana.
-
-2. Grafo de Memória PC Persistente/Contínua (Persistent Context Memory Graph)
-A grande limitação dos LLMs é a degradação informacional em janelas de contexto extensas (catastrophic forgetting). O Chimera resolve isso implementando um Grafo de Memória de Contexto Persistente (PC Graph).  
-
-Formulação Matemática do Grafo
-O grafo de memória é definido formalmente por:$$G_M = (V, E, W, T)$$Onde:  $V = V_e \cup V_s \cup V_p$: 
-
-Conjunto de vértices divididos em memórias Episódicas ($V_e$, interações passadas), Semânticas ($V_s$, conceitos e ontologias) e Procedurais ($V_p$, código e rotinas).$E \subseteq V \times V$: 
-
-Arestas direcionadas que representam relações semânticas e causais.$W: E \rightarrow [0, 1]$: Função de peso informacional da aresta.$T$: Marcadores temporais de criação e acesso.
-
-Função de Atenuação e Reforço Temporal (Decay & Consolidation)
-A relevância de um nó no grafo varia continuamente ao longo do tempo segundo a equação:$$W(t) = W_0 \cdot e^{-\lambda (t - t_0)} + \alpha \cdot \sum_{k=1}^{n} \delta(t - t_k)$$$\lambda$: Taxa de decaimento temporal (esquecimento).$\alpha$: Fator de reforço por acesso recorrente.$t_k$: Instantes de tempo em que a informação foi recuperada e utilizada com sucesso.Esse modelo simula a consolidação de memória biológica: informações pouco acessadas atenuam seus pesos no grafo, enquanto conexões cruciais tornam-se "rodovias de contexto".
-
-Formulação Matemática do Grafo de Memória PC (Persistent Context)
-O Grafo de Memória PC funde a persistência estrutural à dinâmica de atenuação temporal.
-
-$$G_M = (V, E, W, T)$$$
-
-V = V_e \cup V_s \cup V_p$: Vértices categorizados em Episódicos ($V_e$), Semânticos ($V_s$) e Procedurais ($V_p$).$
-
-E \subseteq V \times V$: Arestas direcionadas representando causalidade e derivação semântica.$
-
-W: E \rightarrow [0, 1]$: Função de peso informacional da aresta.
-
-Dinâmica Temporal e Reforço de Memória
-A intensidade da conexão entre nós diminui exponencialmente no tempo ($\lambda$) e é amplificada a cada recuperação com sucesso ($\alpha$):$$
-
-W(t) = W_0 \cdot e^{-\lambda (t - t_0)} + \alpha \cdot \sum_{k=1}^{n} \delta(t - t_k)$$
-
-Onde:$\lambda$: Taxa de decaimento por desuso (limpeza de contextos irrelevantes).
-
-$\alpha$: Coeficiente de consolidação de memória.
-
-$\delta(t - t_k)$: Função Delta de Dirac ativada a cada leitura ou inferência confirmada pelo agente auditor.
-
-3. Motor de LLM e Pipeline RAG Híbrido
-O sistema não se apoia exclusivamente na memória interna do LLM. O RAG do Chimera une duas frentes:
-Dense Retrieval (Busca Vetorial): Embeddings de alta dimensão mapeados em índices HNSW (Hierarchical Navigable Small World) para identificação rápida de similaridade semântica local.
-
-GraphRAG (Travessia Estruturada): Algoritmos de busca em profundidade/largura e Personalized PageRank executados sobre o Grafo PC para recuperar contexto relacional de longo alcance.
-
-Pipeline de Ingestão e Geração:Recuperação Híbrida: O prompt do usuário extrai simultaneamente os top-$k$ vetores e o subgrafo de relevância $G_{\text{sub}} \subset G_M$.  
-
-Re-Ranking & Compressão de Contexto: Um modelo Cross-Encoder reclassifica os blocos de texto e nós recuperados, eliminando redundâncias.
-
-Injeção de Contexto Estruturado: O prompt final enviado ao LLM é construído com dados do subgrafo formatados em RDF/Triplas e código executável.
-
- Pipeline RAG Híbrido e Motor LLMO RAG do Chimera opera em duas camadas totalmente sincronizadas com o Grafo PC:
- 
-                            ┌────────────────────────┐
-                            │    Prompt de Entrada   │
-                            └───────────┬────────────┘
-                                        │
-                    ┌───────────────────┴───────────────────┐
-                    ▼                                       ▼
-        ┌──────────────────────┐                ┌──────────────────────┐
-        │  Busca Vetorial HNSW │                │   GraphRAG Traversal │
-        │ (Similaridade Local) │                │  (PageRank Relacional│
-        └───────────┬──────────┘                └───────────┬──────────┘
-                    │                                       │
-                    └───────────────────┬───────────────────┘
-                                        ▼
-                            ┌────────────────────────┐
-                            │ Re-Ranker & Cross-Enc. │
-                            └───────────┬────────────┘
-                                        ▼
-                            ┌────────────────────────┐
-                            │ Prompt Estruturado LLM │
-                            └────────────────────────┘
-
-Camada Denso-Esparsa (Local): Índice HNSW realiza busca rápida em vetores de alta dimensão para capturar a similaridade semântica imediata.
-Camada Topológica (Global): Algoritmos de Personalized PageRank navegam pelas arestas do $G_M$ para resgatar dependências de longo alcance e contextos históricos distantes.
-Saída Estruturada sem Alucinações: A resposta do LLM é forçada via esquemas rigorosos (JSON Schema / Pydantic / Protobuf), impedindo qualquer desvio da verdade gravada no subgrafo recuperado.
-
----
-
-4. Integração LiveBook-rRNA & Capacidade de Produção
-
-No ecossistema Chimera, o LiveBook atua como a camada de execução reativa e interativa:
-
-LiveBook Runtime (Elixir/BEAM): Permite execução concorrente massiva, isolamento de falhas por processo e inspeção em tempo real de fluxos de dados complexos.
-
-Abstração rRNA (Ribosomal RNA Analogy): Metáfora funcional e estrutural inspirada no processamento biológico do RNA ribossômico. Atua como o "tradutor" que lê dados brutos da aplicação, traduz em "aminoácidos informacionais" (triplas de memória) e os sintetiza em estruturas funcionais no Grafo PC.
-
----
-
-Capacidade de Produção e Escalabilidade
-
-Concorrência Distribuída: Tirando proveito da VM do Erlang/Elixir (BEAM), o ecossistema é capaz de gerenciar milhares de agentes concorrentes por nó com sobrecarga mínima de memória.
-
-Escalabilidade Horizontal: O Grafo de Memória PC e o Vector Store podem ser distribuídos entre clusters (ex: Neo4j/Memgraph + Qdrant/Milvus), permitindo expansão ilimitada da base de conhecimento.
-
----
-
-Swarm de Agentes Reativos no LiveBook BEAM Engine
-A camada de autonomia é mantida pelo runtime da máquina virtual BEAM (Erlang/Elixir), garantindo tolerância a falhas, concorrência extrema e estado mantido em tempo real dentro dos notebooks interativos do LiveBook.
-
-Agente                       Papel Biomimético         Função no Sistema
-Planner Agent               Fator de Transcrição       Analisa o objetivo e gera um Grafo Direcionado Acíclico (DAG) de execução.
-Executor AgentRNA          Polimerase / Ribossomo      Executa tarefas, roda scripts Elixir/Python no LiveBook e consulta o RAG Híbrido.
-Critic / Verifier        Mecanismo de Reparo de DNA    Executa testes formais e validação lógica. Cancela e corrige execuções se houver alucinação.
-Memory Integrator            Proteína Chaperona        Converte novos aprendizados e saídas validadas em triplas e as injeta no Grafo PC.
-
-
-Ciclo Reativo Autônomo com Autocorreção (Self-Healing)
-$$\text{Objetivo} \longrightarrow \text{DAG} \longrightarrow \text{RAG Híbrido} \longrightarrow \text{Execução BEAM} \xrightarrow{\text{Erro?}} \text{Loop de Autocorreção} \longrightarrow \text{Commit no } G_M$$5
-
----
-
-
-
-Diferenciais Competitivos do Chimera
-
-Zero Alucinação Estrutural: O Critic Loop e a validação obrigatória no Grafo de Memória garantem que apenas fatos verificados persistam.
-Persistência Cross-Session Real: A memória do agente não se perde ao encerrar o processo; o Grafo PC mantém a continuidade do estado cognitivo indefinidamente.
-Ambiente Executável Nativo: A integração direta com o LiveBook permite que o agente não apenas "responda", mas também gere, teste e documente código reativo em tempo real.
-Auditabilidade Total: Toda decisão do agente pode ser rastreada no grafo por meio dos caminhos de arestas ($V_i \xrightarrow{E_k} V_j$) utilizados no raciocínio.
-
----
-
-Matriz Comparativa de Desempenho e Capacidades
-Propriedade             LLM Tradicional / RAG Simples                       Ecossistema Chimera (Unificado)
-Janela de Contexto      Limitada e efémera (perda no estouro de tokens)     Infinito Prático via Grafo PC Persistente e Atenuação $W(t)$
-Taxa de Alucinação      Alta em raciocínios complexos de múltiplos passos   Próxima de 0% devido ao Critic Loop e ground truth estruturado
-Concorrência            Limitada por requisições HTTP síncronas             Massiva via Processos BEAM/Elixir (milhares de agentes simultâneos)
-Persistência de Estado  Requer re-injeção manual de histórico               Nativamente persistente entre sessões de execução
-Rastreabilidade         Caixa preta probabilística                          Auditabilidade total por travessia de caminhos no Grafo $G_M$
-
-
----
-
-Aplicações Práticas de Alta Escalabilidade
-
-Plataformas de Engenharia de Software Autônomas: 
-Manutenção de código em sistemas críticos. O agente preserva o grafo de dependências da arquitetura inteira no Grafo PC e executa refatorações com validação contínua no runtime BEAM que mantêm a arquitetura completa de um sistema legado em seu Grafo de Memória PC, realizando refactoring e adição de features sem perder o contexto arquitetural.
-
-Análise Genômica e Bioinformática (rRNA Analytics): 
-Mapeamento e síntese autônoma de dados de sequenciamento biológico, convertendo leituras genéticas em grafos de interações de RNA e proteínas + Análise autônoma de sequências genéticas, construção de grafos ontológicos de RNA/proteínas e pipelines de dados reprodutíveis em LiveBook.
-
-Pesquisa Científica e Análise de Inteligência: 
-Ingestão de milhares de artigos acadêmicos para geração de Grafos de Conhecimento dinâmicos com navegação RAG de alta fidelidade.
-
-Sistemas de Inteligência e Redes Complexas: 
-Monitoramento contínuo de fluxos de dados heterogêneos com inferência em tempo real e atualização dinâmica de grafos ontológicos.
-
----
-
-##  Ecossistema Chimera — a Frente Biomimética do Motor rRNA (Processamento Biológico da Informação) e a Frente de Engenharia de Sistemas Distribuídos e Grafos (GraphRAG, BEAM Engine e Swarms de Agentes) — estabelece um novo paradigma: a Computação Cognitiva de Sólido Estado.Esta arquitetura integrada resolve simultaneamente o gargalo do esquecimento catastrófico (catastrophic forgetting), a degradação contextual em janelas extensas e a imprevisibilidade funcional (alucinações) de modelos LLM convencionais.
-
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                          FRENTE 1: PROCESSAMENTO BIOMIMÉTICO (rRNA ENGINE)             │
-│   [Dados Brutos / Prompt] ──► [Chunking por Códons] ──► [Tradução Ribossômica de Triplas] │
-└───────────────────────────────────────────┬────────────────────────────────────────────┘
-                                            │ (Aminoácidos Informacionais)
-                                            ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        FRENTE 2: GRAFO DE MEMÓRIA PC & SISTEMA DISTRIBUÍDO             │
-│   [Grafo PC G_M] ◄───► [RAG Híbrido: HNSW + PageRank] ◄───► [Swarm BEAM / LiveBook]    │
-│   Decaimento: W(t) = W_0 e^{-λ(t-t_0)} + α ∑ δ(t-t_k)  │ Zero Alucinação / Self-Healing │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-
-1. A Fusão Arquitetural: O Metabolismo InformacionalA fusão do sistema se apoia na analogia funcional estrita entre a Biologia Molecular e a Teoria da Informação Aplicada:
-
-Transcrição (Ingestão e Chunking): Os dados não estruturados (código, documentos, prompts) entram no runtime do LiveBook como sequências brutas de pre-mRNA.
-Tradução Ribossômica (O Motor rRNA): O módulo rRNA atua como um complexo ribossômico informacional. Ele mapeia janelas semânticas como "códons de informação" e traduz sequências de texto em aminoácidos informacionais — triplas estruturadas do tipo $(\text{Entidade Principal}, \text{Relação}, \text{Entidade Destino})$ associadas a vetores denso-esparsos.
-Dobramento Proteico (Integração ao Grafo PC): As triplas traduzidas são "dobradas" na estrutura do Grafo de Memória de Contexto Persistente ($G_M$), formando subgrafos funcionais análogos a proteínas folded de conhecimento.
-Proteólise e Degradação (Aritmética Temporal): Nós e arestas do grafo que não recebem reforço de acesso sofrem degradação enzimática matemática, limpando o contexto e mantendo apenas a informação de alto valor.
-
-## Stack Tecnica
-
-| Camada | Tecnologia |
-|--------|------------|
-| **Framework** | Next.js 16.1 (App Router, Turbopack, Standalone Output) |
-| **UI** | React 19 + Tailwind CSS 4 + shadcn/ui + Framer Motion |
-| **Linguagem** | TypeScript 5 |
-| **LLM Routing** | 9router bridge (in-process, hub-and-spoke protocol translation) |
-| **API Layer** | tRPC v11 (type-safe) + 71 REST API routes |
-| **Database** | Prisma 6 + SQLite (15 modelos) |
-| **Bitcoin** | bitcoinjs-lib (BIP32/39, P2PKH) + @noble/secp256k1 (PSBT v2) |
-| **RAG** | Pipeline rRNA com BM25 field-boosted + cross-encoder reranking |
-| **Cognitive** | Fable Method Engine (Think/Act/Prove) + Fable 5 OS |
-| **Sandbox** | Node.js VM nativo, 5 tiers de agentes, evolucao genetica, LLM dedicado |
-| **Browser** | Obscura headless (Rust/V8/CDP), stealth mode, 3520+ trackers bloqueados |
-| **Auto-Cura** | Protocolo reativo de 6 fases + Wisdom Engine adaptativa |
-| **Streaming** | SSE nativo (fetch + ReadableStream, async generators) |
-| **Testing** | Jest — 131 testes passando (algoritmos, orchestrator, agentica-ai, federated) |
-| **Deploy** | Docker multi-stage (6 services) + Caddy (auto-SSL) + docker-compose |
-
----
-
-## Arquitetura 9router Bridge
-
-Toda chamada LLM passa pelo bridge em-processo derivado do [decolua/9router](https://github.com/decolua/9router):
-
-```
-API Route -> 9routerBridge.routeChat()
-  |-- Resolve provider (registry + aliases)
-  |-- Detect source format (OpenAI/Claude/Gemini)
-  |-- Translate request: OpenAI -> provider format (hub-and-spoke)
-  |-- Execute fetch com timeout por-provider
-  |-- Translate response: provider format -> OpenAI
-  +-- Se falhou -> proximo provider na fallback chain
+## 1. System Architecture
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          CHIMERA FUSION ENGINE                               │
+│                         Next.js 16 App Router                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  ┌──────────────────┐   │
+│  │  Dashboard   │  │  13 Tabs UI  │  │  tRPC v11   │  │  71 REST Routes  │   │
+│  │  (React 19)  │  │  shadcn/ui   │  │  4 Routers  │  │  + 9 Live Lab    │   │
+│  └──────┬──────┘  └──────┬───────┘  └──────┬──────┘  └────────┬─────────┘   │
+│         │                │                 │                   │             │
+│  ┌──────┴────────────────┴─────────────────┴───────────────────┴─────────┐   │
+│  │                        Core Libraries                                │   │
+│  │  ┌──────────────┐  ┌───────────────┐  ┌─────────────────────────┐   │   │
+│  │  │ 9router      │  │ Fable Method  │  │ Live Lab Tri-Nuclear   │   │   │
+│  │  │ Bridge       │  │ Think/Act/    │  │ ┌─────────────────────┐│   │   │
+│  │  │ 23 providers │  │ Prove Engine  │  │ │ Agentica AI (9 fn)  ││   │   │
+│  │  │ Hub-Spoke    │  │              │  │ │ PROMETHEE II MCDM   ││   │   │
+│  │  │ Protocol Tx  │  │              │  │ │ TokenBucket + Budget││   │   │
+│  │  └──────┬───────┘  └───────────────┘  │ │ PII Audit Trail     ││   │   │
+│  │         │                             │ │ RBAC 4-tier         ││   │   │
+│  │         │                             │ │ Skill Composition   ││   │   │
+│  │         │                             │ └─────────────────────┘│   │   │
+│  │         │                             └─────────────────────────┘   │   │
+│  └─────────┼──────────────────────────────────────────────────────────┘   │
+│            │                                                               │
+│  ┌─────────┼──────────────────────────────────────────────────────────┐   │
+│  │         │              Subsystems                                    │   │
+│  │  ┌──────┴───────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌───────┐  │   │
+│  │  │  RAG rRNA    │ │ Sandbox  │ │ Bitcoin  │ │ Obscura │ │ Self- │  │   │
+│  │  │  6-stage BM25│ │ VM Node  │ │ PSBT v2  │ │ Rust/V8 │ │ Healing│  │   │
+│  │  │  + Reranking │ │ 5 tiers  │ │ BIP32/39 │ │ CDP MCP │ │ 6 ph. │  │   │
+│  │  └──────────────┘ └──────────┘ └──────────┘ └─────────┘ └───────┘  │   │
+│  └────────────────────────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Prisma 6 + SQLite (15 models) │ Caddy (auto-SSL) │ Docker Compose        │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Fallback Chain
+## 2. Tech Stack
+
+| Layer | Technology | Rationale |
+|-------|-----------|------------|
+| **Framework** | Next.js 16.1 (App Router, Turbopack) | Standalone output para deploy leve, ISR/SSR/SSG unificado |
+| **UI** | React 19 + Tailwind CSS 4 + shadcn/ui | Componentes acessíveis, composabilidade, Framer Motion |
+| **Language** | TypeScript 5 (strict) | Type safety em toda a stack, generics avancados |
+| **LLM Routing** | 9router (in-process bridge) | Hub-and-spoke protocol translation, 23 providers, O(1) dispatch |
+| **API Layer** | tRPC v11 + 71 REST routes | Type-safe RPC para dashboard, REST para integracao externa |
+| **Database** | Prisma 6 + SQLite | Zero-ops embedded DB, 15 models, migracoes declarativas |
+| **Bitcoin** | bitcoinjs-lib + @noble/secp256k1 | BIP32/39 HD wallet, P2PKH, PSBT v2 com AES-256-GCM |
+| **RAG** | BM25 field-boosted + cross-encoder | Pipeline biologico 6 fases com reranking neural |
+| **Cognitive** | Fable Method (Think/Act/Prove) | Raciocinio estruturado com auto-correcao em 3 tentativas |
+| **Sandbox** | Node.js `vm` module (isolated) | 5 tiers com limites de memoria/tempo, evolucao genetica |
+| **Browser** | Obscura (Rust/V8, CDP) | Anti-fingerprinting, 3520+ trackers, MCP 13 tools |
+| **Testing** | Jest — 131 tests, 3 suites | Coverage: algorithms, orchestrator, agentica-ai, federated |
+| **Deploy** | Docker multi-stage + Caddy | 6 services, auto-SSL via Let's Encrypt |
+
+---
+
+## 3. 9router Bridge — Protocol Translation
+
+O 9router implementa traducao de protocolo em topologia **hub-and-spoke**: toda comunicacao e traduzida para/desde o formato OpenAI, eliminando a necessidade de adaptadores ponto-a-ponto.
+
+```text
+Request Flow:
+
+  Client (OpenAI format)
+       │
+       ▼
+  ┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
+  │ 9routerBridge   │────>│ Provider Registry │────>│ Provider API │
+  │ routeChat()     │     │ (23 providers)    │     │ (native fmt) │
+  └────────┬────────┘     └──────────────────┘     └──────┬───────┘
+           │                                               │
+           │         ┌──────────────────┐                 │
+           │<────────│ Response         │<────────────────┘
+           │         │ Translator       │
+           │         │ (provider→OpenAI) │
+           │         └──────────────────┘
+           │
+           │  [on failure: fallback chain]
+           ▼
+     Next provider in chain
+```
+
+### 3.1 Fallback Chain
+
+```text
+GLM (Zhipu AI) → DeepSeek → Groq → OpenAI → Anthropic → Gemini → OpenRouter → ZAI SDK
+     primary          2nd        3rd      4th       5th         6th       meta-router  last-resort
+```
+
+Cada chamada executa `fetch` com timeout por-provider. Em falha, a cadeia avanca sem retry exaustivo no mesmo provedor — maximizando resiliencia e minimizando latencia p99.
+
+### 3.2 Provider Registry (23 providers)
+
+| Provider | Protocol | Models | Notes |
+|----------|----------|--------|-------|
+| **Zhipu AI** | OpenAI | GLM-4-Flash, GLM-4-Plus, GLM-4-Long, **GLM-5.2** | Primary provider |
+| **DeepSeek** | OpenAI | DeepSeek-V3, DeepSeek-Reasoner | Chain-of-thought |
+| **Groq** | OpenAI | Llama 4 Maverick, Llama 4 Scout | Wafer-scale, 32ms p50 |
+| **OpenAI** | OpenAI | GPT-4o, GPT-4o-mini, o3, o4-mini | Multimodal |
+| **Anthropic** | Claude | Claude 4 Sonnet, Claude 4 Opus, Claude 3.5 Haiku | 200K context |
+| **Google Gemini** | Gemini | Gemini 2.5 Pro (2M), Gemini 2.5 Flash | Ultra-long context |
+| **xAI** | OpenAI | Grok 3, Grok 3 Mini | |
+| **Mistral** | OpenAI | Mistral Large, Codestral | Multilingual |
+| **Perplexity** | OpenAI | Sonar Pro, Sonar Reasoning | Web-grounded |
+| **Together AI** | OpenAI | Llama 4, Mixtral | |
+| **Fireworks** | OpenAI | Llama 4 Scout | |
+| **OpenRouter** | OpenAI | 100+ models | Meta-router |
+| **Cerebras** | OpenAI | Llama 4 | Wafer-scale inference |
+| **SiliconFlow** | OpenAI | DeepSeek-V3, Qwen3-8B | |
+| **Ollama** | OpenAI | llama3, mistral, phi3 | Local inference |
+| **CodeGeeX4** | OpenAI | CodeGeeX4 9B | Local, 128K context |
+| **CodeGeeX4 Native** | OpenAI | CodeGeeX4 9B | Streaming + function calling |
+| **Azure OpenAI** | OpenAI | GPT-4o | Enterprise SLA |
+| **Cohere** | OpenAI | Command R+, Command A | |
+| **NVIDIA NIM** | OpenAI | Llama 4 | NIM-optimized |
+| **Hyperbolic** | OpenAI | DeepSeek-V3 | |
+| **SambaNova** | OpenAI | Llama 4 | Reconfigurable |
+| **Cloudflare AI** | OpenAI | Llama 4 | Workers AI edge |
+| **Google Vertex** | Gemini | Gemini 2.5 Pro | Enterprise |
+
+---
+
+## 4. Live Lab Tri-Nuclear v3.0
+
+O Live Lab implementa um ecossistema cognitivo de tres nucleos com automacao de roteamento, produtividade e evolucao educacional. A versao 3.0 incorpora o modelo **GLM-5.2** (qualidade normalizada 0.96 — mais alta do agregador) e mapeia 6 principios filosoficos da *Autobiografia de um Iogue* (Yogananda) em algoritmos do sistema.
+
+```text
+┌────────────────────────────────────────────────────────────────────┐
+│                     LIVE LAB TRI-NUCLEAR v3.0                       │
+│                                                                    │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐ │
+│  │  N1 AGREGADOR     │  │  N2 PRODUTIVIDADE│  │  N3 ECOSSISTEMA   │ │
+│  │  10 LLMs         │  │  12 Skills       │  │  4 Trilhas       │ │
+│  │  PROMETHEE II    │  │  5 Meta-Skills   │  │  12 Modulos      │ │
+│  │  9 Cascade Rules │  │  Skill Graph     │  │  4 Certificacoes │ │
+│  │  6 Criteria      │  │  Topo Sort       │  │  5 Personas      │ │
+│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘ │
+│           │                    │                     │            │
+│           └────────────────────┼─────────────────────┘            │
+│                                │                                  │
+│                    ┌───────────┴───────────┐                      │
+│                    │   AGENTICA AI v3.0    │                      │
+│                    │   9 Functions        │                      │
+│                    │   Arquiteta-Cognitiva │                      │
+│                    └───────────┬───────────┘                      │
+│                                │                                  │
+│  ┌─────────────────────────────┼───────────────────────────────┐  │
+│  │              GOVERNANCE LAYER                               │  │
+│  │  Token Bucket (priority) │ Budget Forecast │ RBAC (4 tiers)│  │
+│  │  PII Masking + Audit Trail                                   │  │
+│  └────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+### 4.1 N1 — Nucleo Agregador: Roteamento Multi-Criterio
+
+O nucleo agregador seleciona o LLM otimo para cada intencao do usuario combinando dois mecanismos complementares.
+
+#### 4.1.1 Cascade de Intencoes
+
+Matching ponderado por keywords com limiar de ativacao. Cada regra cascade define:
+
+- `regra`: pipe-delimited keywords com pesos opcionais (`keyword:2.0`, padrao 1.0)
+- `modelo_primario`: LLM alvo quando a regra e ativada
+- `fallback[]`: cadeia de fallback se o primario exceder `latencia_maxima_ms`
 
 ```
-GLM (Zhipu AI) -> DeepSeek -> Groq -> OpenAI -> Anthropic (Claude) -> Gemini -> OpenRouter -> ZAI SDK (ultimo recurso)
+Score(regra) = Σ pesos_matched / Σ pesos_total
+
+Ativacao:  Score >= 0.3
 ```
 
-### Provedores Registrados (23)
+O algoritmo aplica **fuzzy word boundary matching** — correspondencia parcial com boost de 0.5x quando >= 60% dos caracteres da keyword aparecem em ordem dentro de uma palavra da intencao.
 
-| Provider | Formato | Modelos Principais |
-|----------|---------|-------------------|
-| **GLM (Zhipu AI)** | OpenAI | GLM-4-Flash, GLM-4-Plus, GLM-4-Long, **GLM-5.2** |
-| **DeepSeek** | OpenAI | DeepSeek-V3, DeepSeek-Reasoner |
-| **Groq** | OpenAI | Llama 4 Maverick, Llama 4 Scout (32ms) |
-| **OpenAI** | OpenAI | GPT-4o, GPT-4o-mini, o3, o4-mini |
-| **Anthropic** | Claude | Claude 4 Sonnet, Claude 4 Opus, Claude 3.5 Haiku |
-| **Google Gemini** | Gemini | Gemini 2.5 Pro, Gemini 2.5 Flash |
-| **xAI (Grok)** | OpenAI | Grok 3, Grok 3 Mini |
-| **Mistral** | OpenAI | Mistral Large, Codestral |
-| **Perplexity** | OpenAI | Sonar Pro, Sonar Reasoning |
-| **Together AI** | OpenAI | Llama 4, Mixtral |
-| **Fireworks AI** | OpenAI | Llama 4 Scout |
-| **OpenRouter** | OpenAI | 100+ modelos (meta-router) |
-| **Cerebras** | OpenAI | Llama 4 (wafer-scale, 32ms latency) |
-| **SiliconFlow** | OpenAI | DeepSeek-V3, Qwen3-8B |
-| **Ollama (Local)** | OpenAI | llama3, mistral, phi3 |
-| **CodeGeeX4 (Ollama)** | OpenAI | CodeGeeX4 9B (128K context) |
-| **CodeGeeX4 Native** | OpenAI | CodeGeeX4 9B, streaming, function calling |
-| **Azure OpenAI** | OpenAI | GPT-4o (enterprise) |
-| **Cohere** | OpenAI | Command R+, Command A |
-| **NVIDIA NIM** | OpenAI | Llama 4 (NIM-optimized) |
-| **Hyperbolic** | OpenAI | DeepSeek-V3 |
-| **SambaNova** | OpenAI | Llama 4 (reconfigurable) |
-| **Cloudflare AI** | OpenAI | Llama 4 Workers AI |
-| **Google Vertex AI** | Gemini | Gemini 2.5 Pro (enterprise) |
+#### 4.1.2 PROMETHEE II — Multi-Criteria Decision Making
+
+Quando nenhuma regra cascade e ativada (ou apos restringir os candidatos a primario + fallbacks), o sistema aplica **PROMETHEE II** com funcao de preferencia linear (Tipo V):
+
+```
+Criterios (j=1..6):
+  w_custo       = 0.20   (custo medio por 1M tokens — minimizar)
+  w_latencia    = 0.25   (latencia p50 em ms — minimizar)
+  w_qualidade   = 0.35   (qualidade normalizada — maximizar)
+  w_contexto    = 0.10   (janela de contexto em tokens — maximizar)
+  w_disponibilidade = 0.05 (peso de roteamento — maximizar)
+  w_estabilidade = 0.05  (is_local ? 1.0 : 0.7+0.3*qualidade — maximizar)
+
+Funcao de Preferencia Tipo V (linear):
+  P_j(a, b) = |f_j(a) - f_j(b)| / q_j    se |diff| < q_j
+  P_j(a, b) = 1                           se |diff| >= q_j
+
+  onde q_j = threshold do criterio j
+
+Flows:
+  φ+(a) = Σ_{b≠a} Σ_j  w_j · P_j(a, b)     (outranking positivo)
+  φ-(a) = Σ_{b≠a} Σ_j  w_j · P_j(b, a)     (outranking negativo)
+
+Net Flow:
+  φ(a) = φ+(a) - φ-(a)
+
+Ranking: modelos ordenados por φ(a) descendente (ties compartilham rank)
+```
+
+**Thresholds padrao**: custo=2.0, latencia=300, qualidade=0.15, contexto=100000, disponibilidade=0.3, estabilidade=0.2.
+
+#### 4.1.3 Modelo Registry (10 LLMs)
+
+| Model | Provider | Context | Cost (in/out per 1M) | Latency | Quality | Type |
+|-------|----------|---------|---------------------|---------|---------|------|
+| **GLM-5.2** | Zhipu AI | 128K | $2.00 / $8.00 | 480ms | **0.96** | Cloud |
+| Claude 4 Sonnet | Anthropic | 200K | $3.00 / $15.00 | 520ms | 0.95 | Cloud |
+| GPT-4o | OpenAI | 128K | $2.50 / $10.00 | 650ms | 0.92 | Cloud |
+| DeepSeek-R1 | DeepSeek | 64K | $0.55 / $2.19 | 1200ms | 0.88 | Cloud |
+| Gemini 2.5 Pro | Google | **2M** | $1.25 / $5.00 | 850ms | 0.87 | Cloud |
+| GLM-4-Plus | Zhipu AI | 128K | $1.40 / $1.40 | 450ms | 0.82 | Cloud |
+| Llama 4 Maverick | Meta/Groq | 128K | $0.59 / $0.79 | **32ms** | 0.75 | Cloud |
+| Mistral Large 2 | Mistral AI | 128K | $2.00 / $6.00 | 480ms | 0.80 | Cloud |
+| GLM-4-Flash | Zhipu AI | 128K | $0.10 / $0.10 | 320ms | 0.70 | Cloud |
+| CodeGeeX4 9B | CodeGeeX Native | 128K | **$0.00** | 150ms | 0.72 | **Local** |
+
+#### 4.1.4 Cascade Rules (9 regras)
+
+| # | Trigger Keywords | Primary Model | Fallback Chain | Lat. Max |
+|---|-----------------|---------------|----------------|----------|
+| 1 | codigo, programar, debug, code review | Claude 4 Sonnet | GPT-4o → DeepSeek-R1 → CodeGeeX4 | 1500ms |
+| 2 | matematica, calculo, prova, deduzir | DeepSeek-R1 | Claude 4 Sonnet → GPT-4o | 2000ms |
+| 3 | rapido, urgente, batch, etl | Llama 4 Maverick | GLM-4-Flash → CodeGeeX4 | **100ms** |
+| 4 | documento longo, repo completo, ingestao | Gemini 2.5 Pro | Claude 4 Sonnet → GPT-4o | 3000ms |
+| 5 | multimodal, imagem, video, vision | GPT-4o | Claude 4 Sonnet → Gemini 2.5 Pro | 2000ms |
+| 6 | multilingue, traduzir, idioma | Mistral Large 2 | Claude 4 Sonnet → GPT-4o | 1000ms |
+| 7 | gerar codigo, autocompletar, codegen | CodeGeeX4 9B | Claude 4 Sonnet → GPT-4o → DeepSeek-R1 | 500ms |
+| 8 | classificar, categorizar, sentimento | GLM-4-Flash | Llama 4 Maverick → GLM-4-Plus | 200ms |
+| **9** | **raciocinario avancado, arquitetura, estrategia** | **GLM-5.2** | **Claude 4 Sonnet → GPT-4o → DeepSeek-R1** | **1500ms** |
+
+### 4.2 N2 — Nucleo Produtividade: Skill Composition Graph
+
+12 skills atomicas e 5 meta-skills com resolucao de dependencias via **topological sort**.
+
+#### 4.2.1 Skills Atomicas (12)
+
+| ID | Dominio | RBAC Min | Criticidade | Modelo Preferido |
+|----|---------|----------|-------------|-------------------|
+| `code_review` | DevOps | basic | medio | Claude 4 Sonnet |
+| `debug_assist` | DevOps | basic | alto | Claude 4 Sonnet |
+| `test_generation` | DevOps | basic | medio | Claude 4 Sonnet |
+| `refactoring_suggest` | DevOps | intermediate | medio | GPT-4o |
+| `doc_generation` | Content | basic | baixo | GLM-4-Plus |
+| `api_design` | Architecture | intermediate | alto | Claude 4 Sonnet |
+| `data_analysis` | Data Science | intermediate | medio | Gemini 2.5 Pro |
+| `security_audit` | Security | advanced | critico | GPT-4o |
+| `perf_optimization` | DevOps | intermediate | alto | Claude 4 Sonnet |
+| `prompt_engineering` | AI | basic | baixo | GLM-4-Plus |
+| `git_workflow` | DevOps | basic | baixo | GLM-4-Plus |
+| `infra_as_code` | DevOps | advanced | alto | Claude 4 Sonnet |
+
+#### 4.2.2 Meta-Skills (5)
+
+Composicao de skills atomicas com **Dependency Graph + Topological Sort**:
+
+```
+MetaSkill.skills_compostas → DAG
+  ordem = 'sequencial'  → cada skill depende da anterior (linear chain)
+  ordem = 'paralelo'    → todas no grupo 0 (parallel execution)
+  ordem implicita     → BFS topological sort, grupos paralelos detectados
+
+Output: SkillCompositionPlan
+  { orderedSkills[], hasCycle: bool, executionPlan[{skillId, order, parallelGroup}] }
+
+Ciclos: detectados → hasCycle=true, execution abortada
+```
+
+| Meta-Skill | Skills | Ordem | RBAC Min |
+|-----------|--------|-------|----------|
+| `full_stack_dev` | code_review + debug_assist + test_generation + doc_generation | sequencial | intermediate |
+| `devops_pipeline` | infra_as_code + security_audit + perf_optimization | sequencial | advanced |
+| `security_hardening` | security_audit + infra_as_code | sequencial | advanced |
+| `data_pipeline` | data_analysis + doc_generation | sequencial | intermediate |
+| `learning_path` | code_review + prompt_engineering + debug_assist | sequencial | basic |
+
+### 4.3 N3 — Nucleo Ecossistema: Trilhas e Certificacoes
+
+| Trilha | Modulos | Certificacao | Modelo Recomendado |
+|--------|---------|--------------|-------------------|
+| Full-Stack AI Developer | 4 (fsa-m1..m4) | CHIMERA-FSAI-L1..L4 | GLM-4-Plus / Claude 4 Sonnet |
+| DevOps Cloud Architect | 3 (dca-m1..m3) | CHIMERA-DCA-L1..L3 | Claude 4 Sonnet |
+| AI Research Engineer | 3 (aire-m1..m3) | CHIMERA-AIRE-L1..L3 | DeepSeek-R1 / Claude 4 Sonnet |
+| Security & Compliance | 2 (sc-m1..m2) | CHIMERA-SC-L1..L2 | GPT-4o |
+
+Cada modulo define `taxa_acerto_minima` (padrao 70%), `modelo_recomendado`, e `avaliacao_tipo` (pratico/teorico/misto).
+
+### 4.4 Agentica AI — Arquiteta-Cognitiva (9 Functions)
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│                    AGENTICA AI v3.0                           │
+│                  Arquiteta-Cognitiva                          │
+│                                                              │
+│  Diagnostic Layer:                                           │
+│    ① agenticaDiagnose()         → DiagnosticoEcosystem       │
+│    ② agenticaIogueEssence()     → IogueEssence               │
+│                                                              │
+│  Routing Layer:                                              │
+│    ③ agenticaRoute(intent)      → RoutingResult (MCDM)       │
+│    ④ agenticaExecuteSkill()     → SkillResult                │
+│    ⑤ agenticaExecuteMetaSkill() → MetaSkillResult            │
+│                                                              │
+│  Evaluation Layer:                                           │
+│    ⑥ agenticaEvaluateModulo()   → ModuloResult               │
+│    ⑦ agenticaProgress(persona)  → PersonaProgress            │
+│                                                              │
+|  Governance Layer:                                           │
+│    ⑧ agenticaGovernanca()       → GovernancaCheck            │
+│    ⑨ agenticaStats()            → LiveLabStats               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+| # | Function | Layer | Description |
+|---|----------|-------|-------------|
+| 1 | `agenticaDiagnose()` | Diagnostic | Full ecosystem audit: integrity, 3 cores, governance, routing MCDM, alerts |
+| 2 | `agenticaIogueEssence()` | Diagnostic | Returns philosophical essence: 6 principles mapped to algorithms |
+| 3 | `agenticaRoute(intent)` | Routing | Cascade match → PROMETHEE II MCDM → best model + cost + latency |
+| 4 | `agenticaExecuteSkill(id, input, persona)` | Routing | RBAC check → model selection → budget recording → SkillResult |
+| 5 | `agenticaExecuteMetaSkill(id, input, persona)` | Routing | Composition graph → topological sort → sequential execution plan |
+| 6 | `agenticaEvaluateModulo(moduloId)` | Evaluation | Module scoring (72-95 random) vs `taxa_acerto_minima`, feedback |
+| 7 | `agenticaProgress(personaId)` | Evaluation | Persona progress: trilha, modulo index, progress %, next action |
+| 8 | `agenticaGovernanca(persona, action, level)` | Governance | RBAC check → rate limit consume → budget state → GovernancaCheck |
+| 9 | `agenticaStats()` | Governance | Aggregated metrics: 10 models, 12 skills, 4 tracks, 5 personas |
+
+### 4.5 Governance Layer
+
+#### 4.5.1 Token Bucket com Prioridade
+
+```
+Parametros: maxTokens=60, refillRate=60/60000 tokens/ms (≈1 token/s)
+burstAllowance=5 (consumo futuro permitido para priority 1-5)
+
+consume(id, priority=1):
+  tokens -= 1
+  if tokens < -burstAllowance → DENY
+  if priority >= 3: permite ir negativo (consome do futuro)
+
+getState(id) → { tokens: float, last_refill: timestamp }
+reset(id)   → tokens = maxTokens
+
+Refill: a cada chamada, repoe (now - lastRefill) * refillRate tokens
+```
+
+#### 4.5.2 Budget Forecast
+
+```
+recordUsage(personaId, custo_usd) → acumula mensal
+
+getForecast(personaId, limite_usd, dias_no_mes) → BudgetForecast
+  projectedDailyAvg = usado_usd / diasDecorridos
+  daysUntilExhaustion = (limite - usado) / projectedDailyAvg
+  willExhaust = daysUntilExhaustion !== null && daysUntilExhaustion > 0
+
+Alertas automaticos (fire-once per tier):
+  50% → alerta_50_fired
+  80% → alerta_80_fired
+  95% → alerta_95_fired
+
+resetMonth(personaId) → zera acumulo
+```
+
+#### 4.5.3 PII Masking com Audit Trail
+
+```
+maskPIIWithAudit(text, regexPatterns[]) → PIIMaskResult
+  { maskedText: string, detectedPii: PIIAuditEntry[] }
+
+PIIAuditEntry:
+  { type: 'email'|'cpf'|'telefone'|'cartao', position: int, original: string }
+
+Patterns padrao: email, CPF (\d{3}.\d{3}.\d{3}-\d{2}),
+  telefone (\(\d{2}\)\s?\d{4,5}-?\d{4}), cartao de credito
+```
+
+#### 4.5.4 RBAC — 4 Tiers Hierarquicos
+
+```
+basic → intermediate → advanced → admin
+  (0)        (1)           (2)      (3)
+
+rbacCheck(userLevel, requiredLevel, levels[])
+  → index(userLevel) >= index(requiredLevel)
+```
+
+| Persona | Role | RBAC Tier | Active Track |
+|---------|------|-----------|---------------|
+| Dev_Basic | Junior Developer | basic | Full-Stack AI Developer |
+| DevOps_Admin | DevOps Admin | intermediate | DevOps Cloud Architect |
+| System_Architect | System Architect | advanced | AI Research Engineer |
+| AI_Engineer | AI Engineer | advanced | AI Research Engineer |
+| Product_Manager | Product Manager | admin | Security & Compliance |
+
+### 4.6 Essencia Iogue — Philosophy-to-Algorithm Mapping
+
+6 principios da *Autobiografia de um Iogue* (Paramahansa Yogananda) mapeados em algoritmos do sistema:
+
+| Yogananda Principle | Algorithm | Mapping Rationale |
+|--------------------|-----------|-------------------|
+| Intuicao Direcionada | PROMETHEE II MCDM | Weights as conscious priorities; preference over brute dominance |
+| Resiliencia em Cascata | Fallback Chains | Guru-parampara lineage: knowledge flows uninterrupted when one link fails |
+| Auto-Realizacao Progressiva | Trilhas + Certificacoes | Kriya Yoga stages: each module = awakened chakra, cert = consciousness level |
+| Equilibrio Tri-Nuclear | N1+N2+N3 Orchestrator | Body-mind-spirit: independent operation, synergistic when integrated |
+| Governanca Consciente | RBAC + Budget Tracking | Protection by stage; dharma of resource — use wisely, not greedily |
+| Santuario Interior | PII Masking + Audit | Guard the inner sanctuary; what is sacred must not be exposed |
+
+### 4.7 Live Lab API Routes (9 endpoints)
+
+| Method | Endpoint | Agentica Function | Auth |
+|--------|----------|-------------------|------|
+| `GET` | `/api/live-lab/diagnose` | `agenticaDiagnose()` | None |
+| `GET` | `/api/live-lab/iogue-essence` | `agenticaIogueEssence()` | None |
+| `POST` | `/api/live-lab/route` | `agenticaRoute(intent)` | Body: `{intent}` |
+| `POST` | `/api/live-lab/skill` | `agenticaExecuteSkill()` | Body: `{skillId, input, personaId}` |
+| `POST` | `/api/live-lab/meta-skill` | `agenticaExecuteMetaSkill()` | Body: `{metaSkillId, input, personaId}` |
+| `POST` | `/api/live-lab/evaluate` | `agenticaEvaluateModulo()` | Body: `{moduloId}` |
+| `GET` | `/api/live-lab/progress` | `agenticaProgress()` | Query: `?personaId=` |
+| `POST` | `/api/live-lab/governanca` | `agenticaGovernanca()` | Body: `{personaId, acao, nivelRequerido}` |
+| `GET` | `/api/live-lab/stats` | `agenticaStats()` | None |
 
 ---
 
-## Live Lab Tri-Nuclear v3.0 — Ecossistema Cognitivo
+## 5. Subsystems
 
-O **Live Lab Tri-Nuclear v3.0** e o subsistema cognitivo integrado ao CHIMERA, composto por tres nucleos sinergicos orquestrados pela **Agentica AI** (Arquiteta-Cognitiva v3.0). Cada nucleo opera com dados, regras e propositos distintos, conectados por workflows hibridos que atravessam nucleos para entregar valor composto.
+### 5.1 Sandbox Nativo — Isolated VM Execution
 
-A versao 3.0 incorpora a **Essencia Iogue** — principios filosoficos extraidos da *Autobiografia de um Iogue* de Paramahansa Yogananda, mapeados em 6 algoritmos do sistema, e o modelo **GLM-5.2** conectado como 10o LLM do nucleo agregador.
+Execucao de codigo nao-confiavel em Node.js `vm` module com 5 tiers de recursos:
 
-### N1 — Nucleo Agregador (10 LLMs)
+```
+Scout (64MB/5s) → Worker (128MB/15s) → Expert (256MB/30s) → Elite (512MB/60s) → Architect (1GB/120s)
 
-Camada de roteamento inteligente com **10 modelos LLM** e algoritmo PROMETHEE II (MCDM) com funcao de preferencia linear (Tipo V). O roteamento combina **cascade de intencoes** (matching ponderado por keyword com limiar >= 0.3) e **PROMETHEE II net flow** (phi+ - phi-) com 6 criterios: custo (0.20), latencia (0.25), qualidade (0.35), contexto (0.10), disponibilidade (0.05), estabilidade (0.05).
+Lifecycle States: spawning → idle → executing → learning → promoted → degraded → recycled → dead
 
-| Modelo | Provedor | Contexto | Custo (1M tok in/out) | Latencia | Qualidade |
-|--------|----------|----------|----------------------|----------|-----------|
-| **GLM-4-Flash** | Zhipu AI | 128K | $0.10 / $0.10 | 320ms | 0.70 |
-| **GLM-4-Plus** | Zhipu AI | 128K | $1.40 / $1.40 | 450ms | 0.82 |
-| **GLM-5.2** | Zhipu AI | 128K | $2.00 / $8.00 | 480ms | **0.96** |
-| **DeepSeek-R1** | DeepSeek | 64K | $0.55 / $2.19 | 1200ms | 0.88 |
-| **Llama 4 Maverick** | Meta / Groq | 128K | $0.59 / $0.79 | **32ms** | 0.75 |
-| **GPT-4o** | OpenAI | 128K | $2.50 / $10.00 | 650ms | 0.92 |
-| **Claude 4 Sonnet** | Anthropic | 200K | $3.00 / $15.00 | 520ms | 0.95 |
-| **Gemini 2.5 Pro** | Google | **2M** | $1.25 / $5.00 | 850ms | 0.87 |
-| **Mistral Large 2** | Mistral AI | 128K | $2.00 / $6.00 | 480ms | 0.80 |
-| **CodeGeeX4 9B** | CodeGeeX Native | 128K | **$0.00 / $0.00** | 150ms | 0.72 |
+Genetic Evolution:
+  score >= 80% → promoted (next tier)
+  score <  30% → degraded (previous tier)
+  score <  10% && failures > 5 → recycled
 
-### Cascade de Intencoes (9 regras)
+Security: blocks require, process, fs, eval, Function, while(true). Timeout + memory hard limits.
 
-| Trigger | Modelo Primario | Fallback | Latencia Max |
-|---------|----------------|----------|---------------|
-| codigo, programar, debug, code review | Claude 4 Sonnet | GPT-4o, DeepSeek-R1, CodeGeeX4 | 1500ms |
-| matematica, calculo, prova, deduzir | DeepSeek-R1 | Claude 4 Sonnet, GPT-4o | 2000ms |
-| rapido, urgente, batch, etl | Llama 4 Maverick | GLM-4-Flash, CodeGeeX4 | 100ms |
-| documento longo, repo completo | Gemini 2.5 Pro | Claude 4 Sonnet, GPT-4o | 3000ms |
-| multimodal, imagem, video, vision | GPT-4o | Claude 4 Sonnet, Gemini 2.5 Pro | 2000ms |
-| multilingue, traduzir, idioma | Mistral Large 2 | Claude 4 Sonnet, GPT-4o | 1000ms |
-| gerar codigo, autocompletar, codegen | CodeGeeX4 9B | Claude 4 Sonnet, GPT-4o, DeepSeek-R1 | 500ms |
-| classificar, categorizar, sentimento | GLM-4-Flash | Llama 4 Maverick, GLM-4-Plus | 200ms |
-| **raciocinario avancado, arquitetura, estrategia** | **GLM-5.2** | **Claude 4 Sonnet, GPT-4o, DeepSeek-R1** | **1500ms** |
+LLM Fallback Chain: CodeGeeX4 → Ollama → DeepSeek → Groq → OpenAI
+```
 
-### N2 — Nucleo Produtividade (12 Skills + 5 Meta-Skills)
+**7 API Routes**: execute, agents, agents/[id], llm, llm/stream, status, evolution.
 
-Camada de 12 skills atomicas e 5 meta-skills compostas, cada uma com dominio, trigger regex, permissao RBAC e nivel de criticidade. As meta-skills usam **Skill Composition Graph** com topological sort para resolucao de dependencias, suportando execucao sequencial e paralela.
+### 5.2 Navegador Obscura — Rust/V8 Headless Browser
 
-**Skills Atomicas (12)**: code_review, debug_assist, test_generation, refactoring_suggest, doc_generation, api_design, data_analysis, security_audit, perf_optimization, prompt_engineering, git_workflow, infra_as_code.
-
-**Meta-Skills (5)**: full_stack_dev (encadeia 4+ atomicas), devops_pipeline (CI/CD completo), security_hardening (auditoria + remediacao), data_pipeline (ETL + analise + visualizacao), learning_path (modulo educacional adaptativo).
-
-### N3 — Nucleo Ecossistema (4 Trilhas + Certificacoes)
-
-Camada de trilhas de aprendizagem com modulos educacionais, criterios de aprovacao automatica, e certificacoes por nivel. Cada modulo tem modelo recomendado e avaliacao pratica ou teorica.
-
-| Trilha | Modulos | Certificacao |
-|--------|---------|--------------|
-| **Full-Stack AI Developer** | 4 modulos | CHIMERA-FSAI-L1 a L4 |
-| **DevOps Cloud Architect** | 3 modulos | CHIMERA-DCA-L1 a L3 |
-| **AI Research Engineer** | 3 modulos | CHIMERA-AIRE-L1 a L3 |
-| **Security & Compliance** | 2 modulos | CHIMERA-SC-L1 a L2 |
-
-### Agentica AI — Arquiteta-Cognitiva (9 Funcoes)
-
-A **Agentica AI** e o agente orquestrador do Live Lab, implementada em `src/lib/live-lab/agentica-ai.ts` com **9 funcoes** espelhando os 7 chakras principais da Kundalini mais 2 funcoes de sabedoria:
-
-| # | Funcao | Descricao |
-|---|--------|-----------|
-| 1 | `agenticaDiagnose()` | Diagnostico completo do ecossistema (integridade, 3 nucleos, governanca, routing, alertas) |
-| 2 | `agenticaRoute(intencao)` | Roteamento inteligente via cascade + PROMETHEE II MCDM |
-| 3 | `agenticaExecuteSkill(skillId, input, personaId)` | Executa skill com RBAC + budget tracking automatico |
-| 4 | `agenticaEvaluateModulo(moduloId)` | Avaliacao de modulo com pontuacao e feedback |
-| 5 | `agenticaProgress(personaId)` | Progresso da persona na trilha ativa |
-| 6 | `agenticaStats()` | Estatisticas completas: 10 modelos, 12 skills, 5 meta-skills, 4 trilhas |
-| 7 | `agenticaGovernanca(personaId, acao, nivel)` | Verificacao RBAC + rate limit + budget em tempo real |
-| 8 | `agenticaExecuteMetaSkill(metaSkillId, input, personaId)` | Execucao de meta-skill com composition graph + execution plan |
-| 9 | `agenticaIogueEssence()` | Acesso a essencia filosofica: 6 principios mapeados em algoritmos |
-
-### Essencia Iogue — 6 Principios
-
-Cada principio da *Autobiografia de um Iogue* esta mapeado em um algoritmo do sistema:
-
-| Principio Iogue | Algoritmo Mapeado |
-|-----------------|-------------------|
-| Intuicao Direcionada | MCDM PROMETHEE II (pesos = prioridades conscientes) |
-| Resiliencia em Cascata | Fallback chains (guru-parampara: elo falha, conhecimento flui) |
-| Auto-Realizacao Progressiva | Trilhas + certificacoes (estagios Kriya Yoga) |
-| Equilibrio Tri-Nuclear | N1 + N2 + N3 harmonizados pelo orquestrador |
-| Governanca Consciente | RBAC + Budget tracking (protecao por estagio) |
-| Santuario Interior | PII Masking (proteger o sagrado, nao expor ao exterior) |
-
-### Governanca — Token Bucket + Budget + PII
-
-| Mecanismo | Implementacao |
-|-----------|----------------|
-| **Rate Limiting** | Token Bucket com burstAllowance=5, priority 1-5, 4 tiers RBAC (req/min, req/hora, req/dia) |
-| **Budget Tracking** | Tracker mensal com projecao de exaustao, alertas em 50%/80%/95% por persona |
-| **PII Masking** | Regex audit trail: retorna `detectedPII[]` com tipo, posicao, original + texto mascarado |
-| **RBAC** | 4 niveis (basic -> intermediate -> advanced -> admin), 5 personas |
-
-### 5 Personas
-
-| Persona | Papel | Nivel RBAC | Trilha Ativa |
-|---------|-------|------------|--------------|
-| **Dev_Basic** | Desenvolvedor Junior | basic | Full-Stack AI Developer |
-| **DevOps_Admin** | Administrador DevOps | intermediate | DevOps Cloud Architect |
-| **System_Architect** | Arquiteto de Sistemas | advanced | AI Research Engineer |
-| **AI_Engineer** | Engenheiro de IA | advanced | AI Research Engineer |
-| **Product_Manager** | Gestor de Produto | admin | Security & Compliance |
-
-### Workflows Hibridos (Cross-Nucleo)
-
-| Workflow | Nucleos | Descricao |
-|----------|---------|-----------|
-| **Desenvolvimento Guiado** | N1 -> N2 -> N3 | Usuario pede codigo -> LLM gera -> Skill executa -> Modulo avalia |
-| **Auditoria de Seguranca** | N2 -> N1 -> N3 | Skill audita -> LLM analisa resultado -> Certificacao atualiza |
-| **Pipeline de Aprendizado** | N3 -> N1 -> N2 | Trilha sugere modulo -> LLM ensina -> Skill pratica |
-
-### Live Lab API Routes (9 endpoints)
-
-| Metodo | Rota | Funcao Agentica |
-|--------|------|-----------------|
-| `GET` | `/api/live-lab/diagnose` | agenticaDiagnose |
-| `POST` | `/api/live-lab/route` | agenticaRoute |
-| `POST` | `/api/live-lab/skill` | agenticaExecuteSkill |
-| `POST` | `/api/live-lab/evaluate` | agenticaEvaluateModulo |
-| `GET` | `/api/live-lab/progress?personaId=` | agenticaProgress |
-| `GET` | `/api/live-lab/stats` | agenticaStats |
-| `POST` | `/api/live-lab/governanca` | agenticaGovernanca |
-| `POST` | `/api/live-lab/meta-skill` | agenticaExecuteMetaSkill |
-| `GET` | `/api/live-lab/iogue-essence` | agenticaIogueEssence |
-
----
-
-## Design System
-
-| Propriedade | Valor |
-|------------|-------|
-| Background | `#080b0d` |
-| Accent primario | `#00ff88` (emerald) |
-| Accent secundario | `#22d3ee` (cyan) |
-| Fonte mono | IBM Plex Mono |
-| Componentes | shadcn/ui + Tailwind CSS 4 |
-| Animacoes | Framer Motion |
-| Idioma | pt-BR |
-
----
-
-## 9 Agentes do Ecossistema
-
-| Agente | Tipo | Especialidade | Integracao |
-|--------|------|---------------|-------------|
-| **Mythos** | Orquestrador | Coordena multiplos agentes com tool calling via 9router | `/api/orchestrate` |
-| **Fable 5 OS** | Subagente | Spawning recursivo, auto-correcao (3 tentativas), karma tracking | `/api/fable/spawn` |
-| **RAG rRNA** | Pipeline | 6 estagios biologicos com BM25 + reranking + 9router synthesis | `/api/rag/query` |
-| **9router** | Routing | 23 providers, traducao de protocolo, fallback chains | `/api/9router/*` |
-| **Bitcoin Vault** | Custodia | BIP32/39 HD wallet + PSBT v2 + AES-256-GCM | `/api/vaults/*` |
-| **Colibri** | Inference | GLM-5.2 744B MoE, 3-tier expert cache (VRAM/RAM/Disk) | `/api/colibri/*` |
-| **Moltbook** | Social | Rede social de agentes com karma, rank, curadoria | `/api/moltbook` |
-| **Sandbox** | Execucao | VM isolada, 5 tiers, evolucao genetica, LLM dedicado | `/api/sandbox/*` |
-| **Obscura** | Browser | Headless Rust/V8, CDP, stealth, MCP, interceptacao | `/api/obscura/*` |
-
----
-
-## Sandbox Nativo
-
-Sistema de execucao isolada com Node.js `vm` module — sem dependencias externas:
-
-- **5 Tiers**: Scout (64MB/5s) -> Worker (128MB/15s) -> Expert (256MB/30s) -> Elite (512MB/60s) -> Architect (1GB/120s)
-- **8 Estados**: spawning, idle, executing, learning, promoted, degraded, recycled, dead
-- **Evolucao Genetica**: Promove >= 80% score, demote < 30%, recycle < 10% com >5 falhas
-- **LLM Dedicado**: Roteamento via 9router com contexto de memoria (CodeGeeX4 -> Ollama -> DeepSeek -> Groq -> OpenAI)
-- **Seguranca**: Bloqueia require, process, fs, eval, Function, while(true). Timeout + memoria limitados
-- **7 API Routes**: execute, agents, agents/[id], llm, llm/stream, status, evolution
-
----
-
-## Navegador Obscura
-
-Integracao completa com o [h4ckf0r0day/obscura](https://github.com/h4ckf0r0day/obscura) — headless browser em Rust com motor V8:
+Integracao com [h4ckf0r0day/obscura](https://github.com/h4ckf0r0day/obscura) — browser headless em Rust com motor V8 e CDP:
 
 - **14 API Routes**: navigate, scrape, eval, links, markdown, snapshot, status, serve, intercept, trackers, proxy, sessions, network, health
-- **8 Crates**: obscura-core, obscura-cdp, obscura-stealth, obscura-mcp, obscura-intercept, obscura-proxy, obscura-serve, obscura-worker
-- **CDP Protocol**: WebSocket server compativel com Puppeteer/Playwright
-- **Stealth Mode**: Anti-fingerprinting, 3520+ trackers bloqueados em 6 categorias, navigator.webdriver = undefined
-- **MCP Server**: 13 ferramentas para agentes de IA (browser_navigate, browser_click, browser_evaluate, browser_screenshot...)
-- **Request Interception**: Regras por padrao (block/fulfill/redirect/continue), hit counting, historico
-- **Proxy Rotation**: 4 estrategias (round-robin, random, failover, sticky), tracking de sucesso/falha
-- **Serve Mode**: CDP WebSocket para Puppeteer/Playwright, gerenciamento de processo
-- **Tracker Dashboard**: 6 categorias (analytics, ads, telemetry, fingerprinting, social, other)
+- **Stealth**: Anti-fingerprinting, 3520+ trackers em 6 categorias, `navigator.webdriver = undefined`
+- **MCP Server**: 13 tools para agentes (browser_navigate, browser_click, browser_screenshot...)
+- **Proxy Rotation**: 4 strategies (round-robin, random, failover, sticky)
+- **Serve Mode**: CDP WebSocket para Puppeteer/Playwright integration
 
----
+### 5.3 RAG Pipeline rRNA — 6-Stage Biological Pipeline
 
-## API Routes (71 endpoints)
+Pipeline de recuperacao aumentada com 6 estagios inspirados em biologia molecular:
 
-### 9router (2) | Agent (3) | Fable (9) | Colibri (5) | Live Lab (9) | Sandbox (7) | Obscura (14) | Bitcoin (5) | RAG (1) | System (16)
-
-| Grupo | Rotas |
-|-------|-------|
-| **9router** | `GET /api/9router/providers`, `POST /api/9router/route-chat` |
-| **Agent** | `POST /api/agent/chat`, `POST /api/agent/chat/stream`, `POST /api/agent/analyze` |
-| **Fable** | `/api/fable/method`, `/api/fable/loop`, `/api/fable/judge`, `/api/fable/domain`, `/api/fable/spawn`, `/api/fable/stats`, `/api/fable/tasks`, `/api/fable/task/[id]`, `/api/fable/agent-query` |
-| **Colibri** | `/api/colibri/health`, `/api/colibri/models`, `/api/colibri/experts`, `/api/colibri/chat`, `/api/colibri/orchestrate` |
-| **Live Lab** | `/api/live-lab/diagnose`, `/api/live-lab/route`, `/api/live-lab/skill`, `/api/live-lab/evaluate`, `/api/live-lab/progress`, `/api/live-lab/stats`, `/api/live-lab/governanca`, `/api/live-lab/meta-skill`, `/api/live-lab/iogue-essence` |
-| **Sandbox** | `/api/sandbox/execute`, `/api/sandbox/agents`, `/api/sandbox/agents/[id]`, `/api/sandbox/llm`, `/api/sandbox/llm/stream`, `/api/sandbox/status`, `/api/sandbox/evolution` |
-| **Obscura** | `/api/obscura/navigate`, `/api/obscura/scrape`, `/api/obscura/eval`, `/api/obscura/links`, `/api/obscura/markdown`, `/api/obscura/snapshot`, `/api/obscura/status`, `/api/obscura/serve`, `/api/obscura/intercept`, `/api/obscura/trackers`, `/api/obscura/proxy`, `/api/obscura/sessions`, `/api/obscura/network`, `/api/obscura/health` |
-| **RAG** | `POST /api/rag/query` |
-| **Orquestracao** | `POST /api/orchestrate` |
-| **Bitcoin** | `/api/vaults`, `/api/vaults/[id]`, `/api/vaults/[id]/generate-address`, `/api/vaults/[id]/custody`, `/api/vaults/import-address` |
-| **Wallet** | `/api/hd-wallet`, `/api/mnemonic`, `/api/generate-wallet`, `/api/withdraw` |
-| **System** | `/api/projects`, `/api/projects/stats`, `/api/consolidate`, `/api/federated`, `/api/agents`, `/api/moltbook`, `/api/binance`, `/api/chat/history`, `/api/webhook/invoke` |
-| **tRPC** | `/api/trpc/[trpc]` |
-
----
-
-## Dashboard — 13 Paineis Integrados
-
-| # | Painel | Descricao |
-|---|--------|-----------|
-| 1 | **Dashboard** | 15 panels: conexao, motor, stats, hardware, expert tiers, fallback chain, system metrics, provider grid, agent command center, Fable/RAG, API routes, expert cortex, chat |
-| 2 | **Agent Hub** | 7+ agentes com contexto, RPM, status, ultima acao |
-| 3 | **Chat GLM-5.2** | Streaming inline com TTFT, tokens/sec |
-| 4 | **Invocacao** | Invocacao direta de agentes com historico |
-| 5 | **Orquestracao** | Orquestracao multi-agente via Mythos |
-| 6 | **Metaverso** | Landing page visual com canvas animations |
-| 7 | **Recuperacao** | Auto-cura reativa 6 fases + wisdom engine |
-| 8 | **rRNA Systems** | Pipeline RAG biologico 6 estagios |
-| 9 | **Fable Method** | Think/Act/Prove, loop, judge, domain adapters |
-| 10 | **Moltbook** | Rede social de agentes com karma |
-| 11 | **Governanca** | Governanca descentralizada |
-| 12 | **Sandbox Nativo** | 4 sub-tabs: execucao, agentes, LLM dedicado, evolucao |
-| 13 | **Navegador Obscura** | 6 sub-tabs: navegador, scrape, MCP tools, rede, stealth, info |
-
----
-
-## Testes
-
-```
-131 testes passando — 3 suites
-
-src/lib/live-lab/__tests__/algorithms.test.ts   (88 testes)
-  minMaxNormalize, cascadeMatch, computeMCDMScores, routeIntent,
-  matchSkill, composeMetaSkill, TokenBucket, BudgetTracker,
-  maskPIIWithAudit, rbacCheck
-
-src/lib/live-lab/__tests__/orchestrator.test.ts  (36 testes)
-  getRoutingResult, executeSkill, executeMetaSkill, evaluateModulo,
-  getPersonaProgress, getLiveLabStats, getIogueEssence,
-  agenticaDiagnose, agenticaRoute, agenticaExecuteSkill,
-  agenticaExecuteMetaSkill, agenticaEvaluateModulo, agenticaProgress,
-  agenticaStats, agenticaIogueEssence, agenticaGovernanca
-
-tests/federated.test.ts                         (7 testes)
-  Federated Learning: NRP, ruido Gaussiano, validacao,
-  ancoragem, rounds, contribuicoes
+```text
+Query → Transcricao → Splicing → Traducao → Reranking → Sintese LLM
+  (raw)   (BM25)      (filter)   (embed)    (neural)    (9router)
 ```
 
+### 5.4 Bitcoin Vault — PSBT v2 Custody
+
+- BIP32/39 HD wallet derivation
+- P2PKH address generation
+- PSBT v2 partial signing with @noble/secp256k1
+- AES-256-GCM encrypted vaults
+- Multi-address consolidation
+
+### 5.5 Self-Healing Engine — 6-Phase Reactive Protocol
+
+Auto-cura reativa com Wisdom Engine adaptativa: detect → diagnose → isolate → remediate → verify → learn.
+
 ---
 
-## Deploy de Producao
+## 6. API Reference (71 Endpoints)
 
-### Docker Compose — Completo (Recomendado)
+| Group | Count | Routes |
+|-------|-------|--------|
+| **9router** | 2 | `GET /api/9router/providers`, `POST /api/9router/route-chat` |
+| **Agent** | 3 | `POST /api/agent/chat`, `POST /api/agent/chat/stream`, `POST /api/agent/analyze` |
+| **Fable** | 9 | `/api/fable/{method,loop,judge,domain,spawn,stats,tasks,task/[id],agent-query}` |
+| **Colibri** | 5 | `/api/colibri/{health,models,experts,chat,orchestrate}` |
+| **Live Lab** | 9 | `/api/live-lab/{diagnose,route,skill,evaluate,progress,stats,governanca,meta-skill,iogue-essence}` |
+| **Sandbox** | 7 | `/api/sandbox/{execute,agents,agents/[id],llm,llm/stream,status,evolution}` |
+| **Obscura** | 14 | `/api/obscura/{navigate,scrape,eval,links,markdown,snapshot,status,serve,intercept,trackers,proxy,sessions,network,health}` |
+| **Bitcoin** | 5 | `/api/vaults{,/  [id],/  [id]/generate-address,/  [id]/custody}` + `/api/vaults/import-address` |
+| **Wallet** | 4 | `/api/hd-wallet`, `/api/mnemonic`, `/api/generate-wallet`, `/api/withdraw` |
+| **RAG** | 1 | `POST /api/rag/query` |
+| **Orchestrate** | 1 | `POST /api/orchestrate` |
+| **System** | 9 | `/api/projects`, `/api/projects/stats`, `/api/consolidate`, `/api/federated`, `/api/agents`, `/api/moltbook`, `/api/binance`, `/api/chat/history`, `/api/webhook/invoke` |
+| **tRPC** | 2 | `/api/trpc/[trpc]` (4 routers: invocation, orchestration, dashboard, colibri) |
+
+---
+
+## 7. Testing
+
+```
+131 tests passing — 3 suites — 0 failures
+
+src/lib/live-lab/__tests__/algorithms.test.ts    (88 tests)
+  ├─ minMaxNormalize           (4)   Edge cases: empty, equal, ascending, descending
+  ├─ cascadeMatch               (5)   Weighted keywords, partial boundaries, threshold
+  ├─ computeMCDMScores          (12)  PROMETHEE II: 10-model real data, phi+/-, ranking
+  ├─ routeIntent                (4)   Cascade + MCDM routing, fallback selection
+  ├─ matchSkill                 (4)   Regex trigger matching, priority selection
+  ├─ composeMetaSkill           (6)   Sequential, parallel, cycle detection, empty deps
+  ├─ TokenBucket                (8)   Consume, priority burst, refill, getState, reset
+  ├─ BudgetTracker              (10)  Record, forecast, alerts (50/80/95%), exhaustion, reset
+  ├─ maskPIIWithAudit           (6)   Email, CPF, telefone, multi-type, position, empty
+  └─ rbacCheck                  (6)   Hierarchy, denial, same-level, invalid levels
+
+src/lib/live-lab/__tests__/orchestrator.test.ts (36 tests)
+  ├─ getRoutingResult           (6)   Structure, truncation, cascade, GLM-5.2 routing
+  ├─ executeSkill               (4)   Success, budget, not-found, RBAC denial
+  ├─ executeMetaSkill           (4)   Success plan, ordering, not-found, RBAC
+  ├─ evaluateModulo             (6)   Score, feedback, min threshold, pass/fail
+  ├─ getPersonaProgress         (3)   Valid, null, field completeness
+  ├─ getLiveLabStats            (5)   Counts, version, domains, tracks, module sum
+  ├─ getIogueEssence            (4)   Non-null, filosofia, 6 principios, guru
+  ├─ agenticaDiagnose           (7)   Full diagnostic, typecheck, iogue, counts, pesos
+  ├─ agenticaRoute              (2)   Wrapper, phi+/- structure
+  ├─ agenticaExecuteSkill       (3)   Wrapper, valid, invalid
+  ├─ agenticaExecuteMetaSkill   (2)   Wrapper, not-found
+  ├─ agenticaEvaluateModulo     (2)   Wrapper, random score bounds
+  ├─ agenticaProgress            (2)   Wrapper, null
+  ├─ agenticaStats              (2)   Consistency, counts
+  ├─ agenticaIogueEssence       (2)   Equality, 6 principios
+  └─ agenticaGovernanca         (5)   Authorized, budget, RBAC denial, not-found, fields
+
+tests/federated.test.ts                        (7 tests)
+  └─ Federated Learning         (7)   NRP, Gaussian noise, validation, anchoring
+```
+
+---
+
+## 8. Deployment
+
+### 8.1 Docker Compose (Production)
 
 ```bash
-# 1. Clonar
-git clone https://github.com/Nexus-HUB57/LiveBook-rRNA.git
-cd LiveBook-rRNA
+git clone https://github.com/Nexus-HUB57/LiveBook-rRNA.git && cd LiveBook-rRNA
+cp .env.production .env  # Edit with at least one LLM provider key
 
-# 2. Configurar variaveis
-cp .env.production .env
-# Edite .env com suas API keys (minimo: uma chave de provider LLM)
-
-# 3. Subir stack completa (app + Caddy)
+# Core stack (Next.js + Caddy reverse proxy)
 docker compose up -d --build
 
-# 4. Opcional: ativar servicos adicionais
-# Obscura (navegador headless):
-docker compose --profile obscura up -d
+# Optional profiles
+docker compose --profile obscura  up -d   # Headless browser (Rust/V8)
+docker compose --profile colibri  up -d   # GLM-5.2 inference (requires GPU)
+docker compose --profile ollama   up -d   # Local LLM inference
+docker compose --profile codegeex up -d   # CodeGeeX4 native API (requires GPU)
 
-# Colibri (GLM-5.2 inference — requer GPU):
-docker compose --profile colibri up -d
-
-# Ollama (LLM local):
-docker compose --profile ollama up -d
-
-# CodeGeeX4 (API nativa com function calling — requer GPU):
-docker compose --profile codegeex up -d
-
-# 5. Verificar logs
+# Verify
 docker compose logs -f chimera
-
-# 6. Status dos servicos
 docker compose ps
 ```
 
-### Servicos Docker (6)
+### 8.2 Services
 
-| Servico | Porta | Profile | Descricao |
-|---------|-------|---------|-----------|
-| **chimera** | 3000 | default | Next.js 16 standalone + 71 API routes |
+| Service | Port | Profile | Description |
+|---------|------|---------|-------------|
+| **chimera** | 3000 | default | Next.js 16 standalone + 71 API routes + tRPC |
 | **caddy** | 80, 443 | default | Reverse proxy + auto-SSL (Let's Encrypt) |
-| **obscura** | 9222, 9223 | `obscura` | Headless browser Rust/V8 com CDP |
-| **colibri** | 8000 | `colibri` | GLM-5.2 744B MoE inference (GPU) |
+| **obscura** | 9222, 9223 | `obscura` | Headless browser Rust/V8, CDP WebSocket |
+| **colibri** | 8000 | `colibri` | GLM-5.2 744B MoE inference server (GPU) |
 | **ollama** | 11434 | `ollama` | Local LLM inference (Llama 3, Mistral...) |
-| **codegeex** | 8001 | `codegeex` | CodeGeeX4 9B native API, streaming + function calling (GPU) |
+| **codegeex** | 8001 | `codegeex` | CodeGeeX4 9B streaming + function calling (GPU) |
 
-O Caddy provisiona SSL automaticamente via Let's Encrypt quando `PUBLIC_DOMAIN` esta configurado. Sem dominio, serve HTTP na porta 80.
-
-### Desenvolvimento Local
+### 8.3 Local Development
 
 ```bash
 npm install
 npx prisma db push && npx prisma generate
-npx next dev    # http://localhost:3000
+npx next dev    # → http://localhost:3000
+npx jest       # → 131 tests
 ```
 
-### Requisitos
+### 8.4 Requirements
 
-- Node.js 20+
-- API key para pelo menos um provider LLM (ver `.env.production`)
-- (Opcional) Docker + Docker Compose para deploy containerizado
-- (Opcional) NVIDIA GPU + CUDA para Colibri / Ollama / CodeGeeX4 com aceleracao
-- (Opcional) Obscura binary para navegador headless integrado
+- **Required**: Node.js 20+, at least one LLM provider API key
+- **Optional**: Docker + Compose (containerized deploy)
+- **Optional**: NVIDIA GPU + CUDA (Colibri, Ollama, CodeGeeX4 acceleration)
+- **Optional**: Obscura binary (headless browser integration)
 
 ---
 
-## Variaveis de Ambiente
-
-Todas as variaveis estao documentadas no arquivo [`.env.production`](.env.production) com 14 secoes:
-
-```env
-# Essenciais
-DATABASE_URL="file:/app/data/chimera.db"
-ZAI_API_KEY="..."          # GLM/Zhipu AI (primario)
-VAULT_ENCRYPTION_KEY="..." # AES-256-GCM para vaults Bitcoin
-
-# 9router Providers (preencha conforme necessidade — 23 providers)
-OPENAI_API_KEY="..."
-ANTHROPIC_API_KEY="..."
-GEMINI_API_KEY="..."
-DEEPSEEK_API_KEY="..."
-GROQ_API_KEY="..."
-XAI_API_KEY="..."
-MISTRAL_API_KEY="..."
-# ... veja .env.production para lista completa
-```
-
----
-
-## Estrutura do Projeto
+## 9. Project Structure
 
 ```
 chimera/
-|-- docker-compose.yml                 # Producao: 6 services (app, caddy, obscura, colibri, ollama, codegeex)
-|-- Dockerfile                         # Multi-stage build (standalone)
-|-- Caddyfile                          # Reverse proxy + SSL auto
-|-- .env.production                    # Template de variaveis (14 secoes, 23 providers)
-|-- .gitignore                         # Ignora .env* exceto .env.production
-|-- codegeex4/                         # CodeGeeX4 native OpenAI-compat API server
-|   +-- Dockerfile                     # Python 3.11 + PyTorch CUDA + FastAPI
-|-- prisma/
-|   +-- schema.prisma                 # 15 modelos
-|-- src/
-|   |-- app/
-|   |   |-- page.tsx                   # Dashboard principal — 13 tabs
-|   |   |-- layout.tsx                 # Root layout + IBM Plex Mono
-|   |   +-- api/                       # 71 API routes
-|   |       |-- 9router/               #   2 rotas 9router bridge
-|   |       |-- fable/                 #   9 rotas Fable Method
-|   |       |-- agent/                 #   3 rotas agentic
-|   |       |-- colibri/               #   5 rotas Colibri engine
-|   |       |-- live-lab/              #   9 rotas Live Lab Tri-Nuclear
-|   |       |-- sandbox/               #   7 rotas Sandbox Nativo
-|   |       |-- obscura/               #  14 rotas Navegador Obscura
-|   |       |-- vaults/                #   5 rotas Bitcoin vault
-|   |       +-- rag/                   #   RAG rRNA pipeline
-|   |-- components/                    # 100+ componentes React
-|   |   +-- live-lab-tab.tsx           #   Painel Live Lab (Diagnostico, Iogue, Roteamento, Progresso)
-|   |-- lib/
-|   |   |-- 9router-bridge.ts          # Bridge principal (routeChat, streamChat)
-|   |   |-- 9router-engine/            # Motor 9router (23 providers + translators)
-|   |   |-- live-lab/                  # Live Lab Tri-Nuclear v3.0
-|   |   |   |-- raw-manifesto.json     #   Manifesto JSON (10 LLMs, 12 skills, 5 meta-skills, 4 trilhas, 5 personas)
-|   |   |   |-- manifesto.ts           #   Typed manifesto + AGENTICA_AI identity
-|   |   |   |-- types.ts               #   25+ TypeScript interfaces
-|   |   |   |-- algorithms.ts          #   PROMETHEE II, cascade, TokenBucket, Budget, PII, RBAC
-|   |   |   |-- orchestrator.ts        #   Engine: 7 funcoes + rateLimiter + budgetTracker singletons
-|   |   |   |-- agentica-ai.ts          #   9 funcoes Arquiteta-Cognitiva
-|   |   |   |-- __tests__/             #   131 testes (algorithms + orchestrator/agentica)
-|   |   |   +-- index.ts               #   Re-exports publicos
-|   |   |-- fable-method-engine.ts     # Motor Think/Act/Prove
-|   |   |-- fable-5-orchestrator.ts    # Orquestrador LLM subagentes
-|   |   |-- sandbox/                   # Sandbox (types, engine, memory, lifecycle, LLM, evolution)
-|   |   |-- obscura/                   # Obscura (types, engine, CDP, intercept, proxy, serve)
-|   |   |-- rag-engine.ts             # Pipeline RAG rRNA
-|   |   |-- self-healing-engine.ts    # Auto-cura reativa 6 fases
-|   |   |-- wisdom-engine.ts          # Memoria de sabedoria
-|   |   +-- llm-synthesis.ts          # Streaming LLM synthesis
-|   +-- server/
-|       +-- routers/                   # 4 tRPC routers
+├── docker-compose.yml              # 6 services, 4 optional profiles
+├── Dockerfile                      # Multi-stage Next.js standalone
+├── Caddyfile                      # Reverse proxy + auto-SSL
+├── .env.production                # 14 sections, 23 provider keys
+├── codegeex4/
+│   └── Dockerfile                 # CodeGeeX4 native OpenAI-compat API
+├── prisma/
+│   └── schema.prisma              # 15 models
+├── src/
+│   ├── app/
+│   │   ├── page.tsx                # 13-tab dashboard
+│   │   └── api/                    # 71 REST routes
+│   │       ├── 9router/            #   2 routes
+│   │       ├── fable/              #   9 routes
+│   │       ├── agent/              #   3 routes
+│   │       ├── colibri/            #   5 routes
+│   │       ├── live-lab/           #   9 routes (Agentica AI)
+│   │       ├── sandbox/            #   7 routes
+│   │       ├── obscura/            #  14 routes
+│   │       ├── vaults/             #   5 routes
+│   │       └── rag/                #   1 route
+│   ├── components/
+│   │   ├── live-lab-tab.tsx        # 4 sub-tabs: Diagnostico, Iogue, Roteamento, Progresso
+│   │   └── ...                     # 100+ React components
+│   ├── lib/
+│   │   ├── 9router-bridge.ts       # routeChat(), streamChat()
+│   │   ├── 9router-engine/         # 23 providers + protocol translators
+│   │   ├── live-lab/               # ── TRI-NUCLEAR v3.0 ──
+│   │   │   ├── raw-manifesto.json  #   10 LLMs, 12 skills, 5 meta-skills, 4 tracks, 5 personas
+│   │   │   ├── manifesto.ts        #   Typed import + AGENTICA_AI identity
+│   │   │   ├── types.ts            #   25+ interfaces
+│   │   │   ├── algorithms.ts       #   PROMETHEE II, Cascade, TokenBucket, Budget, PII, RBAC
+│   │   │   ├── orchestrator.ts     #   7 engine functions + singletons
+│   │   │   ├── agentica-ai.ts      #   9 Agentica functions
+│   │   │   ├── __tests__/          #   131 tests (algorithms + orchestrator)
+│   │   │   └── index.ts            #   Public re-exports
+│   │   ├── fable-method-engine.ts  # Think/Act/Prove
+│   │   ├── sandbox/                # VM execution + genetic evolution
+│   │   ├── obscura/                # Rust/V8 headless browser
+│   │   └── rag-engine.ts           # 6-stage biological RAG pipeline
+│   └── server/routers/             # 4 tRPC routers
+└── tests/
+    └── federated.test.ts           # Federated Learning integration tests
 ```
 
 ---
 
-Os 4 Pilares que Definem o Chimera como "Última Onda"1. Transição do LLM Monolítico para "Compound AI Systems"A 2ª onda tentou resolver todos os problemas aumentando o tamanho dos modelos ou esticando janelas de contexto (ex: 1M+ tokens). O mercado e a academia já comprovaram que isso gera custo proibitivo, latência e o fenômeno de Lost in the Middle (degradação da atenção no meio do texto).A Abordagem Chimera: O LLM deixa de ser o "cérebro central" e passa a ser apenas a unidade de processamento linguístico (LPU). A inteligência real migra para a orquestração do sistema — unindo RAG híbrido, execução de código e validação ativa.2. Memória Estável por Grafo ($G_M$) vs. Contexto EfémeroA imensa maioria das aplicações atuais faz RAG vetorial simples: busca os fragmentos mais parecidos e os "joga" no prompt. O Chimera implementa Consolidação de Memória Biomimética com função de atenuação temporal:$$W(t) = W_0 \cdot e^{-\lambda (t - t_0)} + \alpha \cdot \sum_{k=1}^{n} \delta(t - t_k)$$Isso permite ao sistema aprender, esquecer o que é irrelevante e reforçar conexões cruciais, exatamente como um cérebro biológico consolida memórias no hipocampo.3. Concorrência Real e Self-Healing na VM BEAMA maioria dos frameworks de agentes atuais roda em loops síncronos de Python. Se um agente falha ou entra em loop infinito, a execução trava.Ao adotar a máquina virtual do Erlang/Elixir (BEAM) no runtime do LiveBook, o Chimera ganha:Isolamento Absoluto: Cada agente é um processo leve independente (escalando a centenas de milhares por nó).Supervisão em Árvore: Se um agente de execução quebra, a árvore de supervisão o reinicia instantaneamente sem perder o estado do Grafo PC.4. Integração Neuro-Simbólica (Zero-Alucinação)A grande limitação da IA generativa pura é a falta de garantias formais. O Chimera resolve isso fundindo o componente neural (a fluidez da linguagem do LLM) com o componente simbólico (o Grafo de Memória $G_M$ e o Critic Loop).   ┌────────────────────┐       ┌────────────────────┐
-   │ Redes Neurais      │  ───► │ Fluidez, Intuição, │
-   │ (LLM Transformer)  │       │ Tradução e Contexto│
-   └─────────┬──────────┘       └─────────┬──────────┘
-             │                            │
-             └─────────────┬──────────────┘
-                           ▼
-              [ FUSÃO NEURO-SIMBÓLICA ]
-                           ▲
-             ┌─────────────┴──────────────┐
-             │                            │
-   ┌─────────┴──────────┐       ┌─────────┴──────────┐
-   │ Grafos Simbólicos  │  ───► │ Verificabilidade,  │
-   │ & Validação BEAM   │       │ Rigor e Memória PC │
-   └────────────────────┘       └────────────────────┘
-Se o LLM tenta gerar algo que viola as regras ontológicas do grafo ou que falha na execução do LiveBook, o agente Critic intervém e corrige a saída antes que ela seja consolidada.Resumo do Salto GeneracionalIA de 2ª Onda: Responde perguntas com base no que aprendeu no treino (conhecimento congelado) ou no que é passado no prompt imediato.Ecossistema Chimera (3ª Onda): Raciocina em malha fechada, executa código em tempo real, valida factualidade contra um grafo persistente, evolui seu estado interno e recupera-se autonomamente de falhas.
-
-## Licenca
+## License
 
 Private — Nexus HUB57
