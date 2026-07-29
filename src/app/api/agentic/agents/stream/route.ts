@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { BUILTIN_AGENTS, AgentLoop } from '@/lib/agentic';
+import { persistFullExecution } from '@/lib/agentic/persistence';
 import { v4 as uuid } from 'uuid';
 import { getToolRegistry, getMemoryManager } from '@/lib/agentic';
 import type { Task, ExecutionContext } from '@/lib/agentic';
@@ -53,6 +54,10 @@ export async function POST(req: NextRequest) {
       try {
         const loop = new AgentLoop(ctx.loopConfig);
         const result = await loop.run(ctx);
+
+        // Fire-and-forget persistence — errors must not break the stream
+        persistFullExecution(task, result).catch(() => {});
+
         send(`data: ${JSON.stringify({ type: 'done', ...result })}\n\n`);
       } catch (err) {
         send(`data: ${JSON.stringify({ type: 'error', message: err instanceof Error ? err.message : String(err) })}\n\n`);

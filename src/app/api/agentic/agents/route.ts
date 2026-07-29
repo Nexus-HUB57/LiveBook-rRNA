@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BUILTIN_AGENTS, AgentLoop, AgentEventBus } from '@/lib/agentic';
+import { persistFullExecution } from '@/lib/agentic/persistence';
+import { registerAllToolHandlers } from '@/lib/agentic/tool-handlers';
+import { registerDemoMCPServer } from '@/lib/agentic/mcp-demo-bridge';
 import { v4 as uuid } from 'uuid';
 import { getToolRegistry } from '@/lib/agentic';
 import { getMemoryManager } from '@/lib/agentic';
 import type { Task, ExecutionContext, AgentLoopConfig } from '@/lib/agentic';
 
+// Ensure all tool handlers and MCP demo are registered on first request
+let _initialized = false;
+function ensureInitialized() {
+  if (_initialized) return;
+  _initialized = true;
+  try { registerAllToolHandlers(); } catch { /* handlers may fail in some envs */ }
+  try { registerDemoMCPServer(); } catch { /* demo may fail */ }
+}
+
 /** GET /api/agentic/agents — List all available agents */
 export async function GET() {
+  ensureInitialized();
   return NextResponse.json({
     agents: BUILTIN_AGENTS.map(a => ({
       ...a,
@@ -21,6 +34,7 @@ export async function GET() {
 /** POST /api/agentic/agents — Execute an agent with a prompt */
 export async function POST(req: NextRequest) {
   try {
+    ensureInitialized();
     const body = await req.json();
     const { agentId, prompt, title, strategy, maxIterations } = body;
 
@@ -69,6 +83,9 @@ export async function POST(req: NextRequest) {
 
     const loop = new AgentLoop(ctx.loopConfig);
     const result = await loop.run(ctx);
+
+    // Fire-and-forget persistence — errors must not break the response
+    persistFullExecution(task, result).catch(() => {});
 
     return NextResponse.json({
       success: result.success,

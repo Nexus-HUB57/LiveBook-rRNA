@@ -9,6 +9,7 @@ import {
   Globe, Dna, Users, Landmark, Atom, Feather, MessageSquareText, Sparkles,
   ShieldCheck,
   FlaskConical,
+  Brain,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardTab, QuickSearch } from '@/components/dashboard-tab';
@@ -24,6 +25,7 @@ import RrnaSystemsTab from '@/components/rrna-systems-tab';
 import FableMethodTab from '@/components/fable-method-tab';
 import { SandboxTab } from '@/components/sandbox-tab';
 import { LiveLabTab } from '@/components/live-lab-tab';
+import { AgenticWorkspaceTab } from '@/components/tabs/agentic-workspace';
 
 /* ================================================================
    TAB CONFIG — CHIMERA MULTI-AGENT FUSION ENGINE
@@ -31,6 +33,7 @@ import { LiveLabTab } from '@/components/live-lab-tab';
 const TABS = [
   // Core Colibri
   { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#4ed6a5' },
+  { value: 'agentic-workspace', label: 'Agentic AI', icon: Brain, color: '#6366f1' },
   { value: 'agents', label: 'Agent Hub', icon: Bot, color: '#4ed6a5' },
   { value: 'chat', label: 'Chat GLM-5.2', icon: MessageSquareText, color: '#4ed6a5' },
   { value: 'invocation', label: 'Invocacao', icon: Zap, color: '#a855f7' },
@@ -173,6 +176,7 @@ export default function Home() {
               className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-6"
             >
               {activeTab === 'dashboard' && <DashboardTab />}
+              {activeTab === 'agentic-workspace' && <AgenticWorkspaceTab />}
               {activeTab === 'agents' && <AgentHubTab />}
               {activeTab === 'chat' && <RagChatTab />}
               {activeTab === 'invocation' && <InvocationTab />}
