@@ -8,22 +8,24 @@
   <img src="https://img.shields.io/badge/tRPC-v11-0097A7?logo=trpc" alt="tRPC" />
   <img src="https://img.shields.io/badge/Prisma-6.11-2D3748?logo=prisma" alt="Prisma" />
   <img src="https://img.shields.io/badge/GLM--5.2-Connected-emerald" alt="GLM-5.2" />
-  <img src="https://img.shields.io/badge/API%20Routes-71-cyan" alt="API Routes" />
+  <img src="https://img.shields.io/badge/API%20Routes-78-cyan" alt="API Routes" />
   <img src="https://img.shields.io/badge/Docker-6%20services-2496ED?logo=docker" alt="Docker" />
-  <img src="https://img.shields.io/badge/Live%20Lab-Tri--Nuclear%20v3.0-purple" alt="Live Lab" />
-  <img src="https://img.shields.io/badge/Tests-131%20passing-brightgreen" alt="Tests" />
+  <img src="https://img.shields.io/badge/Live%20Lab-Tri--Nuclear%20v3.1-purple" alt="Live Lab" />
+  <img src="https://img.shields.io/badge/Tests-132%20passing-brightgreen" alt="Tests" />
   <img src="https://img.shields.io/badge/Agentica%20AI-9%20functions-f472b6" alt="Agentica AI" />
+  <img src="https://img.shields.io/badge/Prisma-23%20models-2D3748" alt="DB Models" />
+  <img src="https://img.shields.io/badge/Auth-API%20Key%20Middleware-blue" alt="Auth" />
 </p>
 
 <p align="center">
-  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin PSBT v2</strong> · <strong>RAG Pipeline</strong> · <strong>Sandbox VM</strong> · <strong>Headless Browser</strong> · <strong>Self-Healing</strong> · <strong>Live Lab Tri-Nuclear v3.0</strong>
+  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin PSBT v2</strong> · <strong>RAG Pipeline</strong> · <strong>Sandbox VM</strong> · <strong>Headless Browser</strong> · <strong>Self-Healing</strong> · <strong>Live Lab Tri-Nuclear v3.1</strong> · <strong>Real LLM Execution</strong> · <strong>Observability</strong> · <strong>Agent Communication</strong> · <strong>Meta-Learning</strong>
 </p>
 
 ---
 
 ## Abstract
 
-CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa roteamento inteligente baseado em **MCDM PROMETHEE II** com funcao de preferencia linear (Tipo V), tradução automatica de protocolo em topologia hub-and-spoke para 23 provedores, e um subsistema cognitivo trinuclear — o **Live Lab v3.0** — orquestrado pela Agentica AI com 9 funcoes de alto nivel. O sistema incorpora governanca por RBAC hierárquico (4 tiers), controle de taxa por Token Bucket com prioridade, projecao de orcamento com alertas em limiares configuráveis, e mascaramento de PII com trilha de auditoria. A arquitetura suporta 71 REST endpoints, 4 routers tRPC, streaming SSE nativo, e deploy containerizado com 6 servicos Docker.
+CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa roteamento inteligente baseado em **MCDM PROMETHEE II** com funcao de preferencia linear (Tipo V), tradução automatica de protocolo em topologia hub-and-spoke para 23 provedores, e um subsistema cognitivo trinuclear — o **Live Lab v3.1** — orquestrado pela Agentica AI com 9 funcoes de alto nivel e **execucao real de LLMs** via 9router-bridge. O sistema incorpora governanca por RBAC hierárquico (4 tiers), controle de taxa por Token Bucket com prioridade, projecao de orcamento com alertas em limiares configuráveis, mascaramento de PII com trilha de auditoria, **middleware de autenticacao API key**, **observabilidade estruturada** (logger JSON, metricas Prometheus, tracing), **cache semantico LRU**, **comunicacao bidirecional entre agentes** (message bus + blackboard), **memoria de longo prazo** (episodica/semantica/trabalho/procedural), **meta-aprendizado de pesos MCDM**, **negociacao multi-agente** (Contract Net/Votacao/Debate), **avaliacao de roteamento** (accuracy@1/3, MRR, A/B testing), e **aprendizado continuo de skills**. A arquitetura suporta 78 REST endpoints, 4 routers tRPC, streaming SSE nativo, e deploy containerizado com 6 servicos Docker.
 
 ---
 
@@ -51,20 +53,33 @@ CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa r
 │  │  └──────┬───────┘  └───────────────┘  │ │ PII Audit Trail     ││   │   │
 │  │         │                             │ │ RBAC 4-tier         ││   │   │
 │  │         │                             │ │ Skill Composition   ││   │   │
+│  │         │                             │ │ Real LLM Execution  ││   │   │
+│  │         │                             │ │ Persistencia Prisma  ││   │   │
 │  │         │                             │ └─────────────────────┘│   │   │
 │  │         │                             └─────────────────────────┘   │   │
 │  └─────────┼──────────────────────────────────────────────────────────┘   │
 │            │                                                               │
 │  ┌─────────┼──────────────────────────────────────────────────────────┐   │
-│  │         │              Subsystems                                    │   │
+│  │         │              Infraestrutura                                 │   │
 │  │  ┌──────┴───────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌───────┐  │   │
 │  │  │  RAG rRNA    │ │ Sandbox  │ │ Bitcoin  │ │ Obscura │ │ Self- │  │   │
 │  │  │  6-stage BM25│ │ VM Node  │ │ PSBT v2  │ │ Rust/V8 │ │ Healing│  │   │
 │  │  │  + Reranking │ │ 5 tiers  │ │ BIP32/39 │ │ CDP MCP │ │ 6 ph. │  │   │
 │  │  └──────────────┘ └──────────┘ └──────────┘ └─────────┘ └───────┘  │   │
+│  │  ┌──────────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌───────┐  │   │
+│  │  │ Auth Middle. │ │ Observab.│ │ Agent Msg│ │Semantic │ │ Memory │  │   │
+│  │  │ API Key + RBAC│ │ Logger   │ │ Bus+BB   │ │ Cache   │ │ 4-type │  │   │
+│  │  └──────────────┘ │ Metrics  │ │ Handoff  │ │ LRU 500 │ │ LT-Mem │  │   │
+│  │  ┌──────────────┐ │ Tracing  │ │ 10 types │ │ SHA-256 │ │ Consol.│  │   │
+│  │  │ Meta-Learning│ └──────────┘ └──────────┘ └─────────┘ └───────┘  │   │
+│  │  │ MCDM Weights │ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌───────┐  │   │
+│  │  │ 7 int. types │ │Negotiat. │ │ Routing  │ │ Skill   │ │Dist. RL│  │   │
+│  │  └──────────────┘ │ C/N/V/D  │ │ Eval A@1 │ │ Learner │ │ LRU 10K│  │   │
+│  │                    └──────────┘ │ MRR A/B  │ │ Auto-adj│ │ 4 tiers│  │   │
+│  │                                  └──────────┘ └─────────┘ └───────┘  │   │
 │  └────────────────────────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  Prisma 6 + SQLite (15 models) │ Caddy (auto-SSL) │ Docker Compose        │
+│  Prisma 6 + SQLite (23 models) │ Auth Middleware │ Caddy (auto-SSL) │ Docker  │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -77,13 +92,19 @@ CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa r
 | **Language** | TypeScript 5 (strict) | Type safety em toda a stack, generics avancados |
 | **LLM Routing** | 9router (in-process bridge) | Hub-and-spoke protocol translation, 23 providers, O(1) dispatch |
 | **API Layer** | tRPC v11 + 71 REST routes | Type-safe RPC para dashboard, REST para integracao externa |
-| **Database** | Prisma 6 + SQLite | Zero-ops embedded DB, 15 models, migracoes declarativas |
+| **Database** | Prisma 6 + SQLite | Zero-ops embedded DB, 23 models, migracoes declarativas |
 | **Bitcoin** | bitcoinjs-lib + @noble/secp256k1 | BIP32/39 HD wallet, P2PKH, PSBT v2 com AES-256-GCM |
 | **RAG** | BM25 field-boosted + cross-encoder | Pipeline biologico 6 fases com reranking neural |
 | **Cognitive** | Fable Method (Think/Act/Prove) | Raciocinio estruturado com auto-correcao em 3 tentativas |
+| **Observability** | ChimeraLogger + Prometheus + Tracer | Structured JSON logging, 6 metric families, span tracing, `/metrics` endpoint |
+| **Auth** | Next.js Edge Middleware + API Key | Bearer/x-api-key validation, 8 protected route prefixes, request ID propagation |
+| **Agent Comms** | AgentMessageBus + Blackboard | 10 message types, sendAndWait, broadcast, handoff protocol, shared memory |
+| **Memory** | AgentMemory (4-type) | Episodic, semantic, working, procedural; importance-based eviction, consolidation |
+| **Meta-Learning** | McdmMetaLearner | 7 intent types, EWMA weight adaptation, Prisma persistence, load history on boot |
+| **Negotiation** | AgentNegotiator | Contract Net, Voting, Debate protocols with consensus scoring |
 | **Sandbox** | Node.js `vm` module (isolated) | 5 tiers com limites de memoria/tempo, evolucao genetica |
 | **Browser** | Obscura (Rust/V8, CDP) | Anti-fingerprinting, 3520+ trackers, MCP 13 tools |
-| **Testing** | Jest — 131 tests, 3 suites | Coverage: algorithms, orchestrator, agentica-ai, federated |
+| **Testing** | Jest — 132 tests, 3 suites | Coverage: algorithms, orchestrator, agentica-ai, federated |
 | **Deploy** | Docker multi-stage + Caddy | 6 services, auto-SSL via Let's Encrypt |
 
 ---
@@ -154,13 +175,13 @@ Cada chamada executa `fetch` com timeout por-provider. Em falha, a cadeia avanca
 
 ---
 
-## 4. Live Lab Tri-Nuclear v3.0
+## 4. Live Lab Tri-Nuclear v3.1
 
-O Live Lab implementa um ecossistema cognitivo de tres nucleos com automacao de roteamento, produtividade e evolucao educacional. A versao 3.0 incorpora o modelo **GLM-5.2** (qualidade normalizada 0.96 — mais alta do agregador) e mapeia 6 principios filosoficos da *Autobiografia de um Iogue* (Yogananda) em algoritmos do sistema.
+O Live Lab implementa um ecossistema cognitivo de tres nucleos com automacao de roteamento, produtividade e evolucao educacional. A versao **v3.1** adiciona **execucao real de LLMs** via 9router-bridge (skills e avaliacoes agora chamam modelos reais), **persistencia em banco de dados** (toda execucao e registrada em Prisma), e 12 novos modulos de infraestrutura cognitiva (observabilidade, cache semantico, comunicacao, memoria, meta-learning, negociacao, avaliacao de roteamento, aprendizado de skills, rate limiting distribuido, autenticacao).
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
-│                     LIVE LAB TRI-NUCLEAR v3.0                       │
+│                     LIVE LAB TRI-NUCLEAR v3.1                       │
 │                                                                    │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐ │
 │  │  N1 AGREGADOR     │  │  N2 PRODUTIVIDADE│  │  N3 ECOSSISTEMA   │ │
@@ -353,9 +374,9 @@ Cada modulo define `taxa_acerto_minima` (padrao 70%), `modelo_recomendado`, e `a
 | 1 | `agenticaDiagnose()` | Diagnostic | Full ecosystem audit: integrity, 3 cores, governance, routing MCDM, alerts |
 | 2 | `agenticaIogueEssence()` | Diagnostic | Returns philosophical essence: 6 principles mapped to algorithms |
 | 3 | `agenticaRoute(intent)` | Routing | Cascade match → PROMETHEE II MCDM → best model + cost + latency |
-| 4 | `agenticaExecuteSkill(id, input, persona)` | Routing | RBAC check → model selection → budget recording → SkillResult |
-| 5 | `agenticaExecuteMetaSkill(id, input, persona)` | Routing | Composition graph → topological sort → sequential execution plan |
-| 6 | `agenticaEvaluateModulo(moduloId)` | Evaluation | Module scoring (72-95 random) vs `taxa_acerto_minima`, feedback |
+| 4 | `agenticaExecuteSkill(id, input, persona)` | Routing | **[v3.1 async + LLM real]** RBAC check → 9router call → budget recording → DB persist → SkillResult |
+| 5 | `agenticaExecuteMetaSkill(id, input, persona)` | Routing | **[v3.1 async]** Composition graph → topological sort → sequential LLM execution plan |
+| 6 | `agenticaEvaluateModulo(moduloId)` | Evaluation | **[v3.1 async + LLM Judge]** Calls LLM to score module when no explicit score; fallback to 75 |
 | 7 | `agenticaProgress(personaId)` | Evaluation | Persona progress: trilha, modulo index, progress %, next action |
 | 8 | `agenticaGovernanca(persona, action, level)` | Governance | RBAC check → rate limit consume → budget state → GovernancaCheck |
 | 9 | `agenticaStats()` | Governance | Aggregated metrics: 10 models, 12 skills, 4 tracks, 5 personas |
@@ -441,7 +462,7 @@ rbacCheck(userLevel, requiredLevel, levels[])
 | Governanca Consciente | RBAC + Budget Tracking | Protection by stage; dharma of resource — use wisely, not greedily |
 | Santuario Interior | PII Masking + Audit | Guard the inner sanctuary; what is sacred must not be exposed |
 
-### 4.7 Live Lab API Routes (9 endpoints)
+### 4.7 Live Lab API Routes (13 endpoints)
 
 | Method | Endpoint | Agentica Function | Auth |
 |--------|----------|-------------------|------|
@@ -454,6 +475,10 @@ rbacCheck(userLevel, requiredLevel, levels[])
 | `GET` | `/api/live-lab/progress` | `agenticaProgress()` | Query: `?personaId=` |
 | `POST` | `/api/live-lab/governanca` | `agenticaGovernanca()` | Body: `{personaId, acao, nivelRequerido}` |
 | `GET` | `/api/live-lab/stats` | `agenticaStats()` | None |
+| `GET` | `/api/live-lab/metrics` | `ChimeraMetrics.getPrometheus()` | Prometheus scrape |
+| `GET` | `/api/live-lab/cache/stats` | `SemanticCache.getStats()` | Cache hit/miss rate |
+| `GET` | `/api/live-lab/bus/stats` | `AgentMessageBus.getStats()` | Message bus status |
+| `GET` | `/api/live-lab/memory/stats` | `AgentMemory.getStats()` | Agent memory status |
 
 ---
 
@@ -511,9 +536,83 @@ Query → Transcricao → Splicing → Traducao → Reranking → Sintese LLM
 
 Auto-cura reativa com Wisdom Engine adaptativa: detect → diagnose → isolate → remediate → verify → learn.
 
+### 5.6 v3.1 — 12 Novos Modulos de Infraestrutura Cognitiva
+
+A v3.1 introduz uma camada de infraestrutura cognitiva que eleva o CHIMERA de simulador para sistema de producao:
+
+#### 5.6.1 Autenticacao (`src/middleware.ts` + `src/lib/auth.ts`)
+
+Next.js Edge Middleware com validacao API key. Modo aberto (sem `CHIMERA_API_KEYS`) para desenvolvimento.
+
+```text
+Request → x-request-id (UUID) → x-correlation-id (propagate) → Auth check → Route
+                                                         ↓ Protected:
+                                                         /api/fable/*
+                                                         /api/vaults/*
+                                                         /api/withdraw/*
+                                                         /api/hd-wallet/*
+                                                         /api/generate-wallet/*
+                                                         /api/mnemonic/*
+                                                         /api/consolidate/*
+                                                         /api/webhook/*
+```
+
+#### 5.6.2 Observabilidade (`src/lib/observability.ts`)
+
+- **ChimeraLogger**: JSON estruturado com correlationId/requestId, 4 niveis (info/warn/error/debug)
+- **ChimeraMetrics**: 6 familias de metricas em formato Prometheus (counters, histograms, gauges)
+- **ChimeraTracer**: Spans com parent-child, `performance.now()`, max 1000 spans completados
+
+Metricas nativas: `chimera_routing_total`, `chimera_skill_execution_duration_ms`, `chimera_tokens_total`, `chimera_cost_usd_total`, `chimera_fallback_total`, `chimera_llm_request_duration_ms`
+
+#### 5.6.3 Rate Limiting Distribuido (`src/lib/distributed-rate-limit.ts`)
+
+StickySessionRateLimiter com LRU (max 10K entradas, TTL 5 min) + TieredRateLimiter (basic 10/min, intermediate 30/min, advanced 60/min, admin 120/min).
+
+#### 5.6.4 Cache Semantico (`src/lib/semantic-cache.ts`)
+
+LRU cache (500 entradas, TTL 1h) com chave SHA-256 de input normalizado. Hit/miss tracking. Design preparado para upgrade embedding-based (threshold 0.92 reservado).
+
+#### 5.6.5 Comunicacao Bidirecional (`src/lib/agent-message-bus.ts`)
+
+AgentMessageBus com 10 tipos de mensagem (task_request/result, handoff, query/answer, event, heartbeat, negotiation, blackboard_read/write). Suporta `sendAndWait` com timeout, broadcast, protocolo de handoff, e blackboard compartilhado (LRU 500 entries).
+
+#### 5.6.6 Memoria de Longo Prazo (`src/lib/agent-memory.ts`)
+
+4 tipos com TTLs distintos: **working** (10 min), **episodic** (24h), **semantic** (30 dias), **procedural** (90 dias). Eviction por importancia (0-1). Consolidacao automatica (working → episodic para importancia >= 0.5).
+
+#### 5.6.7 Meta-Aprendizado MCDM (`src/lib/mcdm-meta-learner.ts`)
+
+Classifica intencoes em 7 categorias (code, math, reasoning, multimodal, security, devops, general). EWMA (decay 0.95) para adaptar pesos MCDM por tipo. Persistencia em Prisma `McdmWeightHistory`. Formula: `learned = default + 0.15 * (avg - default)`, normalizado para soma = 1.
+
+#### 5.6.8 Negociacao Multi-Agente (`src/lib/agent-negotiation.ts`)
+
+Tres protocolos: **Contract Net** (broadcast + bid evaluation), **Votacao** (plurality, ties por ordem), **Debate** (for/against + judge). Todos retornam `NegotiationResult` com consensus score (0-1).
+
+#### 5.6.9 Avaliacao de Roteamento (`src/lib/routing-evaluator.ts`)
+
+25 ground truth entries cobrindo todas as 9 cascade rules. Metricas: **accuracy@1**, **accuracy@3**, **MRR** (Mean Reciprocal Rank), custo-efficiency, cascade hit rate. A/B testing com variant registry.
+
+#### 5.6.10 Aprendizado Continuo de Skills (`src/lib/skill-learner.ts`)
+
+Tracking de performance por skill (rolling window 100 execucoes). Auto-ajuste de tokens (1.5x se success < 70%, 0.8x se > 95%). Deteccao de skills faltantes por intents falhados. Alertas para skills necessitando atencao.
+
+#### 5.6.11 Prisma Schema — 8 Novas Tabelas
+
+| Modelo | Proposito | Chave |
+|--------|----------|-------|
+| `FableSandbox` | Instancias de sandbox | sandboxId (unique) |
+| `FableTask` | Fila de tarefas com ciclo de vida | taskId (unique), status |
+| `FableExecution` | Tentativas de execucao por tarefa | taskId (FK cascade) |
+| `LiveLabExecution` | Audit completo de execucoes | executionId (unique) |
+| `SkillExecutionLog` | Log por skill com input/output snap | skillId + createdAt |
+| `BudgetRecord` | Budget mensal por persona com alertas | personaId + periodo (unique) |
+| `RoutingLog` | Decisoes de roteamento MCDM | modeloSelecionado + createdAt |
+| `McdmWeightHistory` | Evolucao de pesos por intent type | intentType + createdAt |
+
 ---
 
-## 6. API Reference (71 Endpoints)
+## 6. API Reference (78 Endpoints)
 
 | Group | Count | Routes |
 |-------|-------|--------|
@@ -521,7 +620,7 @@ Auto-cura reativa com Wisdom Engine adaptativa: detect → diagnose → isolate 
 | **Agent** | 3 | `POST /api/agent/chat`, `POST /api/agent/chat/stream`, `POST /api/agent/analyze` |
 | **Fable** | 9 | `/api/fable/{method,loop,judge,domain,spawn,stats,tasks,task/[id],agent-query}` |
 | **Colibri** | 5 | `/api/colibri/{health,models,experts,chat,orchestrate}` |
-| **Live Lab** | 9 | `/api/live-lab/{diagnose,route,skill,evaluate,progress,stats,governanca,meta-skill,iogue-essence}` |
+| **Live Lab** | 13 | `/api/live-lab/{diagnose,route,skill,evaluate,progress,stats,governanca,meta-skill,iogue-essence,metrics,cache/stats,bus/stats,memory/stats}` |
 | **Sandbox** | 7 | `/api/sandbox/{execute,agents,agents/[id],llm,llm/stream,status,evolution}` |
 | **Obscura** | 14 | `/api/obscura/{navigate,scrape,eval,links,markdown,snapshot,status,serve,intercept,trackers,proxy,sessions,network,health}` |
 | **Bitcoin** | 5 | `/api/vaults{,/  [id],/  [id]/generate-address,/  [id]/custody}` + `/api/vaults/import-address` |
@@ -530,13 +629,14 @@ Auto-cura reativa com Wisdom Engine adaptativa: detect → diagnose → isolate 
 | **Orchestrate** | 1 | `POST /api/orchestrate` |
 | **System** | 9 | `/api/projects`, `/api/projects/stats`, `/api/consolidate`, `/api/federated`, `/api/agents`, `/api/moltbook`, `/api/binance`, `/api/chat/history`, `/api/webhook/invoke` |
 | **tRPC** | 2 | `/api/trpc/[trpc]` (4 routers: invocation, orchestration, dashboard, colibri) |
+| **Auth** | Edge Middleware | `x-request-id` + `x-correlation-id` + API key validation on 8 prefixes |
 
 ---
 
 ## 7. Testing
 
 ```
-131 tests passing — 3 suites — 0 failures
+132 tests passing — 3 suites — 0 failures
 
 src/lib/live-lab/__tests__/algorithms.test.ts    (88 tests)
   ├─ minMaxNormalize           (4)   Edge cases: empty, equal, ascending, descending
@@ -550,19 +650,19 @@ src/lib/live-lab/__tests__/algorithms.test.ts    (88 tests)
   ├─ maskPIIWithAudit           (6)   Email, CPF, telefone, multi-type, position, empty
   └─ rbacCheck                  (6)   Hierarchy, denial, same-level, invalid levels
 
-src/lib/live-lab/__tests__/orchestrator.test.ts (36 tests)
+src/lib/live-lab/__tests__/orchestrator.test.ts (37 tests)
   ├─ getRoutingResult           (6)   Structure, truncation, cascade, GLM-5.2 routing
-  ├─ executeSkill               (4)   Success, budget, not-found, RBAC denial
-  ├─ executeMetaSkill           (4)   Success plan, ordering, not-found, RBAC
-  ├─ evaluateModulo             (6)   Score, feedback, min threshold, pass/fail
+  ├─ executeSkill               (4)   [v3.1 async] LLM mock, budget, not-found, RBAC denial
+  ├─ executeMetaSkill           (4)   [v3.1 async] Success plan, ordering, not-found, RBAC
+  ├─ evaluateModulo             (7)   [v3.1 async] LLM judge, explicit score, feedback, pass/fail
   ├─ getPersonaProgress         (3)   Valid, null, field completeness
   ├─ getLiveLabStats            (5)   Counts, version, domains, tracks, module sum
   ├─ getIogueEssence            (4)   Non-null, filosofia, 6 principios, guru
   ├─ agenticaDiagnose           (7)   Full diagnostic, typecheck, iogue, counts, pesos
   ├─ agenticaRoute              (2)   Wrapper, phi+/- structure
-  ├─ agenticaExecuteSkill       (3)   Wrapper, valid, invalid
-  ├─ agenticaExecuteMetaSkill   (2)   Wrapper, not-found
-  ├─ agenticaEvaluateModulo     (2)   Wrapper, random score bounds
+  ├─ agenticaExecuteSkill       (3)   [v3.1 async] Wrapper, valid, invalid
+  ├─ agenticaExecuteMetaSkill   (2)   [v3.1 async] Wrapper, not-found
+  ├─ agenticaEvaluateModulo     (2)   [v3.1 async] LLM judge mock
   ├─ agenticaProgress            (2)   Wrapper, null
   ├─ agenticaStats              (2)   Consistency, counts
   ├─ agenticaIogueEssence       (2)   Equality, 6 principios
@@ -570,6 +670,8 @@ src/lib/live-lab/__tests__/orchestrator.test.ts (36 tests)
 
 tests/federated.test.ts                        (7 tests)
   └─ Federated Learning         (7)   NRP, Gaussian noise, validation, anchoring
+
+Mocks: jest.mock('@/lib/9router-bridge') + jest.mock('@/lib/db') para isolamento de LLM real nos testes.
 ```
 
 ---
@@ -600,7 +702,7 @@ docker compose ps
 
 | Service | Port | Profile | Description |
 |---------|------|---------|-------------|
-| **chimera** | 3000 | default | Next.js 16 standalone + 71 API routes + tRPC |
+| **chimera** | 3000 | default | Next.js 16 standalone + 78 API routes + tRPC + Auth middleware |
 | **caddy** | 80, 443 | default | Reverse proxy + auto-SSL (Let's Encrypt) |
 | **obscura** | 9222, 9223 | `obscura` | Headless browser Rust/V8, CDP WebSocket |
 | **colibri** | 8000 | `colibri` | GLM-5.2 744B MoE inference server (GPU) |
@@ -613,7 +715,7 @@ docker compose ps
 npm install
 npx prisma db push && npx prisma generate
 npx next dev    # → http://localhost:3000
-npx jest       # → 131 tests
+npx jest       # → 132 tests
 ```
 
 ### 8.4 Requirements
@@ -636,7 +738,7 @@ chimera/
 ├── codegeex4/
 │   └── Dockerfile                 # CodeGeeX4 native OpenAI-compat API
 ├── prisma/
-│   └── schema.prisma              # 15 models
+│   └── schema.prisma              # 23 models (15 original + 8 v3.1)
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx                # 13-tab dashboard
@@ -656,15 +758,25 @@ chimera/
 │   ├── lib/
 │   │   ├── 9router-bridge.ts       # routeChat(), streamChat()
 │   │   ├── 9router-engine/         # 23 providers + protocol translators
-│   │   ├── live-lab/               # ── TRI-NUCLEAR v3.0 ──
+│   │   ├── live-lab/               # ── TRI-NUCLEAR v3.1 ──
 │   │   │   ├── raw-manifesto.json  #   10 LLMs, 12 skills, 5 meta-skills, 4 tracks, 5 personas
 │   │   │   ├── manifesto.ts        #   Typed import + AGENTICA_AI identity
 │   │   │   ├── types.ts            #   25+ interfaces
 │   │   │   ├── algorithms.ts       #   PROMETHEE II, Cascade, TokenBucket, Budget, PII, RBAC
-│   │   │   ├── orchestrator.ts     #   7 engine functions + singletons
-│   │   │   ├── agentica-ai.ts      #   9 Agentica functions
-│   │   │   ├── __tests__/          #   131 tests (algorithms + orchestrator)
+│   │   │   ├── orchestrator.ts     #   7 engine functions + LLM real + DB persist (v3.1)
+│   │   │   ├── agentica-ai.ts      #   9 Agentica functions (4 async v3.1)
+│   │   │   ├── __tests__/          #   132 tests (algorithms + orchestrator)
 │   │   │   └── index.ts            #   Public re-exports
+│   │   ├── auth.ts                 # API key validation, protected routes
+│   │   ├── observability.ts        # ChimeraLogger + ChimeraMetrics + ChimeraTracer
+│   │   ├── distributed-rate-limit.ts # StickySessionRateLimiter + TieredRateLimiter
+│   │   ├── semantic-cache.ts       # SHA-256 LRU cache (500 entries, 1h TTL)
+│   │   ├── agent-message-bus.ts    # 10 message types, sendAndWait, broadcast, blackboard
+│   │   ├── agent-memory.ts         # 4-type memory (working/episodic/semantic/procedural)
+│   │   ├── mcdm-meta-learner.ts    # 7 intent types, EWMA weight adaptation
+│   │   ├── agent-negotiation.ts    # Contract Net, Voting, Debate protocols
+│   │   ├── routing-evaluator.ts    # 25 ground truth, accuracy@1/3, MRR, A/B testing
+│   │   ├── skill-learner.ts        # Performance tracking, auto token adjustment
 │   │   ├── fable-method-engine.ts  # Think/Act/Prove
 │   │   ├── sandbox/                # VM execution + genetic evolution
 │   │   ├── obscura/                # Rust/V8 headless browser
