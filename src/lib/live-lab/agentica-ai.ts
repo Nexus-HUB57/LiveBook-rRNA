@@ -35,9 +35,9 @@ export function agenticaDiagnose(): DiagnosticoEcosystem {
 }
 
 export function agenticaRoute(intent: string): RoutingResult { return getRoutingResult(intent); }
-export function agenticaExecuteSkill(skillId: string, input: Record<string, unknown>, personaId: string): SkillResult { return executeSkill(skillId, input, personaId); }
-export function agenticaExecuteMetaSkill(metaSkillId: string, input: Record<string, unknown>, personaId: string): MetaSkillResult { return executeMetaSkill(metaSkillId, input, personaId); }
-export function agenticaEvaluateModulo(moduloId: string): ModuloResult { return evaluateModulo(moduloId); }
+export async function agenticaExecuteSkill(skillId: string, input: Record<string, unknown>, personaId: string): Promise<SkillResult> { return executeSkill(skillId, input, personaId); }
+export async function agenticaExecuteMetaSkill(metaSkillId: string, input: Record<string, unknown>, personaId: string): Promise<MetaSkillResult> { return executeMetaSkill(metaSkillId, input, personaId); }
+export async function agenticaEvaluateModulo(moduloId: string): Promise<ModuloResult> { return evaluateModulo(moduloId); }
 export function agenticaProgress(personaId: string): PersonaProgress | null { return getPersonaProgress(personaId); }
 export function agenticaStats(): LiveLabStats { return getLiveLabStats(); }
 export function agenticaIogueEssence(): IogueEssence | null { return getIogueEssence(); }

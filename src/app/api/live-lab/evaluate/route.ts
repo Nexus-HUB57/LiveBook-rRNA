@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     if (!moduloId || typeof moduloId !== 'string') {
       return NextResponse.json({ erro: 'Campo "moduloId" e obrigatorio (string)' }, { status: 400 });
     }
-    const result = agenticaEvaluateModulo(moduloId);
+    const result = await agenticaEvaluateModulo(moduloId);
     return NextResponse.json(result);
   } catch (e) {
     return NextResponse.json({ erro: String(e) }, { status: 500 });

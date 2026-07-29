@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     if (!personaId || typeof personaId !== 'string') {
       return NextResponse.json({ erro: 'Campo "personaId" e obrigatorio (string)' }, { status: 400 });
     }
-    const result = agenticaExecuteMetaSkill(metaSkillId, input || {}, personaId);
+    const result = await agenticaExecuteMetaSkill(metaSkillId, input || {}, personaId);
     return NextResponse.json(result);
   } catch (e) {
     return NextResponse.json({ erro: String(e) }, { status: 500 });

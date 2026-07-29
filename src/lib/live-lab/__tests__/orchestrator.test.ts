@@ -29,6 +29,29 @@ import {
   agenticaGovernanca,
 } from '../agentica-ai';
 
+// ─── Mocks for 9router-bridge and Prisma DB ───
+jest.mock('@/lib/9router-bridge', () => ({
+  routeChat: jest.fn().mockResolvedValue({
+    success: true,
+    content: 'Resposta simulada do LLM via mock.',
+    finishReason: 'stop',
+    provider: 'glm',
+    model: 'claude-4-sonnet',
+    format: 'openai',
+    usage: { promptTokens: 500, completionTokens: 300, totalTokens: 800 },
+    latencyMs: 250,
+  }),
+}));
+
+jest.mock('@/lib/db', () => ({
+  db: {
+    liveLabExecution: { create: jest.fn().mockResolvedValue({}) },
+    skillExecutionLog: { create: jest.fn().mockResolvedValue({}) },
+    routingLog: { create: jest.fn().mockResolvedValue({}) },
+    budgetRecord: { upsert: jest.fn().mockResolvedValue({}) },
+  },
+}));
+
 const M = LIVE_LAB_MANIFESTO;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,24 +124,25 @@ describe('executeSkill', () => {
     budgetTracker.resetMonth('product-manager');
   });
 
-  it('successful execution returns sucesso=true with required fields', () => {
-    const result = executeSkill('code_review', { code: 'const x = 1' }, 'dev-basic');
+  it('successful execution returns sucesso=true with required fields', async () => {
+    const result = await executeSkill('code_review', { code: 'const x = 1' }, 'dev-basic');
     expect(result.sucesso).toBe(true);
     expect(result.modelo_selecionado).toBe('claude-4-sonnet');
-    expect(result.tokens_usados).toBe(2000);
+    expect(result.tokens_usados).toBeGreaterThan(0);
     expect(result.custo_usd).toBeGreaterThan(0);
     expect(result.latencia_ms).toBeGreaterThan(0);
     expect(result.resultado).toBeDefined();
+    expect(result.resultado.llm_resposta).toBeTruthy();
   });
 
-  it('records budget usage via budgetTracker', () => {
-    executeSkill('code_review', {}, 'dev-basic');
+  it('records budget usage via budgetTracker', async () => {
+    await executeSkill('code_review', {}, 'dev-basic');
     const budget = budgetTracker.getUsage('dev-basic');
     expect(budget.usado_usd).toBeGreaterThan(0);
   });
 
-  it('returns sucesso=false for skill not found', () => {
-    const result = executeSkill('nonexistent_skill', {}, 'dev-basic');
+  it('returns sucesso=false for skill not found', async () => {
+    const result = await executeSkill('nonexistent_skill', {}, 'dev-basic');
     expect(result.sucesso).toBe(false);
     expect(result.modelo_selecionado).toBe('');
     expect(result.tokens_usados).toBe(0);
@@ -126,8 +150,8 @@ describe('executeSkill', () => {
     expect(result.resultado.erro).toContain('nao encontrada');
   });
 
-  it('RBAC denial: dev-basic cannot execute security_audit (advanced)', () => {
-    const result = executeSkill('security_audit', {}, 'dev-basic');
+  it('RBAC denial: dev-basic cannot execute security_audit (advanced)', async () => {
+    const result = await executeSkill('security_audit', {}, 'dev-basic');
     expect(result.sucesso).toBe(false);
     expect(result.resultado.erro).toContain('RBAC');
   });
@@ -141,8 +165,8 @@ describe('executeMetaSkill', () => {
     budgetTracker.resetMonth('dev-basic');
   });
 
-  it('successful execution returns sucesso=true with execution_plan and resultados', () => {
-    const result = executeMetaSkill('learning_path', {}, 'dev-basic');
+  it('successful execution returns sucesso=true with execution_plan and resultados', async () => {
+    const result = await executeMetaSkill('learning_path', {}, 'dev-basic');
     expect(result.sucesso).toBe(true);
     expect(result.meta_skill_id).toBe('learning_path');
     expect(result.resultados.length).toBeGreaterThan(0);
@@ -152,26 +176,25 @@ describe('executeMetaSkill', () => {
     expect(result.execution_plan.length).toBeGreaterThan(0);
   });
 
-  it('returns execution_plan with ordered skills', () => {
-    const result = executeMetaSkill('learning_path', {}, 'dev-basic');
+  it('returns execution_plan with ordered skills', async () => {
+    const result = await executeMetaSkill('learning_path', {}, 'dev-basic');
     expect(result.execution_plan.length).toBe(3);
-    // Check ordering
     for (let i = 0; i < result.execution_plan.length; i++) {
       expect(result.execution_plan[i].order).toBe(i);
       expect(result.execution_plan[i].skillId).toBeTruthy();
     }
   });
 
-  it('meta-skill not found returns sucesso=false', () => {
-    const result = executeMetaSkill('nonexistent_meta', {}, 'dev-basic');
+  it('meta-skill not found returns sucesso=false', async () => {
+    const result = await executeMetaSkill('nonexistent_meta', {}, 'dev-basic');
     expect(result.sucesso).toBe(false);
     expect(result.resultados).toEqual([]);
     expect(result.total_tokens).toBe(0);
     expect(result.execution_plan).toEqual([]);
   });
 
-  it('RBAC denial for meta-skill: dev-basic cannot use devops_pipeline (advanced)', () => {
-    const result = executeMetaSkill('devops_pipeline', {}, 'dev-basic');
+  it('RBAC denial for meta-skill: dev-basic cannot use devops_pipeline (advanced)', async () => {
+    const result = await executeMetaSkill('devops_pipeline', {}, 'dev-basic');
     expect(result.sucesso).toBe(false);
     expect(result.resultados[0].resultado.erro).toContain('RBAC');
   });
@@ -181,43 +204,51 @@ describe('executeMetaSkill', () => {
 // 4. evaluateModulo
 // ─────────────────────────────────────────────────────────────────────────────
 describe('evaluateModulo', () => {
-  it('returns valid ModuloResult for existing module (fsa-m1)', () => {
-    const result = evaluateModulo('fsa-m1', 85);
+  it('returns valid ModuloResult for existing module (fsa-m1) with explicit score', async () => {
+    const result = await evaluateModulo('fsa-m1', 85);
     expect(result.modulo_id).toBe('fsa-m1');
     expect(result.pontuacao).toBe(85);
     expect(result.modelo_usado).toBe('glm-4-plus');
     expect(result.feedback).toBeTruthy();
   });
 
-  it('module not found returns aprovado=false with error message', () => {
-    const result = evaluateModulo('nonexistent-modulo');
+  it('module not found returns aprovado=false with error message', async () => {
+    const result = await evaluateModulo('nonexistent-modulo');
     expect(result.aprovado).toBe(false);
     expect(result.pontuacao).toBe(0);
     expect(result.feedback).toContain('nao encontrado');
     expect(result.modelo_usado).toBe('');
   });
 
-  it('uses explicit score parameter when provided', () => {
-    const result = evaluateModulo('fsa-m1', 95);
+  it('uses explicit score parameter when provided', async () => {
+    const result = await evaluateModulo('fsa-m1', 95);
     expect(result.pontuacao).toBe(95);
     expect(result.aprovado).toBe(true);
   });
 
-  it('pontuacao_minima matches modulo taxa_acerto_minima (70 for fsa-m1)', () => {
-    const result = evaluateModulo('fsa-m1', 50);
+  it('pontuacao_minima matches modulo taxa_acerto_minima (70 for fsa-m1)', async () => {
+    const result = await evaluateModulo('fsa-m1', 50);
     expect(result.pontuacao_minima).toBe(70);
     expect(result.aprovado).toBe(false);
   });
 
-  it('score below minimum results in reprovado', () => {
-    const result = evaluateModulo('fsa-m1', 60);
+  it('score below minimum results in reprovado', async () => {
+    const result = await evaluateModulo('fsa-m1', 60);
     expect(result.aprovado).toBe(false);
     expect(result.feedback).toContain('Necessita mais pratica');
   });
 
-  it('score above minimum results in aprovado', () => {
-    const result = evaluateModulo('fsa-m1', 72);
+  it('score above minimum results in aprovado', async () => {
+    const result = await evaluateModulo('fsa-m1', 72);
     expect(result.aprovado).toBe(true);
+  });
+
+  it('without explicit score, uses LLM judge (mock returns non-numeric, falls back to 75)', async () => {
+    const result = await evaluateModulo('fsa-m1');
+    // Mock returns 'Resposta simulada...' which parseInt can't parse -> fallback 75
+    expect(result.pontuacao).toBe(75);
+    // modeloUsado is set from judgeResult.model (mock returns 'claude-4-sonnet') even on score fallback
+    expect(result.modelo_usado).toBe('claude-4-sonnet');
   });
 });
 
@@ -418,20 +449,20 @@ describe('agenticaExecuteSkill', () => {
     budgetTracker.resetMonth('dev-basic');
   });
 
-  it('wraps executeSkill, same behavior', () => {
-    const result = agenticaExecuteSkill('code_review', {}, 'dev-basic');
+  it('wraps executeSkill, same behavior', async () => {
+    const result = await agenticaExecuteSkill('code_review', {}, 'dev-basic');
     expect(result.sucesso).toBe(true);
     expect(result.modelo_selecionado).toBe('claude-4-sonnet');
-    expect(result.tokens_usados).toBe(2000);
+    expect(result.tokens_usados).toBeGreaterThan(0);
   });
 
-  it('returns sucesso=true for valid skill+persona combo', () => {
-    const result = agenticaExecuteSkill('prompt_engineering', {}, 'dev-basic');
+  it('returns sucesso=true for valid skill+persona combo', async () => {
+    const result = await agenticaExecuteSkill('prompt_engineering', {}, 'dev-basic');
     expect(result.sucesso).toBe(true);
   });
 
-  it('returns sucesso=false for invalid skill', () => {
-    const result = agenticaExecuteSkill('nonexistent', {}, 'dev-basic');
+  it('returns sucesso=false for invalid skill', async () => {
+    const result = await agenticaExecuteSkill('nonexistent', {}, 'dev-basic');
     expect(result.sucesso).toBe(false);
   });
 });
@@ -444,14 +475,14 @@ describe('agenticaExecuteMetaSkill', () => {
     budgetTracker.resetMonth('dev-basic');
   });
 
-  it('wraps executeMetaSkill and returns execution_plan', () => {
-    const result = agenticaExecuteMetaSkill('learning_path', {}, 'dev-basic');
+  it('wraps executeMetaSkill and returns execution_plan', async () => {
+    const result = await agenticaExecuteMetaSkill('learning_path', {}, 'dev-basic');
     expect(result.sucesso).toBe(true);
     expect(result.execution_plan.length).toBeGreaterThan(0);
   });
 
-  it('returns sucesso=false for nonexistent meta-skill', () => {
-    const result = agenticaExecuteMetaSkill('nope', {}, 'dev-basic');
+  it('returns sucesso=false for nonexistent meta-skill', async () => {
+    const result = await agenticaExecuteMetaSkill('nope', {}, 'dev-basic');
     expect(result.sucesso).toBe(false);
   });
 });
@@ -460,22 +491,19 @@ describe('agenticaExecuteMetaSkill', () => {
 // 12. agenticaEvaluateModulo
 // ─────────────────────────────────────────────────────────────────────────────
 describe('agenticaEvaluateModulo', () => {
-  it('wraps evaluateModulo and returns modelo_usado matching modulo modelo_recomendado', () => {
-    // fsa-m1 modelo_recomendado is 'glm-4-plus'
-    const result = agenticaEvaluateModulo('fsa-m1');
-    // Note: evaluateModulo doesn't accept score param in agenticaEvaluateModulo
-    // It uses random score 72-95, so it should pass for fsa-m1 (min 70)
-    expect(result.modelo_usado).toBe('glm-4-plus');
+  it('wraps evaluateModulo, now uses LLM judge (mock non-numeric -> fallback 75)', async () => {
+    const result = await agenticaEvaluateModulo('fsa-m1');
     expect(result.modulo_id).toBe('fsa-m1');
+    // Mock returns non-numeric string -> parseInt -> NaN -> fallback 75 >= 70 (min for fsa-m1)
+    expect(result.aprovado).toBe(true);
+    expect(result.pontuacao).toBe(75);
   });
 
-  it('returns aprovado=true for high random score on fsa-m1', () => {
-    // Run multiple times to verify random scores are always >= 72 >= 70 (min for fsa-m1)
-    for (let i = 0; i < 5; i++) {
-      const result = agenticaEvaluateModulo('fsa-m1');
+  it('returns aprovado=true consistently with mock LLM judge', async () => {
+    for (let i = 0; i < 3; i++) {
+      const result = await agenticaEvaluateModulo('fsa-m1');
       expect(result.aprovado).toBe(true);
-      expect(result.pontuacao).toBeGreaterThanOrEqual(72);
-      expect(result.pontuacao).toBeLessThanOrEqual(95);
+      expect(result.pontuacao).toBe(75); // mock returns non-numeric, fallback deterministic
     }
   });
 });

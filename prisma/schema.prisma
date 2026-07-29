@@ -252,3 +252,148 @@ model VaultTransaction {
   @@index([txid])
   @@index([status])
 }
+// ─── FABLE 5 OS ───
+
+model FableSandbox {
+  id        String   @id @default(cuid())
+  sandboxId String   @unique
+  rootDir   String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+}
+
+model FableTask {
+  id               String     @id @default(cuid())
+  taskId           String     @unique
+  taskDescription  String
+  status           String     @default("pending") // pending | spawning | executing | completed | failed | timeout
+  capability       String     @default("Engenharia de Software")
+  subAgentId       String?
+  sandboxId        String?
+  codeGenerated    String?
+  executionOutput  String?
+  executionStderr  String?
+  executionMs      Int?
+  karmaGenerated   Int        @default(0)
+  correctionCount  Int        @default(0)
+  maxCorrections   Int        @default(3)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  executions FableExecution[]
+
+  @@index([taskId])
+  @@index([status])
+}
+
+model FableExecution {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        FableTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  attempt     Int
+  agentKey    String   @default("fable_5")
+  inputPrompt String
+  output      String?
+  stderr      String?
+  success     Boolean  @default(false)
+  durationMs  Int?
+  createdAt   DateTime @default(now())
+
+  @@index([taskId])
+}
+
+// ─── LIVE LAB PERSISTENCE ───
+
+model LiveLabExecution {
+  id               String   @id @default(cuid())
+  executionId      String   @unique
+  intent           String
+  personaId        String?
+  skillId          String?
+  modeloSelecionado String?
+  provedor         String?
+  sucesso          Boolean
+  tokensUsados     Int      @default(0)
+  custoUsd         Float    @default(0)
+  latenciaMs       Int      @default(0)
+  resultado        String   @default("{}") // JSON
+  cascadeMatch     String?
+  scoreMcdm        Float?
+  rankMcdm         Int?
+  fallbackUsed     String?
+  createdAt        DateTime @default(now())
+
+  @@index([personaId])
+  @@index([skillId])
+  @@index([createdAt])
+}
+
+model SkillExecutionLog {
+  id          String   @id @default(cuid())
+  executionId String?
+  skillId     String
+  skillNome   String?
+  dominio     String?
+  personaId   String?
+  inputSnap   String   @default("{}") // JSON snapshot
+  outputSnap  String   @default("{}")
+  sucesso     Boolean
+  modelo      String?
+  tokensUsados Int     @default(0)
+  custoUsd    Float    @default(0)
+  latenciaMs  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([skillId])
+  @@index([personaId])
+  @@index([createdAt])
+}
+
+model BudgetRecord {
+  id           String   @id @default(cuid())
+  personaId    String?
+  periodo      String   // e.g. "2026-07"
+  usadoUsd     Float    @default(0)
+  limiteUsd    Float    @default(100)
+  alerta50Fired  Boolean @default(false)
+  alerta80Fired  Boolean @default(false)
+  alerta95Fired  Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([personaId, periodo])
+}
+
+model RoutingLog {
+  id               String   @id @default(cuid())
+  intent           String
+  modeloSelecionado String
+  provedor         String
+  scoreMcdm        Float
+  rankMcdm         Int
+  cascadeMatch     String?
+  cascadeKeyword   String?
+  cascadeScore     Float?
+  latenciaEstimada Int?
+  custoEstimado   Float?
+  isLocal          Boolean  @default(false)
+  corretotManual   Boolean  @default(false) // for ground truth evaluation
+  createdAt        DateTime @default(now())
+
+  @@index([modeloSelecionado])
+  @@index([createdAt])
+}
+
+model McdmWeightHistory {
+  id        String   @id @default(cuid())
+  intentType String   // coarse intent category (e.g. "code", "math", "reasoning")
+  pesos     String   // JSON: {"qualidade": 0.35, ...}
+  feedbackScore Float @default(0) // user satisfaction or accuracy metric
+  sampleSize Int  @default(1)
+  createdAt  DateTime @default(now())
+
+  @@index([intentType])
+}
