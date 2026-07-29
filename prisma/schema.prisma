@@ -305,6 +305,113 @@ model FableExecution {
   @@index([taskId])
 }
 
+// ─── AGENTIC v4.0 — Última Onda ───
+
+model AgenticTask {
+  id          String   @id @default(cuid())
+  parentId    String?
+  agentId     String
+  title       String
+  description String
+  priority    String   @default("medium") // critical | high | medium | low
+  status      String   @default("pending") // pending | planning | in_progress | blocked | review | done | failed | cancelled
+  model       String   @default("glm-4-flash")
+  provider    String   @default("zai")
+  strategy    String   @default("react") // react | plan-and-execute | multi-agent | hybrid
+  plan        String?  // JSON: Plan
+  result      String?  // JSON: final result
+  error       String?
+  metadata    String   @default("{}")
+  totalSteps  Int      @default(0)
+  totalTokens Int      @default(0)
+  totalCostUsd Float   @default(0)
+  durationMs  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  completedAt DateTime?
+
+  toolCalls AgenticToolCall[]
+  steps     AgenticTaskStep[]
+  memories  AgenticMemory[]
+
+  @@index([agentId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model AgenticToolCall {
+  id           String   @id @default(cuid())
+  taskId       String
+  task         AgenticTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  agentId      String
+  toolId       String
+  toolName     String
+  arguments    String   @default("{}") // JSON
+  status       String   @default("pending") // pending | running | success | error | cancelled
+  result       String?  // JSON
+  error        String?
+  durationMs   Int      @default(0)
+  tokensUsed   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([taskId])
+  @@index([toolId])
+  @@index([status])
+}
+
+model AgenticTaskStep {
+  id          String      @id @default(cuid())
+  taskId      String
+  task        AgenticTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  stepNumber  Int
+  action      String
+  reasoning   String
+  observation String?
+  status      String   @default("pending")
+  tokensUsed  Int      @default(0)
+  createdAt   DateTime   @default(now())
+
+  @@index([taskId])
+}
+
+model AgenticMemory {
+  id           String   @id @default(cuid())
+  taskId       String?
+  task         AgenticTask? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  agentId      String
+  memoryType   String   @default("episodic") // episodic | semantic | procedural | working
+  content      String
+  importance   Float    @default(0.5)
+  accessCount  Int      @default(0)
+  metadata     String   @default("{}")
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime?
+
+  @@index([agentId])
+  @@index([memoryType])
+  @@index([importance])
+}
+
+model MCPServer {
+  id         String   @id @default(cuid())
+  name       String
+  transport  String   @default("sse") // stdio | sse | streamable-http
+  command    String?
+  url        String?
+  env        String?  // JSON: Record<string, string>
+  headers    String?  // JSON: Record<string, string>
+  enabled    Boolean  @default(true)
+  connected  Boolean  @default(false)
+  tools      String?  // JSON: MCPToolInfo[]
+  lastPing   DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([enabled])
+  @@index([connected])
+}
+
 // ─── LIVE LAB PERSISTENCE ───
 
 model LiveLabExecution {

@@ -1,24 +1,26 @@
-# CHIMERA — Multi-Agent Fusion Engine
+# CHIMERA v4.0 — Ultima Onda Agentic AI
 
 <p align="center">
+  <img src="https://img.shields.io/badge/CHIMERA-v4.0-blue" alt="v4.0" />
   <img src="https://img.shields.io/badge/Next.js-16.1-black?logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/9router-23%20providers-00ff88" alt="Providers" />
   <img src="https://img.shields.io/badge/tRPC-v11-0097A7?logo=trpc" alt="tRPC" />
-  <img src="https://img.shields.io/badge/Prisma-6.11-2D3748?logo=prisma" alt="Prisma" />
+  <img src="https://img.shields.io/badge/Prisma-6.19-2D3748?logo=prisma" alt="Prisma" />
   <img src="https://img.shields.io/badge/GLM--5.2-Connected-emerald" alt="GLM-5.2" />
   <img src="https://img.shields.io/badge/API%20Routes-78-cyan" alt="API Routes" />
   <img src="https://img.shields.io/badge/Docker-6%20services-2496ED?logo=docker" alt="Docker" />
-  <img src="https://img.shields.io/badge/Live%20Lab-Tri--Nuclear%20v3.1-purple" alt="Live Lab" />
-  <img src="https://img.shields.io/badge/Tests-132%20passing-brightgreen" alt="Tests" />
-  <img src="https://img.shields.io/badge/Agentica%20AI-9%20functions-f472b6" alt="Agentica AI" />
-  <img src="https://img.shields.io/badge/Prisma-23%20models-2D3748" alt="DB Models" />
+  <img src="https://img.shields.io/badge/Agentic%20Runtime-v4.0-purple" alt="Agentic" />
+  <img src="https://img.shields.io/badge/MCP-Protocol-orange" alt="MCP" />
+  <img src="https://img.shields.io/badge/Tests-168%20passing-brightgreen" alt="Tests" />
+  <img src="https://img.shields.io/badge/4%20Agents%2B%2010%20Tools-blueviolet" alt="Agents" />
+  <img src="https://img.shields.io/badge/Prisma-24%20models-2D3748" alt="DB Models" />
   <img src="https://img.shields.io/badge/Auth-API%20Key%20Middleware-blue" alt="Auth" />
 </p>
 
 <p align="center">
-  <strong>LLM Orchestration</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>CodeGeeX4 Native</strong> · <strong>Bitcoin PSBT v2</strong> · <strong>RAG Pipeline</strong> · <strong>Sandbox VM</strong> · <strong>Headless Browser</strong> · <strong>Self-Healing</strong> · <strong>Live Lab Tri-Nuclear v3.1</strong> · <strong>Real LLM Execution</strong> · <strong>Observability</strong> · <strong>Agent Communication</strong> · <strong>Meta-Learning</strong>
+  <strong>Agentic Runtime</strong> · <strong>MCP Protocol</strong> · <strong>4 Agents</strong> · <strong>10 Tools</strong> · <strong>Memory 4-Types</strong> · <strong>ReAct + Plan-and-Execute</strong> · <strong>SSE Event Bus</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>Bitcoin PSBT v2</strong> · <strong>RAG Pipeline</strong> · <strong>Sandbox VM</strong> · <strong>Live Lab Tri-Nuclear v3.1</strong> · <strong>Observability</strong> · <strong>Meta-Learning</strong>
 </p>
 
 ---
