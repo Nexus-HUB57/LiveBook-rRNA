@@ -7,27 +7,27 @@
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/9router-23%20providers-00ff88" alt="Providers" />
   <img src="https://img.shields.io/badge/tRPC-v11-0097A7?logo=trpc" alt="tRPC" />
-  <img src="https://img.shields.io/badge/Prisma-6.19-2D3748?logo=prisma" alt="Prisma" />
+  <img src="https://img.shields.io/badge/Prisma-6.11-2D3748?logo=prisma" alt="Prisma" />
   <img src="https://img.shields.io/badge/GLM--5.2-Connected-emerald" alt="GLM-5.2" />
-  <img src="https://img.shields.io/badge/API%20Routes-78-cyan" alt="API Routes" />
+  <img src="https://img.shields.io/badge/API%20Routes-87-cyan" alt="API Routes" />
   <img src="https://img.shields.io/badge/Docker-6%20services-2496ED?logo=docker" alt="Docker" />
   <img src="https://img.shields.io/badge/Agentic%20Runtime-v4.0-purple" alt="Agentic" />
   <img src="https://img.shields.io/badge/MCP-Protocol-orange" alt="MCP" />
-  <img src="https://img.shields.io/badge/Tests-168%20passing-brightgreen" alt="Tests" />
-  <img src="https://img.shields.io/badge/4%20Agents%2B%2010%20Tools-blueviolet" alt="Agents" />
-  <img src="https://img.shields.io/badge/Prisma-24%20models-2D3748" alt="DB Models" />
+  <img src="https://img.shields.io/badge/Tests-185%20passing-brightgreen" alt="Tests" />
+  <img src="https://img.shields.io/badge/7%20Agent%20Roles%2B%2010%20Tools-blueviolet" alt="Agents" />
+  <img src="https://img.shields.io/badge/Prisma-29%20models-2D3748" alt="DB Models" />
   <img src="https://img.shields.io/badge/Auth-API%20Key%20Middleware-blue" alt="Auth" />
 </p>
 
 <p align="center">
-  <strong>Agentic Runtime</strong> · <strong>MCP Protocol</strong> · <strong>4 Agents</strong> · <strong>10 Tools</strong> · <strong>Memory 4-Types</strong> · <strong>ReAct + Plan-and-Execute</strong> · <strong>SSE Event Bus</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>Bitcoin PSBT v2</strong> · <strong>RAG Pipeline</strong> · <strong>Sandbox VM</strong> · <strong>Live Lab Tri-Nuclear v3.1</strong> · <strong>Observability</strong> · <strong>Meta-Learning</strong>
+  <strong>Agentic Runtime v4.0</strong> · <strong>MCP Protocol</strong> · <strong>7 Agent Roles</strong> · <strong>10 Tools</strong> · <strong>Memory 4-Types</strong> · <strong>ReAct + Plan-and-Execute</strong> · <strong>SSE Event Bus</strong> · <strong>23 AI Providers</strong> · <strong>Protocol Translation</strong> · <strong>Bitcoin PSBT v2</strong> · <strong>RAG Pipeline</strong> · <strong>Sandbox VM</strong> · <strong>Live Lab Tri-Nuclear v3.1</strong> · <strong>Observability</strong> · <strong>Meta-Learning</strong>
 </p>
 
 ---
 
 ## Abstract
 
-CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa roteamento inteligente baseado em **MCDM PROMETHEE II** com funcao de preferencia linear (Tipo V), tradução automatica de protocolo em topologia hub-and-spoke para 23 provedores, e um subsistema cognitivo trinuclear — o **Live Lab v3.1** — orquestrado pela Agentica AI com 9 funcoes de alto nivel e **execucao real de LLMs** via 9router-bridge. O sistema incorpora governanca por RBAC hierárquico (4 tiers), controle de taxa por Token Bucket com prioridade, projecao de orcamento com alertas em limiares configuráveis, mascaramento de PII com trilha de auditoria, **middleware de autenticacao API key**, **observabilidade estruturada** (logger JSON, metricas Prometheus, tracing), **cache semantico LRU**, **comunicacao bidirecional entre agentes** (message bus + blackboard), **memoria de longo prazo** (episodica/semantica/trabalho/procedural), **meta-aprendizado de pesos MCDM**, **negociacao multi-agente** (Contract Net/Votacao/Debate), **avaliacao de roteamento** (accuracy@1/3, MRR, A/B testing), e **aprendizado continuo de skills**. A arquitetura suporta 78 REST endpoints, 4 routers tRPC, streaming SSE nativo, e deploy containerizado com 6 servicos Docker.
+CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa roteamento inteligente baseado em **MCDM PROMETHEE II** com funcao de preferencia linear (Tipo V), tradução automatica de protocolo em topologia hub-and-spoke para 23 provedores, e um subsistema cognitivo trinuclear — o **Live Lab v3.1** — orquestrado pela Agentica AI com 9 funcoes de alto nivel e **execucao real de LLMs** via 9router-bridge. O sistema incorpora governanca por RBAC hierárquico (4 tiers), controle de taxa por Token Bucket com prioridade, projecao de orcamento com alertas em limiares configuráveis, mascaramento de PII com trilha de auditoria, **middleware de autenticacao API key**, **observabilidade estruturada** (logger JSON, metricas Prometheus, tracing), **cache semantico LRU**, **comunicacao bidirecional entre agentes** (message bus + blackboard), **memoria de longo prazo** (episodica/semantica/trabalho/procedural), **meta-aprendizado de pesos MCDM**, **negociacao multi-agente** (Contract Net/Votacao/Debate), **avaliacao de roteamento** (accuracy@1/3, MRR, A/B testing), e **aprendizado continuo de skills**. A arquitetura suporta 87 REST endpoints, 4 routers tRPC, streaming SSE nativo, e deploy containerizado com 6 servicos Docker.
 
 ---
 
@@ -40,8 +40,8 @@ CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa r
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  ┌──────────────────┐   │
-│  │  Dashboard   │  │  13 Tabs UI  │  │  tRPC v11   │  │  71 REST Routes  │   │
-│  │  (React 19)  │  │  shadcn/ui   │  │  4 Routers  │  │  + 9 Live Lab    │   │
+│  │  Dashboard   │  │  13 Tabs UI  │  │  tRPC v11   │  │  87 REST Routes  │   │
+│  │  (React 19)  │  │  shadcn/ui   │  │  4 Routers  │  │  + 10 Agentic    │   │
 │  └──────┬──────┘  └──────┬───────┘  └──────┬──────┘  └────────┬─────────┘   │
 │         │                │                 │                   │             │
 │  ┌──────┴────────────────┴─────────────────┴───────────────────┴─────────┐   │
@@ -81,7 +81,7 @@ CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa r
 │  │                                  └──────────┘ └─────────┘ └───────┘  │   │
 │  └────────────────────────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  Prisma 6 + SQLite (23 models) │ Auth Middleware │ Caddy (auto-SSL) │ Docker  │
+│  Prisma 6 + SQLite (29 models) │ Auth Middleware │ Caddy (auto-SSL) │ Docker  │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -93,8 +93,8 @@ CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa r
 | **UI** | React 19 + Tailwind CSS 4 + shadcn/ui | Componentes acessíveis, composabilidade, Framer Motion |
 | **Language** | TypeScript 5 (strict) | Type safety em toda a stack, generics avancados |
 | **LLM Routing** | 9router (in-process bridge) | Hub-and-spoke protocol translation, 23 providers, O(1) dispatch |
-| **API Layer** | tRPC v11 + 71 REST routes | Type-safe RPC para dashboard, REST para integracao externa |
-| **Database** | Prisma 6 + SQLite | Zero-ops embedded DB, 23 models, migracoes declarativas |
+| **API Layer** | tRPC v11 + 87 REST routes | Type-safe RPC para dashboard, REST para integracao externa |
+| **Database** | Prisma 6 + SQLite | Zero-ops embedded DB, 29 models, migracoes declarativas |
 | **Bitcoin** | bitcoinjs-lib + @noble/secp256k1 | BIP32/39 HD wallet, P2PKH, PSBT v2 com AES-256-GCM |
 | **RAG** | BM25 field-boosted + cross-encoder | Pipeline biologico 6 fases com reranking neural |
 | **Cognitive** | Fable Method (Think/Act/Prove) | Raciocinio estruturado com auto-correcao em 3 tentativas |
@@ -106,7 +106,7 @@ CHIMERA e uma plataforma de orquestracao multi-agente para LLMs que implementa r
 | **Negotiation** | AgentNegotiator | Contract Net, Voting, Debate protocols with consensus scoring |
 | **Sandbox** | Node.js `vm` module (isolated) | 5 tiers com limites de memoria/tempo, evolucao genetica |
 | **Browser** | Obscura (Rust/V8, CDP) | Anti-fingerprinting, 3520+ trackers, MCP 13 tools |
-| **Testing** | Jest — 132 tests, 3 suites | Coverage: algorithms, orchestrator, agentica-ai, federated |
+| **Testing** | Jest — 185 tests, 6 suites | Coverage: algorithms, orchestrator, agentica-ai, agentic runtime, MCP flow, federated |
 | **Deploy** | Docker multi-stage + Caddy | 6 services, auto-SSL via Let's Encrypt |
 
 ---
@@ -538,11 +538,135 @@ Query → Transcricao → Splicing → Traducao → Reranking → Sintese LLM
 
 Auto-cura reativa com Wisdom Engine adaptativa: detect → diagnose → isolate → remediate → verify → learn.
 
-### 5.6 v3.1 — 12 Novos Modulos de Infraestrutura Cognitiva
+### 5.6 v4.0 — Agentic Runtime (2.338 LOC)
+
+O v4.0 introduz um **Agentic Runtime completo** com execução de multi-agentes, MCP (Model Context Protocol), 10 tools reais, e persistência em Prisma. Este é o coração da capacidade de agencia autonoma do CHIMERA.
+
+```text
+┌──────────────────────────────────────────────────────────────────┐
+│                    AGENTIC RUNTIME v4.0                           │
+│                                                                  │
+│  ┌─────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
+│  │  Agent Loop  │  │ Tool Registry│  │  MCP Adapter          │  │
+│  │  ReAct       │  │ 10 tools     │  │  stdio/sse/http       │  │
+│  │ Plan&Exec   │  │ 3 categories │  │  demo-server bridge   │  │
+│  │ Multi-Agent │  │ MCP dynamic  │  │  13 CDP tools         │  │
+│  │ Hybrid       │  │              │  │                       │  │
+│  └──────┬──────┘  └──────┬───────┘  └───────────┬───────────┘  │
+│         │                │                       │              │
+│  ┌──────┴────────────────┴───────────────────────┴──────────┐  │
+│  │                    Core Services                          │  │
+│  │  ┌──────────────┐  ┌───────────────┐  ┌────────────────┐ │  │
+│  │  │  Persistence  │  │ Memory Mgr    │  │ Event Bus      │ │  │
+│  │  │  Prisma ORM   │  │ 4-type memory │  │ SSE streaming  │ │  │
+│  │  │  6 models     │  │ episodic/     │  │ 15 event types │ │  │
+│  │  │  Task/Step/   │  │ semantic/     │  │ status change  │ │  │
+│  │  │  ToolCall/    │  │ procedural/   │  │ handoff/       │ │  │
+│  │  │  Agent/Memory │  │ working       │  │ completion     │ │  │
+│  │  └──────────────┘  └───────────────┘  └────────────────┘ │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  7 Agent Roles: orchestrator · specialist · analyst · researcher
+│                coder · reviewer · guardian                       │
+│  4 Strategies: ReAct · Plan-and-Execute · Multi-Agent · Hybrid  │
+│  10 Tools: web_search · code_executor · file_reader/writer       │
+│           rag_query · llm_call · image_generator · web_reader   │
+│           text_to_speech · vlm_analyze                           │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+#### 5.6.1 Agent Loop (`src/lib/agentic/agent-loop.ts`)
+
+Execucao de tarefas por agentes com 4 estrategias de raciocinio:
+
+| Estrategia | Descricao | Uso |
+|-----------|-----------|-----|
+| `react` | Think → Act → Observe (loop ate final answer) | Tasks simples e bem definidas |
+| `plan-and-execute` | Planeja todos os passos primeiro, depois executa | Tasks complexas com multiplas etapas |
+| `multi-agent` | Delega subtasks para agentes especialistas | Tasks que requerem multiplas especialidades |
+| `hybrid` | Plan-and-Execute com ReAct para cada passo | Maximo de robustez, tasks criticas |
+
+Cada iteracao produz um `LoopStep` com tipo (thinking/tool_call/tool_result/observation/handoff/final_answer), tokens usados, e timestamp. Suporta handoff entre agentes com `HandoffRequest`.
+
+#### 5.6.2 Tool Registry + 10 Handlers (`src/lib/agentic/tool-registry.ts` + `tool-handlers.ts`)
+
+Registro centralizado de tools com 10 handlers implementados:
+
+| Tool | Category | Handler | Descricao |
+|------|----------|---------|-----------|
+| `web_search` | Research | z-ai-web-dev-sdk | Busca web em tempo real |
+| `web_reader` | Research | z-ai-web-dev-sdk | Extracao de conteudo de paginas |
+| `code_executor` | Execution | Node.js `vm` | Execucao sandboxed de codigo |
+| `file_reader` | File I/O | fs (scoped) | Leitura de arquivos do workspace |
+| `file_writer` | File I/O | fs (scoped) | Escrita de arquivos no workspace |
+| `rag_query` | Knowledge | RAG Engine | Consulta ao pipeline RAG rRNA |
+| `llm_call` | AI | 9router Bridge | Chamada direta a LLM via roteamento |
+| `image_generator` | Creative | z-ai-web-dev-sdk | Geracao de imagens por texto |
+| `text_to_speech` | Creative | z-ai-web-dev-sdk | Sintese de voz a partir de texto |
+| `vlm_analyze` | Vision | z-ai-web-dev-sdk | Analise visual com modelo multimodal |
+
+O registry suporta ferramentas dinamicas registradas via MCP (Model Context Protocol).
+
+#### 5.6.3 MCP Protocol Adapter (`src/lib/agentic/mcp-adapter.ts`)
+
+Integracao com o protocolo MCP para ferramentas externas:
+
+- **3 transportes**: stdio, SSE, streamable-http
+- **Descoberta automatica** de ferramentas ao conectar em um MCP server
+- **Forwarding** de chamadas de tools para servers remotos
+- **MCP Demo Bridge**: ponte para o Obscura headless browser (13 CDP tools expostas como MCP tools)
+- **MCP Demo Server**: servidor MCP embutido com ferramentas de demonstracao
+
+#### 5.6.4 Memory Manager (`src/lib/agentic/memory-manager.ts`)
+
+Memoria de 4 tipos com persistencia em Prisma (`AgenticMemory` model):
+
+| Tipo | TTL | Uso |
+|------|-----|-----|
+| `working` | 10 min | Contexto da task atual |
+| `episodic` | 24h | Experiencias passadas do agente |
+| `semantic` | 30 dias | Conhecimento consolidado |
+| `procedural` | 90 dias | Habilidades e padroes aprendidos |
+
+Suporta query por agente, tipo, importancia minima, e busca textual.
+
+#### 5.6.5 Event Bus (`src/lib/agentic/event-bus.ts`)
+
+Sistema de eventos com 15 tipos para streaming SSE:
+
+```
+agent.status_change · agent.thinking · agent.tool_call · agent.tool_result
+agent.handoff · agent.error · agent.completed · task.created · task.status_change
+task.completed · memory.created · memory.retrieved
+mcp.server_connected · mcp.server_disconnected · mcp.tool_registered
+```
+
+Clientes SSE recebem eventos em tempo real via `GET /api/agentic/events`.
+
+#### 5.6.6 Persistence (`src/lib/agentic/persistence.ts`)
+
+Persistencia completa em Prisma com 6 models dedicados. Tarefas, steps, e tool calls sao registrados com input/output snapshots para auditabilidade total.
+
+#### 5.6.7 10 API Routes do Agentic Runtime
+
+| Method | Endpoint | Descricao |
+|--------|----------|-----------|
+| `POST` | `/api/agentic/route` | Executa task completa (cria + roda agent loop) |
+| `GET` | `/api/agentic/agents` | Lista agentes configurados |
+| `GET` | `/api/agentic/agents/stream` | Stream SSE de execucao de agente |
+| `GET` | `/api/agentic/events` | SSE event bus para todos os eventos |
+| `GET` | `/api/agentic/tools` | Lista tools registradas (nativas + MCP) |
+| `GET` | `/api/agentic/memory` | Query memoria de agentes |
+| `GET` | `/api/agentic/mcp` | Lista MCP servers configurados |
+| `POST` | `/api/agentic/mcp/connect` | Conecta a um MCP server |
+| `POST` | `/api/agentic/mcp/call` | Chama tool MCP em server conectado |
+| `GET` | `/api/agentic/mcp/demo-server` | MCP demo server info + status |
+
+### 5.7 v3.1 — 12 Modulos de Infraestrutura Cognitiva
 
 A v3.1 introduz uma camada de infraestrutura cognitiva que eleva o CHIMERA de simulador para sistema de producao:
 
-#### 5.6.1 Autenticacao (`src/middleware.ts` + `src/lib/auth.ts`)
+#### 5.7.1 Autenticacao (`src/middleware.ts` + `src/lib/auth.ts`)
 
 Next.js Edge Middleware com validacao API key. Modo aberto (sem `CHIMERA_API_KEYS`) para desenvolvimento.
 
@@ -559,7 +683,7 @@ Request → x-request-id (UUID) → x-correlation-id (propagate) → Auth check 
                                                          /api/webhook/*
 ```
 
-#### 5.6.2 Observabilidade (`src/lib/observability.ts`)
+#### 5.7.2 Observabilidade (`src/lib/observability.ts`)
 
 - **ChimeraLogger**: JSON estruturado com correlationId/requestId, 4 niveis (info/warn/error/debug)
 - **ChimeraMetrics**: 6 familias de metricas em formato Prometheus (counters, histograms, gauges)
@@ -567,39 +691,39 @@ Request → x-request-id (UUID) → x-correlation-id (propagate) → Auth check 
 
 Metricas nativas: `chimera_routing_total`, `chimera_skill_execution_duration_ms`, `chimera_tokens_total`, `chimera_cost_usd_total`, `chimera_fallback_total`, `chimera_llm_request_duration_ms`
 
-#### 5.6.3 Rate Limiting Distribuido (`src/lib/distributed-rate-limit.ts`)
+#### 5.7.3 Rate Limiting Distribuido (`src/lib/distributed-rate-limit.ts`)
 
 StickySessionRateLimiter com LRU (max 10K entradas, TTL 5 min) + TieredRateLimiter (basic 10/min, intermediate 30/min, advanced 60/min, admin 120/min).
 
-#### 5.6.4 Cache Semantico (`src/lib/semantic-cache.ts`)
+#### 5.7.4 Cache Semantico (`src/lib/semantic-cache.ts`)
 
 LRU cache (500 entradas, TTL 1h) com chave SHA-256 de input normalizado. Hit/miss tracking. Design preparado para upgrade embedding-based (threshold 0.92 reservado).
 
-#### 5.6.5 Comunicacao Bidirecional (`src/lib/agent-message-bus.ts`)
+#### 5.7.5 Comunicacao Bidirecional (`src/lib/agent-message-bus.ts`)
 
 AgentMessageBus com 10 tipos de mensagem (task_request/result, handoff, query/answer, event, heartbeat, negotiation, blackboard_read/write). Suporta `sendAndWait` com timeout, broadcast, protocolo de handoff, e blackboard compartilhado (LRU 500 entries).
 
-#### 5.6.6 Memoria de Longo Prazo (`src/lib/agent-memory.ts`)
+#### 5.7.6 Memoria de Longo Prazo (`src/lib/agent-memory.ts`)
 
 4 tipos com TTLs distintos: **working** (10 min), **episodic** (24h), **semantic** (30 dias), **procedural** (90 dias). Eviction por importancia (0-1). Consolidacao automatica (working → episodic para importancia >= 0.5).
 
-#### 5.6.7 Meta-Aprendizado MCDM (`src/lib/mcdm-meta-learner.ts`)
+#### 5.7.7 Meta-Aprendizado MCDM (`src/lib/mcdm-meta-learner.ts`)
 
 Classifica intencoes em 7 categorias (code, math, reasoning, multimodal, security, devops, general). EWMA (decay 0.95) para adaptar pesos MCDM por tipo. Persistencia em Prisma `McdmWeightHistory`. Formula: `learned = default + 0.15 * (avg - default)`, normalizado para soma = 1.
 
-#### 5.6.8 Negociacao Multi-Agente (`src/lib/agent-negotiation.ts`)
+#### 5.7.8 Negociacao Multi-Agente (`src/lib/agent-negotiation.ts`)
 
 Tres protocolos: **Contract Net** (broadcast + bid evaluation), **Votacao** (plurality, ties por ordem), **Debate** (for/against + judge). Todos retornam `NegotiationResult` com consensus score (0-1).
 
-#### 5.6.9 Avaliacao de Roteamento (`src/lib/routing-evaluator.ts`)
+#### 5.7.9 Avaliacao de Roteamento (`src/lib/routing-evaluator.ts`)
 
 25 ground truth entries cobrindo todas as 9 cascade rules. Metricas: **accuracy@1**, **accuracy@3**, **MRR** (Mean Reciprocal Rank), custo-efficiency, cascade hit rate. A/B testing com variant registry.
 
-#### 5.6.10 Aprendizado Continuo de Skills (`src/lib/skill-learner.ts`)
+#### 5.7.10 Aprendizado Continuo de Skills (`src/lib/skill-learner.ts`)
 
 Tracking de performance por skill (rolling window 100 execucoes). Auto-ajuste de tokens (1.5x se success < 70%, 0.8x se > 95%). Deteccao de skills faltantes por intents falhados. Alertas para skills necessitando atencao.
 
-#### 5.6.11 Prisma Schema — 8 Novas Tabelas
+#### 5.7.11 Prisma Schema — 14 Novas Tabelas
 
 | Modelo | Proposito | Chave |
 |--------|----------|-------|
@@ -611,10 +735,16 @@ Tracking de performance por skill (rolling window 100 execucoes). Auto-ajuste de
 | `BudgetRecord` | Budget mensal por persona com alertas | personaId + periodo (unique) |
 | `RoutingLog` | Decisoes de roteamento MCDM | modeloSelecionado + createdAt |
 | `McdmWeightHistory` | Evolucao de pesos por intent type | intentType + createdAt |
+| `Agent` | Configuracao de agentes do runtime | agentId (unique) |
+| `AgentSkill` | Skills habilitadas por agente | agentId + skillId (unique) |
+| `AgenticMemory` | Memoria persistente dos agentes | agentId + type + createdAt |
+| `AgenticTask` | Tarefas do agentic runtime | taskId (unique), status |
+| `AgenticTaskStep` | Passos de execucao por tarefa | taskId (FK cascade) |
+| `AgenticToolCall` | Registro de chamadas de tools | toolCallId (unique) |
 
 ---
 
-## 6. API Reference (78 Endpoints)
+## 6. API Reference (87 Endpoints)
 
 | Group | Count | Routes |
 |-------|-------|--------|
@@ -622,7 +752,8 @@ Tracking de performance por skill (rolling window 100 execucoes). Auto-ajuste de
 | **Agent** | 3 | `POST /api/agent/chat`, `POST /api/agent/chat/stream`, `POST /api/agent/analyze` |
 | **Fable** | 9 | `/api/fable/{method,loop,judge,domain,spawn,stats,tasks,task/[id],agent-query}` |
 | **Colibri** | 5 | `/api/colibri/{health,models,experts,chat,orchestrate}` |
-| **Live Lab** | 13 | `/api/live-lab/{diagnose,route,skill,evaluate,progress,stats,governanca,meta-skill,iogue-essence,metrics,cache/stats,bus/stats,memory/stats}` |
+| **Live Lab** | 14 | `/api/live-lab/{diagnose,route,skill,evaluate,progress,stats,governanca,meta-skill,iogue-essence,metrics,cache/stats,bus/stats,memory/stats}` |
+| **Agentic Runtime** | 10 | `/api/agentic/{route,agents,agents/stream,events,tools,memory,mcp,mcp/connect,mcp/call,mcp/demo-server}` |
 | **Sandbox** | 7 | `/api/sandbox/{execute,agents,agents/[id],llm,llm/stream,status,evolution}` |
 | **Obscura** | 14 | `/api/obscura/{navigate,scrape,eval,links,markdown,snapshot,status,serve,intercept,trackers,proxy,sessions,network,health}` |
 | **Bitcoin** | 5 | `/api/vaults{,/  [id],/  [id]/generate-address,/  [id]/custody}` + `/api/vaults/import-address` |
@@ -638,9 +769,9 @@ Tracking de performance por skill (rolling window 100 execucoes). Auto-ajuste de
 ## 7. Testing
 
 ```
-132 tests passing — 3 suites — 0 failures
+185 tests passing — 6 suites — 0 failures
 
-src/lib/live-lab/__tests__/algorithms.test.ts    (88 tests)
+src/lib/live-lab/__tests__/algorithms.test.ts    (65 tests)
   ├─ minMaxNormalize           (4)   Edge cases: empty, equal, ascending, descending
   ├─ cascadeMatch               (5)   Weighted keywords, partial boundaries, threshold
   ├─ computeMCDMScores          (12)  PROMETHEE II: 10-model real data, phi+/-, ranking
@@ -652,7 +783,7 @@ src/lib/live-lab/__tests__/algorithms.test.ts    (88 tests)
   ├─ maskPIIWithAudit           (6)   Email, CPF, telefone, multi-type, position, empty
   └─ rbacCheck                  (6)   Hierarchy, denial, same-level, invalid levels
 
-src/lib/live-lab/__tests__/orchestrator.test.ts (37 tests)
+src/lib/live-lab/__tests__/orchestrator.test.ts (60 tests)
   ├─ getRoutingResult           (6)   Structure, truncation, cascade, GLM-5.2 routing
   ├─ executeSkill               (4)   [v3.1 async] LLM mock, budget, not-found, RBAC denial
   ├─ executeMetaSkill           (4)   [v3.1 async] Success plan, ordering, not-found, RBAC
@@ -670,8 +801,21 @@ src/lib/live-lab/__tests__/orchestrator.test.ts (37 tests)
   ├─ agenticaIogueEssence       (2)   Equality, 6 principios
   └─ agenticaGovernanca         (5)   Authorized, budget, RBAC denial, not-found, fields
 
+src/__tests__/agentic/runtime.test.ts          (36 tests)
+  ├─ Agent Loop                (12)   ReAct, Plan-and-Execute, multi-agent, hybrid strategies
+  ├─ Tool Registry             (8)   Registration, lookup, category filtering, MCP tools
+  ├─ Tool Handlers             (10)   web_search, code_executor, file_reader/writer, rag_query, llm_call, tts, vlm_analyze, image_generator
+  └─ Persistence               (6)   Task CRUD, step recording, Prisma save/load
+
+src/__tests__/agentic/mcp-flow.test.ts           (16 tests)
+  ├─ MCP Adapter              (8)   connect, disconnect, tool listing, tool call, error handling
+  └─ MCP Demo Bridge           (8)   Server lifecycle, tool forwarding, SSE events, graceful shutdown
+
 tests/federated.test.ts                        (7 tests)
   └─ Federated Learning         (7)   NRP, Gaussian noise, validation, anchoring
+
+src/__tests__/live-lab/algorithms.test.ts       (1 test)
+  └─ Integration smoke test
 
 Mocks: jest.mock('@/lib/9router-bridge') + jest.mock('@/lib/db') para isolamento de LLM real nos testes.
 ```
@@ -717,7 +861,7 @@ docker compose ps
 npm install
 npx prisma db push && npx prisma generate
 npx next dev    # → http://localhost:3000
-npx jest       # → 132 tests
+npx jest       # → 185 tests
 ```
 
 ### 8.4 Requirements
@@ -740,16 +884,16 @@ chimera/
 ├── codegeex4/
 │   └── Dockerfile                 # CodeGeeX4 native OpenAI-compat API
 ├── prisma/
-│   └── schema.prisma              # 23 models (15 original + 8 v3.1)
+│   └── schema.prisma              # 29 models (15 original + 14 v3.1/v4.0)
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx                # 13-tab dashboard
-│   │   └── api/                    # 71 REST routes
+│   │   └── api/                    # 87 REST routes
 │   │       ├── 9router/            #   2 routes
 │   │       ├── fable/              #   9 routes
 │   │       ├── agent/              #   3 routes
 │   │       ├── colibri/            #   5 routes
-│   │       ├── live-lab/           #   9 routes (Agentica AI)
+│   │       ├── live-lab/           #   14 routes (Agentica AI)
 │   │       ├── sandbox/            #   7 routes
 │   │       ├── obscura/            #  14 routes
 │   │       ├── vaults/             #   5 routes
@@ -767,7 +911,7 @@ chimera/
 │   │   │   ├── algorithms.ts       #   PROMETHEE II, Cascade, TokenBucket, Budget, PII, RBAC
 │   │   │   ├── orchestrator.ts     #   7 engine functions + LLM real + DB persist (v3.1)
 │   │   │   ├── agentica-ai.ts      #   9 Agentica functions (4 async v3.1)
-│   │   │   ├── __tests__/          #   132 tests (algorithms + orchestrator)
+│   │   │   ├── __tests__/          #   125 tests (algorithms + orchestrator)
 │   │   │   └── index.ts            #   Public re-exports
 │   │   ├── auth.ts                 # API key validation, protected routes
 │   │   ├── observability.ts        # ChimeraLogger + ChimeraMetrics + ChimeraTracer
@@ -782,7 +926,17 @@ chimera/
 │   │   ├── fable-method-engine.ts  # Think/Act/Prove
 │   │   ├── sandbox/                # VM execution + genetic evolution
 │   │   ├── obscura/                # Rust/V8 headless browser
+│   │   ├── agentic/                # ── AGENTIC RUNTIME v4.0 ──
+│   │   │   ├── agent-loop.ts       #   4 strategies: ReAct, Plan-Exec, Multi-Agent, Hybrid
+│   │   │   ├── tool-registry.ts     #   10 native tools + MCP dynamic
+│   │   │   ├── tool-handlers.ts    #   Real tool implementations
+│   │   │   ├── mcp-adapter.ts       #   MCP stdio/sse/http adapter
+│   │   │   ├── event-bus.ts         #   15 event types, SSE streaming
+│   │   │   ├── memory-manager.ts    #   4-type memory + Prisma
+│   │   │   ├── persistence.ts       #   6 Prisma models CRUD
+│   │   │   └── types.ts             #   20+ interfaces
 │   │   └── rag-engine.ts           # 6-stage biological RAG pipeline
+│   ├── __tests__/                  # 52 tests (agentic runtime + MCP flow)
 │   └── server/routers/             # 4 tRPC routers
 └── tests/
     └── federated.test.ts           # Federated Learning integration tests
